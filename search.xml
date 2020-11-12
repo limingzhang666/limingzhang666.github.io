@@ -581,49 +581,6 @@ width: 15%;
       </tags>
   </entry>
   <entry>
-    <title>MacOS VPN(Cisco IPSec)断线解决办法</title>
-    <url>/2020/05/19/macos-vpn-disconnection-resolve/</url>
-    <content><![CDATA[<p>现在很多VPN客户端都是不支持Mac的，所以更多的时候我们需要使用Mac系统内置的<code>IPsec VPN </code>客户端工具去连接。</p>
-<p>但是在链接 Cisco VPN 服务器后，一般每隔45分钟到一小时就会自动断线，这无疑是令人沮丧的。虽然说这是Mac系统为了电脑的安全性所做的考虑，但是实际使用时可能会很不方便。</p>
-<p>本文章将介绍一种的解决方法来让 VPN 客户端正常连接不断线。</p>
-<a id="more"></a>
-
-<h2 id="方案参考"><a href="#方案参考" class="headerlink" title="方案参考"></a>方案参考</h2><p>本解决方案来自苹果的官方支持社区 <a href="https://discussions.apple.com/thread/3275811?start=0&tstart=0">Apple Support Communities</a></p>
-<h2 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h2><ol>
-<li><p>连接 VPN(Cisco IPSec) ，让系统生成配置文件</p>
-</li>
-<li><p>执行拷贝命令，将配置文件拷贝到/etc/racoon（xxx.xxx 即VPN服务器ip地址）：</p>
- <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ sudo cp /var/run/racoon/xxx.xxx.xxx.xxx.conf /etc/racoon</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改 racoon 配置文件，使用定制的配置文件：<br>将最后一行注释掉（目的是不使用系统生成配置），修改为使用定制的配置文件，注意行尾的分号：</p>
- <figure class="highlight diff"><figcaption><span>/etc/racoon/racoon.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- # include &quot;/var/run/racoon/*.conf” ;  </span></span><br><span class="line"><span class="addition">+ include “/etc/racoon/xxx.xxx.xxx.xxx.conf” ;</span></span><br></pre></td></tr></table></figure></li>
-<li><p>修改 IPSec 配置文件（注意使用 sudo 命令）:</p>
-<ul>
-<li><p>取消 dead peer 检测（原来为 20）: </p>
-<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  dpd_delay 20; </span></span><br><span class="line"><span class="addition">+  dpd_delay 0;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改请求方式为 claim（重要，原来为 obey）:</p>
-<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  proposal_check obey;</span></span><br><span class="line"><span class="addition">+  proposal_check claim;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改请求周期（所有 proposal 中的值，原来为 3600 sec）:</p>
-<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- lifetime time 3600 sec; </span></span><br><span class="line"><span class="addition">+ lifetime time 24 hours;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>重新链接 VPN(Cisco IPSec)，即可永不断线。</p>
-</li>
-</ol>
-<div class="note danger"><p>注意：当原来的ip地址发生变化时，会拨号失败。<br>解决方法：将xxx.xxx.xxx.xxx.conf 文件名改为新的ip地址，再执行一次步骤3即可。</p>
-</div>]]></content>
-      <categories>
-        <category>Mac</category>
-      </categories>
-      <tags>
-        <tag>Mac</tag>
-        <tag>VPN</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>App如何识别身份证号码</title>
     <url>/2019/11/28/idcard-secret/</url>
     <content><![CDATA[<p>现在的网络中对实名要求越来越高，日常使用App时都会有输入身份证号码进行身份验证的环节。有的时候按照自己身份证的格式随便改下几位数字想蒙混过关，不想直接被系统识别号码错误了，他们是怎么验证的？</p>
@@ -690,6 +647,49 @@ width: 15%;
       <tags>
         <tag>身份证</tag>
         <tag>工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MacOS VPN(Cisco IPSec)断线解决办法</title>
+    <url>/2020/05/19/macos-vpn-disconnection-resolve/</url>
+    <content><![CDATA[<p>现在很多VPN客户端都是不支持Mac的，所以更多的时候我们需要使用Mac系统内置的<code>IPsec VPN </code>客户端工具去连接。</p>
+<p>但是在链接 Cisco VPN 服务器后，一般每隔45分钟到一小时就会自动断线，这无疑是令人沮丧的。虽然说这是Mac系统为了电脑的安全性所做的考虑，但是实际使用时可能会很不方便。</p>
+<p>本文章将介绍一种的解决方法来让 VPN 客户端正常连接不断线。</p>
+<a id="more"></a>
+
+<h2 id="方案参考"><a href="#方案参考" class="headerlink" title="方案参考"></a>方案参考</h2><p>本解决方案来自苹果的官方支持社区 <a href="https://discussions.apple.com/thread/3275811?start=0&tstart=0">Apple Support Communities</a></p>
+<h2 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h2><ol>
+<li><p>连接 VPN(Cisco IPSec) ，让系统生成配置文件</p>
+</li>
+<li><p>执行拷贝命令，将配置文件拷贝到/etc/racoon（xxx.xxx 即VPN服务器ip地址）：</p>
+ <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ sudo cp /var/run/racoon/xxx.xxx.xxx.xxx.conf /etc/racoon</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改 racoon 配置文件，使用定制的配置文件：<br>将最后一行注释掉（目的是不使用系统生成配置），修改为使用定制的配置文件，注意行尾的分号：</p>
+ <figure class="highlight diff"><figcaption><span>/etc/racoon/racoon.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- # include &quot;/var/run/racoon/*.conf” ;  </span></span><br><span class="line"><span class="addition">+ include “/etc/racoon/xxx.xxx.xxx.xxx.conf” ;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>修改 IPSec 配置文件（注意使用 sudo 命令）:</p>
+<ul>
+<li><p>取消 dead peer 检测（原来为 20）: </p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  dpd_delay 20; </span></span><br><span class="line"><span class="addition">+  dpd_delay 0;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改请求方式为 claim（重要，原来为 obey）:</p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  proposal_check obey;</span></span><br><span class="line"><span class="addition">+  proposal_check claim;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改请求周期（所有 proposal 中的值，原来为 3600 sec）:</p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- lifetime time 3600 sec; </span></span><br><span class="line"><span class="addition">+ lifetime time 24 hours;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>重新链接 VPN(Cisco IPSec)，即可永不断线。</p>
+</li>
+</ol>
+<div class="note danger"><p>注意：当原来的ip地址发生变化时，会拨号失败。<br>解决方法：将xxx.xxx.xxx.xxx.conf 文件名改为新的ip地址，再执行一次步骤3即可。</p>
+</div>]]></content>
+      <categories>
+        <category>Mac</category>
+      </categories>
+      <tags>
+        <tag>Mac</tag>
+        <tag>VPN</tag>
       </tags>
   </entry>
   <entry>
