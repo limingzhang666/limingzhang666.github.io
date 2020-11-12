@@ -1,0 +1,835 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Hello World</title>
+    <url>/2020/11/12/hello-world/</url>
+    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+]]></content>
+  </entry>
+  <entry>
+    <title>Hexo+NexT(v7.0+) 搭建博客：内容优化</title>
+    <url>/2019/05/18/hexo-content-optimization/</url>
+    <content><![CDATA[<p>NexT主题内提供了很多功能来让内容更加丰富，本文介绍了如何开启和定制这些功能，主要包括:</p>
+<ul>
+<li>模板设置</li>
+<li>文章发布修改时间、字数统计</li>
+<li>文章版权声明</li>
+<li>链接样式、底部标签样式</li>
+<li>图片尺寸处理</li>
+<li>代码块复制、显示和隐藏</li>
+<li>草稿和发布<a id="more"></a>
+
+</li>
+</ul>
+<h2 id="模板设置"><a href="#模板设置" class="headerlink" title="模板设置"></a>模板设置</h2><p>为了便于创建新文章时更加便利，可以在hexo的<code>scaffolds</code>文件夹内创建模板文件，比如我创建的草稿模板</p>
+<figure class="highlight markdown"><figcaption><span>scaffolds/draft.md</span></figcaption><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: &#123;&#123; title &#125;&#125;</span><br><span class="line">categories: </span><br><span class="line">tags: </span><br><span class="line">date: &#123;&#123; date &#125;&#125;</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+
+<h2 id="文章发布修改时间"><a href="#文章发布修改时间" class="headerlink" title="文章发布修改时间"></a>文章发布修改时间</h2><p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改<code>post_meta</code>，可用于控制信息的显示：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">post_meta:</span></span><br><span class="line">  <span class="attr">item_text:</span> <span class="literal">true</span>  <span class="comment"># 显示文字说明</span></span><br><span class="line">  <span class="attr">created_at:</span> <span class="literal">true</span>  <span class="comment"># 显示文章创建时间</span></span><br><span class="line">  <span class="attr">updated_at:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">false</span>  <span class="comment"># 文章修改时间</span></span><br><span class="line">    <span class="attr">another_day:</span> <span class="literal">false</span>  <span class="comment"># 只有当修改时间和创建时间不是同一天的时候才显示</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="literal">true</span>  <span class="comment"># 分类信息</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="文章字数统计"><a href="#文章字数统计" class="headerlink" title="文章字数统计"></a>文章字数统计</h2><p>该功能由 <a href="https://github.com/theme-next/hexo-symbols-count-time">hexo-symbols-count-time</a> 提供，效果如图：<br><img src="https://image.chingow.cn/images/20190602020607_IyueIG_Screenshot.jpeg?420x" alt="文章统计" title="文章统计"></p>
+<p>在根目录下执行如下命令安装相关依赖：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ npm install hexo-symbols-count-time --save</span><br></pre></td></tr></table></figure>
+
+<p>在 <span id="inline-blue">站点配置文件</span> _config.yml 中添加<code>symbols_count_time</code>配置，这些配置项主要用于控制每项统计信息是否显示：</p>
+<figure class="highlight yaml"><figcaption><span>_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">symbols_count_time:</span></span><br><span class="line">  <span class="attr">symbols:</span> <span class="literal">true</span>         <span class="comment"># 统计单篇文章字数</span></span><br><span class="line">  <span class="attr">time:</span> <span class="literal">true</span>            <span class="comment"># 估算单篇文章阅读时间</span></span><br><span class="line">  <span class="attr">total_symbols:</span> <span class="literal">false</span>  <span class="comment"># 统计站点总字数</span></span><br><span class="line">  <span class="attr">total_time:</span> <span class="literal">false</span>     <span class="comment"># 估算站点总阅读时间</span></span><br></pre></td></tr></table></figure>
+
+<p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中做如下修改，这些配置项主要用于控制统计信息的显示样式：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">symbols_count_time:</span></span><br><span class="line">  <span class="attr">separated_meta:</span> <span class="literal">true</span>  <span class="comment"># 是否换行显示 统计信息</span></span><br><span class="line">  <span class="attr">item_text_post:</span> <span class="literal">true</span>  <span class="comment"># 文章统计信息中是否显示“本文字数/阅读时长”等描述文字</span></span><br><span class="line">  <span class="attr">item_text_total:</span> <span class="literal">false</span>   <span class="comment"># 站点统计信息中是否显示“本文字数/阅读时长”等描述文字</span></span><br><span class="line">  <span class="attr">awl:</span> <span class="number">4</span>  <span class="comment"># Average Word Length：平均字符长度</span></span><br><span class="line">  <span class="attr">wpm:</span> <span class="number">275</span>  <span class="comment"># Words Per Minute：阅读速度</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="文末版权声明"><a href="#文末版权声明" class="headerlink" title="文末版权声明"></a>文末版权声明</h2><p>NexT主题已经内置了版权声明功能，只需开启配置即可，效果如下：<br><img src="https://image.chingow.cn/images/20190602011504_NtvIUD_Screenshot.jpeg?600x" alt="文末版权声明" title="文末版权声明"></p>
+<p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中开启文章底部的版权声明，版权声明默认使用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，用户可以根据自身需要修改 <code>licence</code> 字段变更协议：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">creative_commons:</span></span><br><span class="line">  <span class="attr">license:</span> <span class="string">by-nc-sa</span>  <span class="comment"># 开启版权声明</span></span><br><span class="line">  <span class="attr">sidebar:</span> <span class="literal">true</span> <span class="comment"># 侧边栏</span></span><br><span class="line">  <span class="attr">post:</span> <span class="literal">true</span> <span class="comment"># post文章</span></span><br><span class="line">  <span class="attr">language:</span> <span class="string">zh-CN</span></span><br></pre></td></tr></table></figure>
+
+<p>默认版权声明中只有 <strong>本文作者</strong>、<strong>本文链接</strong>、<strong>版权声明</strong> 三项，如果你想添加更多内容，如 <strong>文章标题</strong> 等，需要先在语言配置文件里补全版权信息文案字段：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/languages/zh-CN.yml</span></figcaption><table><tr><td class="code"><pre><span class="line">copyright:</span><br><span class="line"><span class="addition">+ title : 本文标题</span></span><br><span class="line">  author: 文章作者</span><br><span class="line">  link: 原始链接</span><br><span class="line">  license_title: 许可协议</span><br><span class="line">  license_content: &quot;本文章采用 %s 许可协议，转载请保留原文链接及作者。&quot;</span><br></pre></td></tr></table></figure>
+
+<p>再修改版权声明布局的相关代码：</p>
+<figure class="highlight html"><figcaption><span>themes/next/layout/_partials/post/post-copyright.swig</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">ul</span> <span class="attr">class</span>=<span class="string">&quot;post-copyright&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">li</span> <span class="attr">class</span>=<span class="string">&quot;post-copyright-title&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">strong</span>&gt;</span>&#123;&#123; __(&#x27;post.copyright.title&#x27;) + __(&#x27;symbol.colon&#x27;) &#125;&#125;<span class="tag">&lt;/<span class="name">strong</span>&gt;</span>&#123;#</span><br><span class="line">    #&#125;&#123;&#123; post.title | default(config.title) &#125;&#125;&#123;#</span><br><span class="line">  #&#125;<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">li</span> <span class="attr">class</span>=<span class="string">&quot;post-copyright-author&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">strong</span>&gt;</span>&#123;&#123; __(&#x27;post.copyright.author&#x27;) + __(&#x27;symbol.colon&#x27;) &#125;&#125; <span class="tag">&lt;/<span class="name">strong</span>&gt;</span>&#123;#</span><br><span class="line">  #&#125;&#123;&#123; post.author || author &#125;&#125;&#123;#</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在版权样式文件中添加如下样式：</p>
+<figure class="highlight css"><figcaption><span>themes\next\source\css\_common\components\post\post-copyright.styl</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="selector-class">.swal-overlay</span> &#123;</span><br><span class="line">  <span class="attribute">background-color</span>: transparent;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.copy-success-message</span> &#123;</span><br><span class="line">  <span class="attribute">box-shadow</span>: <span class="number">0px</span> <span class="number">4px</span> <span class="number">12px</span> <span class="built_in">rgba</span>(<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0.15</span>);</span><br><span class="line">  <span class="attribute">border-radius</span>: <span class="number">4px</span>;</span><br><span class="line">  <span class="attribute">width</span>: auto;  </span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">16</span>x <span class="number">0px</span>;</span><br><span class="line">  <span class="attribute">vertical-align</span>: top;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.copy-success-message</span> <span class="selector-class">.swal-content</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0px</span> <span class="number">0px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">10px</span> <span class="number">16px</span>;  </span><br><span class="line">  <span class="attribute">line-height</span>: <span class="number">1em</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.copy-success-message</span> <span class="selector-class">.message-icon</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#52c41a</span>;</span><br><span class="line">  <span class="attribute">margin-right</span>: <span class="number">8px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.copy-success-message</span> <span class="selector-class">.message-content</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">14px</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在实际使用过程中，有些文章是转载别人的文章，文末再出现个人版权声明就不太合适。此时可在Front-Matter中设定变量 <code>copyright</code> 用于控制是否显示版权信息。<br>修改文章布局模板中相关代码，使得只有当主题配置文件中 <code>post_copyright.enable</code> 字段和 <code>page.copyright</code> 字段同时为 <code>true</code> 时才会插入版权声明：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_macro/post.swig</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- &#123;% if theme.post_copyright.enable and not is_index %&#125;</span></span><br><span class="line"><span class="addition">+ &#123;% if theme.post_copyright.enable and page.copyright and not is_index %&#125;</span></span><br><span class="line">    &lt;div&gt;</span><br><span class="line">      &#123;% include &#x27;post-copyright.swig&#x27; with &#123; post: post &#125; %&#125;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &#123;% endif %&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了批量为每篇新文章设定该变量并赋默认值，可以修改草稿模板内容，这样每篇草稿发布为正文后都会默认显示底部版权信息：</p>
+<figure class="highlight diff"><figcaption><span>scaffolds\draft.md</span></figcaption><table><tr><td class="code"><pre><span class="line">  title: &#123;&#123; title &#125;&#125;</span><br><span class="line">  tags:</span><br><span class="line">  categories:</span><br><span class="line"><span class="addition">+ copyright: true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="链接样式"><a href="#链接样式" class="headerlink" title="链接样式"></a>链接样式</h2><p>主题自带的链接样式在hover时是灰色的，颜色不明显。在自定义样式文件中添加样式：</p>
+<figure class="highlight css"><figcaption><span>themes/next/source/css/_custom/custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">$link-color = #2780e3;</span><br><span class="line">$link-hover-color = #1094e8;</span><br><span class="line">$sidebar-link-hover-color = #0593d3;  </span><br><span class="line"></span><br><span class="line">// 普通链接样式</span><br><span class="line"><span class="selector-tag">a</span>, <span class="selector-tag">span</span><span class="selector-class">.exturl</span> &#123;</span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    color: $link-hover-color;</span><br><span class="line">    border-bottom-color: $link-hover-color;</span><br><span class="line">  &#125;</span><br><span class="line">  // For spanned external links.</span><br><span class="line">  <span class="selector-tag">cursor</span>: <span class="selector-tag">pointer</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 侧边栏链接样式</span><br><span class="line"><span class="selector-class">.sidebar</span> <span class="selector-tag">a</span>, <span class="selector-class">.sidebar</span> <span class="selector-tag">span</span><span class="selector-class">.exturl</span>&#123;</span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    color: $sidebar-link-hover-color;</span><br><span class="line">    border-bottom-color: $sidebar-link-hover-color;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 侧边栏目录链接样式</span><br><span class="line"><span class="selector-class">.post-toc</span> <span class="selector-tag">ol</span> <span class="selector-tag">a</span> &#123;</span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    color: $sidebar-link-hover-color;</span><br><span class="line">    border-bottom-color: $sidebar-link-hover-color;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//文章内链接文本样式</span><br><span class="line"><span class="selector-class">.post-body</span> <span class="selector-tag">p</span> <span class="selector-tag">a</span>&#123;</span><br><span class="line">  <span class="attribute">color</span>: $link-color;</span><br><span class="line">  <span class="attribute">text-decoration</span>: none;</span><br><span class="line">  <span class="attribute">border-bottom</span>: none;</span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    color: $link-hover-color;</span><br><span class="line">    <span class="selector-tag">text-decoration</span>: <span class="selector-tag">underline</span>;</span><br><span class="line">    border-bottom-color: $link-hover-color;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 文章内上下一页链接样式</span><br><span class="line"><span class="selector-class">.post-nav-prev</span> <span class="selector-tag">a</span> , <span class="selector-class">.post-nav-next</span> <span class="selector-tag">a</span>&#123;</span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    color: $link-hover-color;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="底部标签添加图标"><a href="#底部标签添加图标" class="headerlink" title="底部标签添加图标"></a>底部标签添加图标</h2><p>默认情况下标签前缀是 <code>#</code> 字符，可以通过修改主题源码将标签的字符前缀改为图标前缀，效果如图：</p>
+<p><img src="https://image.chingow.cn/images/20190602012005_lHglf5_Screenshot.jpeg?140x" alt="底部标签" title="底部标签"></p>
+<p>在文章布局模板中找到文末标签相关代码段，将 <code>#</code> 换成 <code>&lt;i class=&quot;fa fa-tags&quot;&gt;&lt;/i&gt;</code> 即可：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_macro/post.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">  &lt;footer class=&quot;post-footer&quot;&gt;</span><br><span class="line">    &#123;% if post.tags and post.tags.length and not is_index %&#125;</span><br><span class="line">      &lt;div class=&quot;post-tags&quot;&gt;</span><br><span class="line">        &#123;% for tag in post.tags %&#125;</span><br><span class="line"><span class="deletion">-          &lt;a href=&quot;&#123;&#123; url_for(tag.path) &#125;&#125;&quot; rel=&quot;tag&quot;&gt;# &#123;&#123; tag.name &#125;&#125;&lt;/a&gt;</span></span><br><span class="line"><span class="addition">+          &lt;a href=&quot;&#123;&#123; url_for(tag.path) &#125;&#125;&quot; rel=&quot;tag&quot;&gt;&lt;i class=&quot;fa fa-tags&quot;&gt;&lt;/i&gt; &#123;&#123; tag.name &#125;&#125;&lt;/a&gt;</span></span><br><span class="line">        &#123;% endfor %&#125;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    &#123;% endif %&#125;</span><br><span class="line">    ...</span><br><span class="line">  &lt;/footer&gt;</span><br></pre></td></tr></table></figure>
+
+<p>NexT中使用 <a href="https://fontawesome.com/v4.7.0/icons/">FontAwesome</a> 作为图标库，用户可以在 FontAwesome 上找到心仪的图标来替换标签的字符前缀。</p>
+<h2 id="图片尺寸处理"><a href="#图片尺寸处理" class="headerlink" title="图片尺寸处理"></a>图片尺寸处理</h2><div class="note info"><p>本章节受 bobcn 的<a href="https://github.com/bobcn/hexo_resize_image.js">方案</a>，自行重构了代码逻辑。</p>
+</div>
+
+<p>有时候原始图片的尺寸不太合适，想指定图片在文章中的大小，但是 <strong>Markdown</strong> 原生的图片语法在<strong>Hexo</strong>中是无效的，这一点让人很困扰（可能是Hexo的Bug，希望以后的版本能够解决这个问题）。<br>现行的处理办法主要有两种方案，一种是使用html标签</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">width</span>=<span class="string">200</span> <span class="attr">src</span>=<span class="string">&quot;/image/test.jpg&quot;</span> &gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>另一种是 <a href="https://hexo.io/zh-cn/docs/tag-plugins.html">hexo官方文档</a> 推荐的方式</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">&#123;% img [class names] /path/to/image [width] [height] [title text [alt text]] %&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是习惯了 Markdown 的原生语法之后还是觉得这两种都不够简洁高效，用起来多有不便。于是尝试对 Next 主题进行了加强，变相扩展支持了 Markdown 的插图语法：</p>
+<ul>
+<li><p>可指定像素<br>方法是在 URL 后面添加 <code>?&lt;width&gt;x&lt;height&gt;</code>，也可以只指定一个参数，图片会等比例缩放。</p>
+ <figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">![<span class="string">指定像素</span>](<span class="link">/image/test.jpg?200x200</span>)</span><br><span class="line">![<span class="string">仅指定width</span>](<span class="link">/image/test.jpg?200x</span>)</span><br><span class="line">![<span class="string">仅指定height</span>](<span class="link">/image/test.jpg?x200</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可指定缩放比例<br>方法是在 URL 后面添加 <code>?&lt;scale&gt;</code>，等比例缩放图片大小至 %。</p>
+ <figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">![<span class="string">指定比例</span>](<span class="link">/image/test.jpg?40</span>)</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>如何实现这种效果的呢？首先在自定义脚本目录新建用于处理图片尺寸的 <strong>JavaScript</strong> 脚本</p>
+<figure class="highlight js"><figcaption><span>themes/next/source/js/_custom/hexo_resize_image.js</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">set_image_size</span>(<span class="params">image, width, height</span>) </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    image.setAttribute(<span class="string">&quot;width&quot;</span>, width + <span class="string">&quot;px&quot;</span>);</span><br><span class="line">    image.setAttribute(<span class="string">&quot;height&quot;</span>, height + <span class="string">&quot;px&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hexo_resize_image</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> imgs = <span class="built_in">document</span>.getElementsByTagName(<span class="string">&#x27;img&#x27;</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = imgs.length - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> img = imgs[i];</span><br><span class="line">        <span class="keyword">var</span> src = img.getAttribute(<span class="string">&#x27;src&#x27;</span>).toString();</span><br><span class="line">        <span class="keyword">var</span> fields = src.match(<span class="regexp">/\?(\d*x\d*)/</span>);</span><br><span class="line">        <span class="keyword">if</span> (fields &amp;&amp; fields.length &gt; <span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">var</span> values = fields[<span class="number">1</span>].split(<span class="string">&quot;x&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (values.length == <span class="number">2</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> width = values[<span class="number">0</span>];</span><br><span class="line">                <span class="keyword">var</span> height = values[<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!(width.length &amp;&amp; height.length))</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">var</span> n_width = img.naturalWidth;</span><br><span class="line">                    <span class="keyword">var</span> n_height = img.naturalHeight;</span><br><span class="line">                    <span class="keyword">if</span> (width.length &gt; <span class="number">0</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        height = n_height*width/n_width;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (height.length &gt; <span class="number">0</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        width = n_width*height/n_height;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                set_image_size(img, width, height);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        fields = src.match(<span class="regexp">/\?(\d*)/</span>);</span><br><span class="line">        <span class="keyword">if</span> (fields &amp;&amp; fields.length &gt; <span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">var</span> scale = <span class="built_in">parseFloat</span>(fields[<span class="number">1</span>].toString());</span><br><span class="line">            <span class="keyword">var</span> width = scale/<span class="number">100.0</span>*img.naturalWidth;</span><br><span class="line">            <span class="keyword">var</span> height = scale/<span class="number">100.0</span>*img.naturalHeight;</span><br><span class="line">            set_image_size(img, width, height);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">window</span>.onload = hexo_resize_image;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>然后在自定义布局文件最后添加 <strong>JavaScript</strong> 声明</p>
+<figure class="highlight html"><figcaption><span>themes/next/layout/css/_custom/custom.swig</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;/js/custom/hexo_resize_image.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="代码复制"><a href="#代码复制" class="headerlink" title="代码复制"></a>代码复制</h2><p>NexT主题已经内置了代码复制功能，只需开启配置即可，效果如下：<br><img src="https://image.chingow.cn/images/20190602170547_O2y1Oe_Screenshot.jpeg?600x" alt="代码复制" title="代码复制"></p>
+<p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中开启代码复制功能：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">copy_button:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span>  <span class="comment"># 开启代码复制功能</span></span><br><span class="line">  <span class="attr">show_result:</span> <span class="literal">true</span>  <span class="comment"># 显示复制结果</span></span><br></pre></td></tr></table></figure>
+
+<p>搜索的按钮有点移位，在自定义样式文件中调整样式：</p>
+<figure class="highlight css"><figcaption><span>themes\next\source\css\_custom\custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">// 复制按钮样式top调整</span><br><span class="line"><span class="selector-class">.highlight-wrap</span> <span class="selector-class">.copy-btn</span> &#123;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">1px</span> <span class="number">6px</span>;</span><br><span class="line">  <span class="attribute">top</span>: <span class="number">3px</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="代码块显示和隐藏"><a href="#代码块显示和隐藏" class="headerlink" title="代码块显示和隐藏"></a>代码块显示和隐藏</h2><p>— 待完成 —</p>
+<h2 id="草稿和发布"><a href="#草稿和发布" class="headerlink" title="草稿和发布"></a>草稿和发布</h2><p id="div-border-left-blue">一般我们使用` hexo new <title> `来建立文章，这种建立方法会将新文章建立在 **source/_posts** 目录下，当使用 hexo generate 编译文件时，会将其 HTML 结果编译在 public 目录下，之后` hexo server `将会把 public 目录下所有文章发布。</p>
+
+<div class="note danger"><p>这种建立文章方式是有缺点的！写文章的人都知道，一篇文章从创作到发布需要经过多次润色，若我们的文章还在创作润色中，尚未编辑完成，执行 <strong>hexo server</strong> 时也会随着一起发布，这样对读者是不友好的。</p>
+</div>
+<p>Hexo 另外提供 draft 机制，它的原理是新文章将建立在 <strong>source/_drafts</strong> 目录下，因此并不会将其编译到 public 目录下发布，而且提供了很友好的预览功能。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new draft &lt;title&gt;	<span class="comment"># 新建草稿文章</span></span><br><span class="line">$ hexo s --draft	        <span class="comment"># 预览草稿文章</span></span><br></pre></td></tr></table></figure>
+
+<p>将草稿发布为正式文章：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo P &lt;filename&gt;</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>&lt;filename&gt;</code> 为不包含 md 后缀的文章名称。它的原理只是将文章从 source/_drafts 移动到 source/_posts 而已。</p>
+]]></content>
+      <categories>
+        <category>博客</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+NexT(v7.0+) 搭建博客：功能强化</title>
+    <url>/2019/05/19/hexo-function-optimization/</url>
+    <content><![CDATA[<p><img src="https://image.chingow.cn/background/20190602023505_JefG9q_6DE1E34E-037D-4EA6-A8CC-68280E0EAC1D-1264-00000122BCC398FB_tmp.jpeg" alt="Photo in Chongqing Fengjie" title="Photo in Chongqing Fengjie"></p>
+<p>开源的力量让第三方插件的支持越来越多，本文介绍了在如何利用插件来加强网站的功能，主要包括:</p>
+<ul>
+<li>分类时间线</li>
+<li>DaoVoice</li>
+<li>站内搜索</li>
+<li>文章推荐</li>
+<li>Valine评论</li>
+<li>图片灯箱<a id="more"></a>
+
+</li>
+</ul>
+<h2 id="分类时间线"><a href="#分类时间线" class="headerlink" title="分类时间线"></a>分类时间线</h2><p>归档页面的时间线会让文章显示得很有条理，但是分类里却没有，可以通过修改布局自己实现这个时间线功能。</p>
+<p><img src="https://image.chingow.cn/images/20190602012728_SmUFAI_Screenshot.jpeg?400x" alt="分类时间线" title="分类时间线"></p>
+<p>在主题的分类布局文件中添加以下代码：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/category.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">	&#123;% for post in page.posts %&#125;</span><br><span class="line"><span class="addition">+		&#123;# Show year #&#125;</span></span><br><span class="line"><span class="addition">+			&#123;% set year %&#125;</span></span><br><span class="line"><span class="addition">+			&#123;% set post.year = date(post.date, &#x27;YYYY&#x27;) %&#125;</span></span><br><span class="line"><span class="addition">+			&#123;% if post.year !== year %&#125;</span></span><br><span class="line"><span class="addition">+			&#123;% set year = post.year %&#125;</span></span><br><span class="line"><span class="addition">+			&lt;div class=&quot;collection-title&quot;&gt;</span></span><br><span class="line"><span class="addition">+			&lt;h2 class=&quot;archive-year motion-element&quot; id=&quot;archive-year-&#123;&#123; year &#125;&#125;&quot;&gt;&#123;&#123; year &#125;&#125;&lt;/h2&gt;</span></span><br><span class="line"><span class="addition">+			&lt;/div&gt;</span></span><br><span class="line"><span class="addition">+			&#123;% endif %&#125;</span></span><br><span class="line"><span class="addition">+		&#123;# endshow #&#125;</span></span><br><span class="line">		&#123;&#123; post_template.render(post) &#125;&#125;</span><br><span class="line">	&#123;% endfor %&#125;</span><br><span class="line">	</span><br><span class="line">	……</span><br><span class="line">	</span><br><span class="line">&#123;% block sidebar %&#125;</span><br><span class="line">  &#123;&#123; sidebar_template.render(false) &#125;&#125;</span><br><span class="line">&#123;% endblock %&#125;</span><br><span class="line"></span><br><span class="line"><span class="addition">+&#123;% block script_extra %&#125;</span></span><br><span class="line"><span class="addition">+  &#123;% if theme.use_motion %&#125;</span></span><br><span class="line"><span class="addition">+		&lt;script type=&quot;text/javascript&quot; id=&quot;motion.page.archive&quot;&gt;</span></span><br><span class="line"><span class="addition">+			$(&#x27;.archive-year&#x27;).velocity(&#x27;transition.slideLeftIn&#x27;);</span></span><br><span class="line"><span class="addition">+		&lt;/script&gt;</span></span><br><span class="line"><span class="addition">+	&#123;% endif %&#125;</span></span><br><span class="line"><span class="addition">+&#123;% endblock %&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="在线联系DaoVoice"><a href="#在线联系DaoVoice" class="headerlink" title="在线联系DaoVoice"></a>在线联系DaoVoice</h2><p>该功能由 <a href="http://dashboard.daovoice.io/">DaoVoice</a> 插件提供，效果如图：<br><img src="https://image.chingow.cn/images/20190603010423_YeqmzM_Screenshot.jpeg?300x" alt="DaoVoice" title="DaoVoice"></p>
+<p>首先去 <a href="http://dashboard.daovoice.io/get-started?invite_code=3d64b7fd">DaoVoice官网</a> 注册，输入邀请码 3d64b7fd，注册后查看<strong>app_id</strong> 并复制，在 <span id="inline-purple">主题配置文件</span> _config.yml 中添加daovoice的配置：</p>
+<figure class="highlight yaml"><figcaption><span>themes\next\_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment"># Online contact</span></span><br><span class="line"><span class="attr">daovoice:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">daovoice_app_id:</span> &#123;<span class="string">your</span> <span class="string">app_id</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>按照官网开发文档说明里 <strong>应用设置</strong>—&gt;<strong>安装到网站</strong>的设置，在head的布局模板中插入相关 JavaScript 代码：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_partials/head.swig</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="addition">+&#123;% if theme.daovoice %&#125;</span></span><br><span class="line"><span class="addition">+	&lt;script&gt;</span></span><br><span class="line"><span class="addition">+		(function(i,s,o,g,r,a,m)&#123;i[&quot;DaoVoiceObject&quot;]=r;i[r]=i[r]||function()&#123;(i[r].q=i[r].q||[]).push(arguments)&#125;,i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset=&quot;utf-8&quot;;m.parentNode.insertBefore(a,m)&#125;)(window,document,&quot;script&quot;,(&#x27;https:&#x27; == document.location.protocol ? &#x27;https:&#x27; : &#x27;http:&#x27;) + &quot;//widget.daovoice.io/widget/$&#123;your_app_id&#125;.js&quot;,&quot;daovoice&quot;)</span></span><br><span class="line"><span class="addition">+		daovoice(&#x27;init&#x27;, &#123;</span></span><br><span class="line"><span class="addition">+			app_id: &quot;&#123;&#123;theme.daovoice_app_id&#125;&#125;&quot;</span></span><br><span class="line"><span class="addition">+		&#125;);</span></span><br><span class="line"><span class="addition">+		daovoice(&#x27;update&#x27;);</span></span><br><span class="line"><span class="addition">+	&lt;/script&gt;</span></span><br><span class="line"><span class="addition">+&#123;% endif %&#125;</span></span><br><span class="line"></span><br><span class="line">&#123;# Export some HEXO Configurations to Front-End #&#125;</span><br><span class="line">&lt;script id=&quot;hexo.configurations&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>具体样式设计可以在 <strong>应用设置</strong> -&gt; <strong>聊天设置</strong> 后边改。</p>
+<h2 id="站内搜索"><a href="#站内搜索" class="headerlink" title="站内搜索"></a>站内搜索</h2><p>该功能由 <a href="https://github.com/theme-next/hexo-generator-searchdb">hexo-generator-searchdb</a> 提供，效果如图：</p>
+<p><img src="https://image.chingow.cn/images/20190602014351_let2yO_Screenshot.jpeg?650x" alt="站内搜索" title="站内搜索"></p>
+<p>在根目录下执行以下命令安装相关依赖：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ npm install hexo-generator-searchdb --save</span><br></pre></td></tr></table></figure>
+
+<p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改配置<code>local_search</code>：</p>
+<figure class="highlight yaml"><figcaption><span>themes\next\_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">local_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span>		<span class="comment"># 开启站内搜索</span></span><br><span class="line">  <span class="attr">trigger:</span> <span class="string">auto</span>		<span class="comment"># 自动和手动触发</span></span><br><span class="line">  <span class="attr">top_n_per_article:</span> <span class="number">3</span>  <span class="comment"># 每篇文章显示的搜索结果数量</span></span><br><span class="line">  <span class="attr">unescape:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>搜索弹框的页边距有点点挤，在自定义样式文件中添加样式规则来增加页边距：</p>
+<figure class="highlight css"><figcaption><span>themes\next\source\css\_custom\custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">//增加搜索弹窗的页边距</span><br><span class="line"><span class="selector-class">.local-search-popup</span> <span class="selector-id">#local-search-result</span> &#123;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">25px</span> <span class="number">40px</span></span><br><span class="line">  height: <span class="built_in">calc</span>(<span class="number">100%</span> - <span class="number">95px</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="文章推荐"><a href="#文章推荐" class="headerlink" title="文章推荐"></a>文章推荐</h2><p>该功能由 <a href="https://github.com/tea3/hexo-related-popular-posts">hexo-related-popular-posts</a> 插件提供，效果如图：</p>
+<p><img src="https://image.chingow.cn/images/20190602014455_EGjrzz_Screenshot.jpeg?350x%22%E6%96%87%E7%AB%A0%E6%8E%A8%E8%8D%90%22" alt="文章推荐"></p>
+<p>在站点根目录中执行以下命令安装依赖：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ npm install hexo-related-popular-posts --save</span><br></pre></td></tr></table></figure>
+
+<p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中开启相关文章推荐功能：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">related_posts:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">title:</span>  <span class="comment"># custom header, leave empty to use the default one</span></span><br><span class="line">  <span class="attr">display_in_home:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">params:</span></span><br><span class="line">    <span class="attr">maxCount:</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<p>此时会在每篇文章结尾根据标签相关性和内容相关性来推荐相关文章。</p>
+<p>事实上并非每篇文章都需要开启该功能，可在文章 Front-Matter 中设置 <code>related_posts</code> 字段来控制是否在文末显示相关文章，然后修改文章布局模板中相关的判定条件：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_macro/post.swig</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- &#123;% if theme.related_posts.enable and (theme.related_posts.display_in_home or not is_index) %&#125;</span></span><br><span class="line"><span class="addition">+ &#123;% if theme.related_posts.enable and (theme.related_posts.display_in_home or not is_index) and post.related_posts %&#125;</span></span><br><span class="line">    &#123;% include &#x27;post-related.swig&#x27; with &#123; post: post &#125; %&#125;</span><br><span class="line">  &#123;% endif %&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了方便可在草稿模板 scaffolds\draft.md 中统一添加 <code>related_posts</code> 字段默认值：</p>
+<figure class="highlight diff"><figcaption><span>scaffolds/draft.md</span></figcaption><table><tr><td class="code"><pre><span class="line">  title: &#123;&#123; title &#125;&#125;</span><br><span class="line">  tags:</span><br><span class="line">  categories:</span><br><span class="line"><span class="addition">+ related_posts: true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Valine评论"><a href="#Valine评论" class="headerlink" title="Valine评论"></a>Valine评论</h2><p><img src="https://image.chingow.cn/images/20190602015658_Y7Rj8t_Screenshot.jpeg?650x%22Valine%E8%AF%84%E8%AE%BA%22" alt="Valine评论"></p>
+<blockquote>
+<p>Valine 诞生于 2017 年 8 月 7 日，是一款基于 <a href="https://leancloud.cn/">LeanCloud</a> 提供后端数据服务的快速、简洁且高效的无后端评论系统，支持匿名评论、持Markdown、Emoji等都是它的绝对优势，而且 Next 主题也已经内置了 Valine 组件，使用起来非常方便。</p>
+</blockquote>
+<p>首先，在LeanCloud上注册账号并创建应用，设置LeanCloud的信息。</p>
+<p>在 <strong>存储</strong> -&gt; <strong>数据</strong> 中 新建一个名为<code> Counter</code> 的 Class，<code>ACL</code>权限设置为 <strong>无限制</strong>：<br>在 <strong>设置</strong> -&gt; <strong>安全中心</strong> 中添加博客域名到 Web 安全域名中，以保护LeanCloud应用的数据安全。</p>
+<div class="note info"><p>在LeanCloud中的Class可以理解为数据库中的数据表。Counter用于存储记录文章访问量，记录是以url作为唯一依据的，所以根据默认的permalink组成结构，如果你更改了文章的发布日期和标题中的任意一个，都会造成文章阅读数值的清零重计。</p>
+</div>
+
+<p>然后，在 <span id="inline-purple">主题配置文件</span> _config.yml 开启评论功能即可：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">valine:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span>    <span class="comment"># 开启 Valine 评论</span></span><br><span class="line">  <span class="comment"># 设置应用 id 和 key</span></span><br><span class="line">  <span class="attr">appid:</span>  <span class="comment"># your leancloud application appid</span></span><br><span class="line">  <span class="attr">appkey:</span>  <span class="comment"># your leancloud application appkey</span></span><br><span class="line">  <span class="comment"># 关闭提醒与验证</span></span><br><span class="line">  <span class="attr">notify:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">verify:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">placeholder:</span>  <span class="comment"># 文本框默认文字</span></span><br><span class="line">  <span class="attr">avatar:</span> <span class="string">mm</span>  <span class="comment"># gravatar style</span></span><br><span class="line">  <span class="attr">guest_info:</span> <span class="string">nick,mail</span> <span class="comment"># 需要填写的信息字段</span></span><br><span class="line">  <span class="attr">pageSize:</span> <span class="number">10</span>  <span class="comment"># 每页评论数</span></span><br><span class="line">  <span class="attr">language:</span> <span class="string">zh-cn</span> <span class="comment"># language, available values: en, zh-cn</span></span><br><span class="line">  <span class="attr">visitor:</span> <span class="literal">true</span> <span class="comment"># 开启文章阅读次数统计</span></span><br><span class="line">  <span class="attr">comment_count:</span> <span class="literal">false</span> <span class="comment"># 首页是否开启评论数</span></span><br></pre></td></tr></table></figure>
+
+<p>有时候我们并不想在文章标题下显示评论数量，如要隐藏，可在自定义样式文件中添加如下代码：</p>
+<figure class="highlight css"><figcaption><span>themes/next/source/css/_custom/custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">//屏蔽标题下的评论数量</span><br><span class="line"><span class="selector-class">.post-comments-count</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: none;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>评论区会显示评论人的浏览器和操作系统版本号等信息，如果只想要一个干净的评论界面，而没有多余其他的信息，可在自定义样式文件中添加如下代码：</p>
+<figure class="highlight css"><figcaption><span>themes/next/source/css/_custom/custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">//屏蔽评论组件的多余信息</span><br><span class="line"><span class="selector-id">#comments</span> <span class="selector-class">.info</span>, <span class="selector-id">#comments</span> <span class="selector-class">.vsys</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: none;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后，集成评论服务后，所有的页面也会带有评论，包括标签、关于等页面。这里需要在添加字段<code>comments</code>并将值设置为 false 即可。</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: 标签</span><br><span class="line">type: &quot;tags&quot;</span><br><span class="line">comments: false</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+
+<h2 id="图片灯箱"><a href="#图片灯箱" class="headerlink" title="图片灯箱"></a>图片灯箱</h2><p>添加灯箱功能，实现点击图片后放大聚焦图片，并支持幻灯片播放、全屏播放、缩略图、快速分享到社交媒体等，该功能由 <a href="https://github.com/fancyapps/fancybox">fancyBox</a> 提供。</p>
+<p>在根目录下执行以下命令安装相关依赖：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/theme-next-fancybox3 themes/next/<span class="built_in">source</span>/lib/fancybox</span><br></pre></td></tr></table></figure>
+
+<p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中设置 <code>fancybox: true</code>：</p>
+<figure class="highlight yaml"><figcaption><span>themes\next\_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>刷新浏览器即可生效。</p>
+<h2 id="结束语"><a href="#结束语" class="headerlink" title="结束语"></a>结束语</h2><p>文章中大量的优化方案都参照了 <a href="yearito.cn">yearito</a> 的优化精髓，在集成第三方插件或者自定义新功能的过程中尽量做到：</p>
+<ul>
+<li>可以在站点配置 / 主题配置文件中方便快捷的开启 / 关闭插件服务</li>
+<li>可以在语言包 zh-CN.yml 中快速修改页面中的自定义文案，而不是在代码中将文字表述写死</li>
+<li>尽量在自定义样式文件 custom.styl 和自定义布局文件 custom.swig 中添加代码，而非修改主题源码<br>新增文件统一放在 _custom 目录下</li>
+<li>所有以上这些原则，尽管实现起来可能更复杂，需要更多的代码，但都是为了让站点更好维护，更灵活方便。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>博客</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+NexT(v7.0+) 搭建博客：性能优化</title>
+    <url>/2019/05/20/hexo-performance-optimization/</url>
+    <content><![CDATA[<p>在访问很多博客的时候，页面加载和响应速度往往都要上十秒，严重影响用户的体验。<br>本文将探究如何利用常用的方案来进行性能优化，主要包括:</p>
+<ul>
+<li>CDN加速</li>
+<li>Nginx压缩、缓存</li>
+<li>图床</li>
+</ul>
+<a id="more"></a>
+
+<p>首先，可利用 <a href="https://developers.google.com/speed/pagespeed/insights/">Google PageSpeed Insights</a> 帮助分析网页加载速度，根据报告结果和优化建议进行针对性的优化。<br>常见的网站提速方案有：cdn加速，压缩源文件，nginx gzip压缩，减少网站一些不必要的引入，图片大小等。</p>
+<h3 id="CDN加速"><a href="#CDN加速" class="headerlink" title="CDN加速"></a>CDN加速</h3><p>在阅读下文之前，如果你还不知道 CDN 是什么，请先移步<a href="https://baike.baidu.com/item/CDN">百度百科：CDN词条</a> 进行一些了解。<br>在所有静态资源中，对加载速度影响较大且存在大幅优化空间的主要还是「JavaScript 第三方库」脚本，设定成合适的 CDN 地址，此特性可以加速静态资源的加载。<br>对于我 Hexo 博客来说，NexT 主题已经做好了配置，只需添加 CDN 加载源，将其改为从公共 CDN 加载即可。<br>在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改<code>vendors</code>：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment"># Example:</span></span><br><span class="line"><span class="comment"># jquery: //cdn.jsdelivr.net/npm/jquery@2/dist/jquery.min.js</span></span><br><span class="line"><span class="comment"># jquery: //cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js</span></span><br><span class="line"><span class="attr">jquery:</span> <span class="string">//cdn.jsdelivr.net/npm/jquery@2.1.3/dist/jquery.min.js</span></span><br><span class="line"></span><br><span class="line"><span class="string">...</span>  </span><br></pre></td></tr></table></figure>
+
+<p>比较常用的开源项目 CDN 服务商主要有 unpkg、bootcdn、 cdnjs、jsdelivr 和 cloudflare，本站主要使用 jsdelivr 提供的 CDN 加速服务。</p>
+<h3 id="上云"><a href="#上云" class="headerlink" title="上云"></a>上云</h3><div class="note info"><p>国内的 CDN服务 要求网站必须备案，但是有些服务商是不支持备案的，于是云主机就是我们需要的了，可以一键备案直接上云。</p>
+</div>
+
+<p>研究了一下各个云服务的价格，1核1G的云主机一年大概都是500+，不过阿里云针对新用户都有很给力的活动：</p>
+<table>
+<thead>
+<tr>
+<th align="center">产品名称</th>
+<th align="center">性能</th>
+<th align="center">配置</th>
+<th align="center">时长</th>
+<th align="center">原价</th>
+<th>现价</th>
+<th>折扣</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">阿里云t5</td>
+<td align="center"><strong>+20%突发性能</strong></td>
+<td align="center">1核2G内存1M带宽</td>
+<td align="center">一年</td>
+<td align="center">992</td>
+<td>89</td>
+<td>9%</td>
+</tr>
+<tr>
+<td align="center">阿里云t6</td>
+<td align="center"><strong>+10%突发性能</strong></td>
+<td align="center">2核1G内存1M带宽</td>
+<td align="center">一年</td>
+<td align="center">745</td>
+<td>99</td>
+<td>13%</td>
+</tr>
+<tr>
+<td align="center">阿里云t5</td>
+<td align="center"><strong>+20%突发性能</strong></td>
+<td align="center">1核2G内存1M带宽</td>
+<td align="center">三年</td>
+<td align="center">2977</td>
+<td>229</td>
+<td>7%</td>
+</tr>
+<tr>
+<td align="center">阿里云n4</td>
+<td align="center">100%性能</td>
+<td align="center">2核4G内存3M带宽</td>
+<td align="center">一年</td>
+<td align="center">3389</td>
+<td>399</td>
+<td>12%</td>
+</tr>
+<tr>
+<td align="center">阿里云n4</td>
+<td align="center">100%性能</td>
+<td align="center">2核4G内存3M带宽</td>
+<td align="center">两年</td>
+<td align="center">6766</td>
+<td>469</td>
+<td>7%</td>
+</tr>
+<tr>
+<td align="center">阿里云n4</td>
+<td align="center">100%性能</td>
+<td align="center">2核4G内存3M带宽</td>
+<td align="center">三年</td>
+<td align="center">10148</td>
+<td>799</td>
+<td>8%</td>
+</tr>
+<tr>
+<td align="center">阿里云t5</td>
+<td align="center"><strong>+20%突发性能</strong></td>
+<td align="center">2核4G内存1M带宽</td>
+<td align="center">三年</td>
+<td align="center">7236</td>
+<td>639</td>
+<td>9%</td>
+</tr>
+<tr>
+<td align="center">阿里云t5</td>
+<td align="center"><strong>+20%突发性能</strong></td>
+<td align="center">1核1G内存1M带宽（香港）</td>
+<td align="center">一年</td>
+<td align="center">972</td>
+<td>119</td>
+<td>12%</td>
+</tr>
+</tbody></table>
+<p>看起来的话 <a href="https://www.aliyun.com/minisite/goods?userCode=wdpvvh4p&share_source=copy_link">阿里云1核2G的云主机</a> 三年只要229 ，简直太白菜价了。建议一次性买三年的，新用户优惠可是只有这一次。</p>
+<p>Tips：香港主机的优势在于无需备案，且可以访问墙外的网络，要注意正规建站用途。</p>
+<h3 id="Nginx压缩、缓存"><a href="#Nginx压缩、缓存" class="headerlink" title="Nginx压缩、缓存"></a>Nginx压缩、缓存</h3><div class="note info"><p>Nginx 是一个高性能的 Web 服务器，可以适当地分配流量（负载均衡器）、流媒体、动态调整图像大小、缓存内容等等，合理配置可以有效提高网站的响应速度。</p>
+</div>
+
+<h4 id="开启gzip"><a href="#开启gzip" class="headerlink" title="开启gzip"></a>开启gzip</h4><p>gzip压缩页面需要浏览器和服务器双方都支持，实际上就是服务器端压缩，传到浏览器后浏览器解压并解析。<br>修改nginx.conf，在http模块中增加gzip配置：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">#开启gzip压缩;</span><br><span class="line">gzip  on;</span><br><span class="line"></span><br><span class="line">#设置允许压缩的页面最小字节数;</span><br><span class="line">gzip_min_length 1k;</span><br><span class="line"></span><br><span class="line">#设置压缩缓冲区大小，此处设置为4个16K内存作为压缩结果流缓存</span><br><span class="line">gzip_buffers 4 16k;</span><br><span class="line"></span><br><span class="line">#压缩版本</span><br><span class="line">gzip_http_version 1.1;</span><br><span class="line"></span><br><span class="line">#设置压缩比率，最小为1，处理速度快，传输速度慢；9为最大压缩比，处理速度慢，传输速度快;级别越高，压缩就越小</span><br><span class="line">gzip_comp_level 6;</span><br><span class="line"></span><br><span class="line">#制定压缩的类型</span><br><span class="line">gzip_types text/plain application/x-javascript text/css application/xml text/javascript application/javascript application/json image/svg+xml application/x-font-ttf font/opentype image/x-icon;</span><br><span class="line"></span><br><span class="line">#配置禁用gzip条件，支持正则。此处表示ie6及以下不启用gzip（因为ie低版本不支持）</span><br><span class="line">gzip_disable &quot;MSIE [1-6]\.&quot;;</span><br><span class="line"></span><br><span class="line">#选择支持vary header；改选项可以让前端的缓存服务器缓存经过gzip压缩的页面; 这个可以不写</span><br><span class="line">gzip_vary on;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="开启缓存"><a href="#开启缓存" class="headerlink" title="开启缓存"></a>开启缓存</h4><p>修改nginx.conf，在server中配置缓存和失效时间：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">location ~* ^.+\.(ico|gif|jpg|jpeg|png)$ &#123;</span><br><span class="line">    access_log off;</span><br><span class="line">    expires 30d;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location ~* ^.+\.(css|js|txt|xml|swf|wav)$ &#123;</span><br><span class="line">    access_log off;</span><br><span class="line">    expires 24h;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location ~* ^.+\.(html|htm)$ &#123;</span><br><span class="line">     expires 1h;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h3><div class="note info"><p>目前各大云服务商都提供了对象存储服务，如七牛云 QINIU、又拍云 USS、腾讯云 COS、阿里云 OSS 等。我们可以使用这些服务器来存储图片信息，并将其称为图床。</p>
+</div>
+
+<p>使用图床的好处：</p>
+<ul>
+<li>可以减轻服务器的存储压力；</li>
+<li>减轻应为图片带来的额外的流量消耗；</li>
+<li>图床一般都是具有cdn加速的，可以让你的网页变得更快。</li>
+</ul>
+<p>我主要是看中了cdn加速这点，这个对网站的性能提升太重要了。</p>
+<p>常用的云存储服务费用对比：</p>
+<table>
+<thead>
+<tr>
+<th align="center">限定符</th>
+<th align="center">免费存储空间</th>
+<th align="center">免费下载流量</th>
+<th align="center">免费请求</th>
+<th align="center">免费时间</th>
+<th align="center">HTTPS</th>
+<th align="center">CDN</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">微博图床</td>
+<td align="center">无限</td>
+<td align="center">无限</td>
+<td align="center">无限</td>
+<td align="center">永久</td>
+<td align="center"><i class="fa fa-close"/></td>
+<td align="center"><i class="fa fa-check"/></td>
+</tr>
+<tr>
+<td align="center">七牛云</td>
+<td align="center">10G</td>
+<td align="center">10G</td>
+<td align="center">PUT: 10万次 <br/>GET: 100万次</td>
+<td align="center">永久</td>
+<td align="center"><i class="fa fa-check"/></td>
+<td align="center"><i class="fa fa-check"/></td>
+</tr>
+<tr>
+<td align="center">青云QingStor</td>
+<td align="center">30G</td>
+<td align="center">11G</td>
+<td align="center">PUT: 10万次 <br/>GET: 100万次</td>
+<td align="center">12个月</td>
+<td align="center"><i class="fa fa-check"/></td>
+<td align="center"><i class="fa fa-check"/></td>
+</tr>
+<tr>
+<td align="center">又拍云USS</td>
+<td align="center">10G</td>
+<td align="center">15G</td>
+<td align="center">无限</td>
+<td align="center">12个月</td>
+<td align="center"><i class="fa fa-check"/></td>
+<td align="center"><i class="fa fa-check"/></td>
+</tr>
+<tr>
+<td align="center">阿里云OSS</td>
+<td align="center">无</td>
+<td align="center">无</td>
+<td align="center">无</td>
+<td align="center">无</td>
+<td align="center"><i class="fa fa-check"/></td>
+<td align="center"><i class="fa fa-check"/></td>
+</tr>
+<tr>
+<td align="center">腾讯云COS</td>
+<td align="center">50G</td>
+<td align="center">无</td>
+<td align="center">无</td>
+<td align="center">6个月</td>
+<td align="center"><i class="fa fa-check"/></td>
+<td align="center"><i class="fa fa-check"/></td>
+</tr>
+<tr>
+<td align="center">Github</td>
+<td align="center">100G</td>
+<td align="center">无限</td>
+<td align="center">无限</td>
+<td align="center">永久</td>
+<td align="center"><i class="fa fa-check"/></td>
+<td align="center"><i class="fa fa-close"/></td>
+</tr>
+</tbody></table>
+<ul>
+<li>七牛云是专业云服务商，提供比较完备的服务，且免费额度足够个人博客使用。</li>
+<li>七牛云的定位就是 CDN，让你在浏览网页的时候最快的接收到页面中的图片、音频等文件，所以非常适合个人、企业用户用来储存站点资源，且CDN加速也不会产生太多的费用。</li>
+<li>微博图床是匿名图床，如果有一天禁止外链访问的话，图片将全部丢失。想着辛辛苦苦制作的图片有丢失的风险，马上就放弃了。【2019年4月微博图床开启了防盗链，对图片 CDN 添加了引用来源<code>Referer</code>检测，对于非微博站内引用的请求统统拒绝访问】</li>
+<li>GitHub 看起来是个不错的选择，但是网络访问速度不是很理想，随即放弃了。</li>
+<li>阿里云OSS也是个不错的选择，有个9元包年40G存储空间，无限流量。</li>
+</ul>
+<h3 id="七牛云"><a href="#七牛云" class="headerlink" title="七牛云"></a>七牛云</h3><p>综合比较之后：我选择了七牛云的对象存储作为图床(高效、快速、有保障)。<br><img src="https://image.chingow.cn/images/20190610215145_FVk4s5_Screenshot.jpeg" alt="七牛云对象存储" title="七牛云对象存储"></p>
+<h4 id="注册账号并实名认证"><a href="#注册账号并实名认证" class="headerlink" title="注册账号并实名认证"></a>注册账号并实名认证</h4><p>注册 <a href="https://portal.qiniu.com/signup?code=1hjtnnywndb9u">七牛开发者平台</a> 账号，并前往 <strong>个人中心</strong>  -&gt;  <strong>个人信息</strong> 实名认证。</p>
+<h4 id="新建存储空间"><a href="#新建存储空间" class="headerlink" title="新建存储空间"></a>新建存储空间</h4><ul>
+<li><p>进入控制台，打开 <strong>对象存储</strong>  -&gt; <strong>新建存储空间</strong>， 即可创建新的Bucket。<br>【存储区域】：建议选择一个离你较近的CDN<br>【访问控制】：这里必须选择“公开空间”，因为设置为私有空间，图片的外链是无法访问的。</p>
+</li>
+<li><p>进入新创建的存储空间，在 <strong>空间概览</strong>里点击 <strong>自定义域名</strong> 为空间绑定融合cdn加速域名。详细的参数解释可以参考 <a href="https://developer.qiniu.com/fusion/manual/4939/the-domain-name-to-access">官方域名接入文档</a> 。<br><img src="https://image.chingow.cn/images/20190610224405_2DZajr_Screenshot.jpeg" alt="自定义域名" title="自定义域名"><br>【域名类型】：如果没有特殊需求，选择普通域名即可。<br>【加速域名】：建议填写的是，您未在使用的二级或三级域名等，请勿轻易绑定www域名避免影响您的源站服务。<br>【源站配置】：当您为存储空间绑定自定义域名的时候，源站配置默认为七牛云存储空间即可。</p>
+</li>
+<li><p>配置CNAME<br>创建加速域名成功后，七牛云会提供CNAME地址，需要在域名服务提供商处将加速域名指向分配的CNAME地址，配置生效后，即可享受CDN加速服务。根据控制台的引导文档并参考 <a href="https://developer.qiniu.com/fusion/kb/1322/how-to-configure-cname-domain-name">官方配置域名CNAME文档</a> 。</p>
+</li>
+</ul>
+<h4 id="上传文件"><a href="#上传文件" class="headerlink" title="上传文件"></a>上传文件</h4><p>进入新创建的存储空间，在 <strong>内容管理</strong> 中上传、下载、访问、修改资源，这样就可以使用资源的外链了。<br>上传图片文件以后，复制外链连接就可以利用这个链接访问这个图片了。<br><img src="https://image.chingow.cn/images/20190610224604_5uT2oa_Screenshot.jpeg" alt="使用资源外链" title="使用资源外链"></p>
+<h3 id="上传工具"><a href="#上传工具" class="headerlink" title="上传工具"></a>上传工具</h3><p>如果每次都需要在web端点击上传图片，然后复制外链的操作就比较麻烦了，使用工具可以让我们更加方便地上传资源。<br>Mac平台上有多款图床工具，找到了几个优秀的工具，做了个对比：</p>
+<style>
+table th:nth-of-type(2){
+width: 15%;;
+}
+table th:nth-of-type(5){
+width: 15%;
+}
+
+</style>
+
+<table>
+<thead>
+<tr>
+<th align="center">名称</th>
+<th align="center">收费标准</th>
+<th align="center">优点</th>
+<th align="center">缺点</th>
+<th align="center">推荐指数</th>
+<th align="center">下载链接</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">ipic</td>
+<td align="center">60元/年</td>
+<td align="center">剪贴板、压缩、拖拽上传，功能强大，支持多种云服务</td>
+<td align="center">免费版只支持微博图床</td>
+<td align="center"><i class="fa fa-star"/></td>
+<td align="center"><a href="https://itunes.apple.com/cn/app/ipic-markdown-%E5%9B%BE%E5%BA%8A-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E5%B7%A5%E5%85%B7/id1101244278?mt=12">Mac App Store</a></td>
+</tr>
+<tr>
+<td align="center">PicGo</td>
+<td align="center">免费</td>
+<td align="center">链接上传，支持相册管理</td>
+<td align="center">不支持清除上传历史</td>
+<td align="center"><i class="fa fa-star"/> <i class="fa fa-star"/> <i class="fa fa-star-half-o"/></td>
+<td align="center"><a href="https://github.com/Molunerfinn/PicGo/releases">PicGo.dmg</a></td>
+</tr>
+<tr>
+<td align="center">PicUploader</td>
+<td align="center">免费</td>
+<td align="center">压缩上传，多文件、文件夹同时上传</td>
+<td align="center">不支持顶部菜单</td>
+<td align="center"><i class="fa fa-star"/> <i class="fa fa-star"/></td>
+<td align="center"><a href="https://github.com/xiebruce/PicUploader/releases">PicUploader.zip</a></td>
+</tr>
+<tr>
+<td align="center">云存储管理</td>
+<td align="center">免费</td>
+<td align="center">链接上传，可视化相册管理</td>
+<td align="center">上传速度太慢，会卡死（不能忍受(°⌓°;）</td>
+<td align="center"><i class="fa fa-star"/> <i class="fa fa-star"/> <i class="fa fa-star"/></td>
+<td align="center"><a href="https://github.com/willnewii/qiniuClient">云存储管理客户端</a></td>
+</tr>
+<tr>
+<td align="center">cuImage</td>
+<td align="center">免费</td>
+<td align="center">剪贴板、压缩、拖拽上传，与ipic类似</td>
+<td align="center">仅支持七牛云<br/>不支持链接上传</td>
+<td align="center"><i class="fa fa-star"/> <i class="fa fa-star"/> <i class="fa fa-star"/> <i class="fa fa-star"/>  <i class="fa fa-star-half-o"/></td>
+<td align="center"><a href="https://github.com/hulizhen/cuImage/releases">Mac App Store</a></td>
+</tr>
+</tbody></table>
+<p>如果是使用七牛云图床我推荐cuImage，它的功能完善，使用剪贴板、拖曳、甚至是快捷键都可以直接将图片上传到云存储，并直接生成Markdown外链，操作十分简便。</p>
+]]></content>
+      <categories>
+        <category>博客</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>阿里云</tag>
+        <tag>七牛云</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+NexT(v7.0+) 搭建博客：基础安装</title>
+    <url>/2019/04/29/hexo-satrted/</url>
+    <content><![CDATA[<p><img src="https://image.chingow.cn/background/006tNc79gy1g37jxk0kq5j327a0ki0th.jpg" alt="Hexo" title="Hexo"></p>
+<p>关于如何搭建Hexo博客的文章已经有很多人写过了，并且有很多人已经写的很深刻很到位了，为什么还要重复写一遍呢？直到我看到了这位同学的博客 <a href="yearito.cn">yearito</a> <strong>（ ps：本站的建站优化大都参考自这里）</strong> ，我有了说服自己的理由：</p>
+<ul>
+<li>你可以参考别人的技术方案，集众所长，亲自实践，然后融入自己的思考写出一篇新文章</li>
+<li>即使并没有做出创新性的贡献，自己重新归纳一遍也有助于梳理流程，深化理解</li>
+</ul>
+<a id="more"></a>
+<p id="div-border-left-red">现在百度 Google 很方便，动动手指就可以搜索到想要的答案，但是太多人都是**『顺手拈来、过目就忘』**，下次遇到同样的问题再搜索一遍。
+为什么会这样呢？不善于总结，不情愿动手思考，时而久之就会变成所谓的 “代码搬运工” ！<p>
+
+<p>闲话不多说了，我们开始吧！</p>
+<h2 id="安装node-js"><a href="#安装node-js" class="headerlink" title="安装node.js"></a>安装node.js</h2><p>在 <a href="https://nodejs.org/en/download/">官方下载网站</a> 下载源代码，选择最后一项 <code>Source Code</code><br>解压到某一目录, 然后进入此目录,依次执行以下 3 条命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ ./configure</span><br><span class="line">$ make</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
+
+<p>安装完后查看<code>node.js</code>版本，检验是否安装成功</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ node -v</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装hexo"><a href="#安装hexo" class="headerlink" title="安装hexo"></a>安装hexo</h2><p>在命令行中通过 <strong>npm</strong> 来安装 hexo：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<h3 id="本地启动hexo"><a href="#本地启动hexo" class="headerlink" title="本地启动hexo"></a>本地启动hexo</h3><p>创建一个博客目录（例如 <code>/my-blog</code>），在此目录下，执行初始化命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ mkdir -p my-blog</span><br><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ hexo init</span><br></pre></td></tr></table></figure>
+
+<p>执行完毕后，将会生成以下文件结构：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">|-- node_modules       &#x2F;&#x2F;依赖安装目录</span><br><span class="line">|-- scaffolds          &#x2F;&#x2F;模板文件夹，新建的文章将会从此目录下的文件中继承格式</span><br><span class="line">|-- source             &#x2F;&#x2F;资源文件夹，用于放置图片、数据、文章等资源</span><br><span class="line">|   |-- _posts          &#x2F;&#x2F;文章目录</span><br><span class="line">|-- themes             &#x2F;&#x2F;主题文件夹</span><br><span class="line">|   |-- landscape      &#x2F;&#x2F;默认主题</span><br><span class="line">|-- .gitignore         &#x2F;&#x2F;指定不纳入git版本控制的文件</span><br><span class="line">|-- _config.yml        &#x2F;&#x2F;站点配置文件</span><br><span class="line">|-- db.json</span><br><span class="line">|-- package.json</span><br><span class="line">&#96;-- package-lock.json</span><br></pre></td></tr></table></figure>
+
+<p>在根目录下执行如下命令启动<strong>hexo</strong>内置的web容器</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate     <span class="comment"># 生成静态文件</span></span><br><span class="line">$ hexo server       <span class="comment"># 在本地服务器运行</span></span><br></pre></td></tr></table></figure>
+
+<p>在浏览器输入IP地址 <a href="http://localhost:4000/">http://localhost:4000</a>  就可以看到我们熟悉的** Hello Word **了。</p>
+<p><img src="https://image.chingow.cn/images/d7cced3b-950e-6d7b-6edc-dc3058646ddb.png" alt="Hello Word" title="Hello Word"></p>
+<h3 id="常用命令简化和组合"><a href="#常用命令简化和组合" class="headerlink" title="常用命令简化和组合"></a>常用命令简化和组合</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo g    <span class="comment"># 等同于hexo generate</span></span><br><span class="line">$ hexo s    <span class="comment"># 等同于hexo server</span></span><br><span class="line">$ hexo p    <span class="comment"># 等同于hexo port </span></span><br><span class="line">$ hexo d    <span class="comment"># 等同于hexo deploy </span></span><br></pre></td></tr></table></figure>
+
+<p>当本地不想使用默认的4000端口时（比如在服务器上，默认使用80端口），可以使用 port 命令更改启动端口<br>另外，<strong>hexo</strong>支持命令合并，比方说 生成静态文件 → 本地启动80端口，我们可以执行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo s -g -p 80</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装NexT主题"><a href="#安装NexT主题" class="headerlink" title="安装NexT主题"></a>安装NexT主题</h2><p>hexo 安装主题的方式非常简单, 只需几个简单的命令即可。<br>将NexT主题文件拷贝至<strong>themes</strong>目录下，然后修改 <span id="inline-blue">站点配置文件</span> _config.yml 中的 <code>theme</code>字段为<code>next</code>即可。</p>
+<p>cd 到博客的根目录下执行以下命令下载主题文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/hexo-theme-next.git themes/next</span><br><span class="line"></span><br><span class="line">$ vim _config.yml</span><br><span class="line">theme: next</span><br></pre></td></tr></table></figure>
+
+<p>清除 <strong>hexo</strong>缓存，重启服务</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo clean</span><br><span class="line">$ hexo s -g</span><br></pre></td></tr></table></figure>
+
+<p>大部分的设定都能在 <a href="http://theme-next.iissnan.com/getting-started.html">NexT官方文档</a> 里找到, 如主题设定、侧栏、头像、友情链接、打赏等等，在此就不多讲了，照着文档走就行了。</p>
+]]></content>
+      <categories>
+        <category>博客</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MacOS VPN(Cisco IPSec)断线解决办法</title>
+    <url>/2020/05/19/macos-vpn-disconnection-resolve/</url>
+    <content><![CDATA[<p>现在很多VPN客户端都是不支持Mac的，所以更多的时候我们需要使用Mac系统内置的<code>IPsec VPN </code>客户端工具去连接。</p>
+<p>但是在链接 Cisco VPN 服务器后，一般每隔45分钟到一小时就会自动断线，这无疑是令人沮丧的。虽然说这是Mac系统为了电脑的安全性所做的考虑，但是实际使用时可能会很不方便。</p>
+<p>本文章将介绍一种的解决方法来让 VPN 客户端正常连接不断线。</p>
+<a id="more"></a>
+
+<h2 id="方案参考"><a href="#方案参考" class="headerlink" title="方案参考"></a>方案参考</h2><p>本解决方案来自苹果的官方支持社区 <a href="https://discussions.apple.com/thread/3275811?start=0&tstart=0">Apple Support Communities</a></p>
+<h2 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h2><ol>
+<li><p>连接 VPN(Cisco IPSec) ，让系统生成配置文件</p>
+</li>
+<li><p>执行拷贝命令，将配置文件拷贝到/etc/racoon（xxx.xxx 即VPN服务器ip地址）：</p>
+ <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ sudo cp /var/run/racoon/xxx.xxx.xxx.xxx.conf /etc/racoon</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改 racoon 配置文件，使用定制的配置文件：<br>将最后一行注释掉（目的是不使用系统生成配置），修改为使用定制的配置文件，注意行尾的分号：</p>
+ <figure class="highlight diff"><figcaption><span>/etc/racoon/racoon.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- # include &quot;/var/run/racoon/*.conf” ;  </span></span><br><span class="line"><span class="addition">+ include “/etc/racoon/xxx.xxx.xxx.xxx.conf” ;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>修改 IPSec 配置文件（注意使用 sudo 命令）:</p>
+<ul>
+<li><p>取消 dead peer 检测（原来为 20）: </p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  dpd_delay 20; </span></span><br><span class="line"><span class="addition">+  dpd_delay 0;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改请求方式为 claim（重要，原来为 obey）:</p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  proposal_check obey;</span></span><br><span class="line"><span class="addition">+  proposal_check claim;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改请求周期（所有 proposal 中的值，原来为 3600 sec）:</p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- lifetime time 3600 sec; </span></span><br><span class="line"><span class="addition">+ lifetime time 24 hours;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>重新链接 VPN(Cisco IPSec)，即可永不断线。</p>
+</li>
+</ol>
+<div class="note danger"><p>注意：当原来的ip地址发生变化时，会拨号失败。<br>解决方法：将xxx.xxx.xxx.xxx.conf 文件名改为新的ip地址，再执行一次步骤3即可。</p>
+</div>]]></content>
+      <categories>
+        <category>Mac</category>
+      </categories>
+      <tags>
+        <tag>Mac</tag>
+        <tag>VPN</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>App如何识别身份证号码</title>
+    <url>/2019/11/28/idcard-secret/</url>
+    <content><![CDATA[<p>现在的网络中对实名要求越来越高，日常使用App时都会有输入身份证号码进行身份验证的环节。有的时候按照自己身份证的格式随便改下几位数字想蒙混过关，不想直接被系统识别号码错误了，他们是怎么验证的？</p>
+<blockquote>
+<p>实名验证的渠道有很多，比如银行渠道、公安部渠道等，往往都是收费的。在发往这些渠道进行实名验证之前，是不是可以先对身份证的格式正确性进行验证，这样能够适当提高收费验证的成功率，节省成本支出；而且也可以提升用户体验，在用户输入错误时及时反馈而不必等待验证结果的返回。</p>
+</blockquote>
+<p>本文章将实际探究一下身份证号码的校验计算方法以及两代身份证的差异情况。</p>
+<a id="more"></a>
+
+<h3 id="身份号码组成介绍"><a href="#身份号码组成介绍" class="headerlink" title="身份号码组成介绍"></a>身份号码组成介绍</h3><p>根据中华人民共和国国家标准《GB 11643-1999 公民身份号码（Citizen identification number）》，我们的身份证号由18位数字组成，其中前17个数字是本体码（master number），最后一个数字是校验码（check number），校验码是根据本体码的17个数字计算而得的。</p>
+<ul>
+<li><p>前6位是地址码： 表示编码对象常住户口所在县(市、旗、区)的行政区划代码。按《GB/T 2260-2007》的规定执行 ;</p>
+</li>
+<li><p>7到14位是出生日期码：表示编码对象出生的年、月、日，年、月、日代码之间不用分隔符，格式为YYYYMMDD ;</p>
+</li>
+<li><p>15到17位是顺序码： 表示在同一地址码所标识的区域范围内，对同年、同月、同日出生的人编定的顺序号，顺序码的奇数分配给男性，偶数分配给女性 ;</p>
+</li>
+<li><p>18位是校验码： 根据前17位本体码，通过采用ISO订立的《ISO 7064: 1983》中的“MOD 11-2”校验码系统计算出校验码，为 0~9的数字和字母 X 。</p>
+  <figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 18位二代身份证号码的正则表达式</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> Pattern pattern = Pattern.compile(<span class="string">&quot;^\\d&#123;17&#125;[\\d|X]$&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h3 id="15位与18位身份证号码差异"><a href="#15位与18位身份证号码差异" class="headerlink" title="15位与18位身份证号码差异"></a>15位与18位身份证号码差异</h3><p>我们有些人的身份证是一代身份证，只有15位，它跟18位的二代身份证是有些区别的：</p>
+<ul>
+<li>一代身份证出生年月日只有6位，采用YYMMDD格式，其中年份代码仅有2位；（1999年10月开始实行二代18位身份证号码，因此15位身份证号码省略了年份前面的 <code>19XX</code> ）;</li>
+<li>一代身份证是没有最后一位校验码的，安全性会差一些。</li>
+</ul>
+<h3 id="如何计算校验码"><a href="#如何计算校验码" class="headerlink" title="如何计算校验码"></a>如何计算校验码</h3><blockquote>
+<p>身份证号码一共18位，从左向右被依次编号为18、17、16、……、1</p>
+</blockquote>
+<ul>
+<li><p>首先每个位置的数字本体码用 α 表示， 第[i]位置上号码的字符值就是 <strong>αi</strong>，最后第18位校验码的字符就是 <strong>α18</strong> ;</p>
+</li>
+<li><p>为每个位置设置一个加权因子(weight)，用 W 表示，第[i]位置上的加权因子就是 <strong>Wi</strong>，<br>计算公式 <strong>Wi = 2^(i-1) (mod 11)</strong> ，什么意思呢？就是2的i-1次方，再除以11得到余数：</p>
+<ul>
+<li>第一位 W[18] = 2^17%11 = 7 ；</li>
+<li>第二位 W[17] = 2^16%11 = 9 ；</li>
+<li>…… </li>
+<li>以此类推</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 前17位加权因子集合</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span>[] POWER_LIST = <span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">17</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    <span class="comment">// 初始化加权因子 Wi</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">17</span>; i++) &#123;</span><br><span class="line">        <span class="comment">// 计算方法是 2的17-i 次方除以11的余数，公式： Wi = 2^(17-i) (mod 11)</span></span><br><span class="line">        POWER_LIST[i] = (<span class="keyword">int</span>) Math.pow(Double.valueOf(<span class="number">2</span>), Double.valueOf(<span class="number">17</span> - i)) % <span class="number">11</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://image.chingow.cn/images/20191128204604_7eCfe0_Screenshot.png?750x" alt="加权因子" title="加权因子"></p>
+</li>
+<li><p>接下来将17位数字本体码乘以加权因子并求和，并除以11得到最后一个位置的余数 <strong>α1</strong>  <img src="https://image.chingow.cn/images/20191128204004_3dCbe2_Screenshot.png" alt="最后一位位余数计算公式"></p>
+</li>
+<li><p>最后根据校验码码表查得余数对应的校验码：<br><img src="https://image.chingow.cn/images/20191128203840_dHoyl6_Screenshot.png?750x" alt="校验码码表" title="校验码码表"></p>
+<p>  代码的逻辑就是这样：</p>
+  <figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 身份证号码校验码码表</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">char</span>[] PARITY_BIT = &#123;<span class="string">&#x27;1&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;X&#x27;</span>, <span class="string">&#x27;9&#x27;</span>, <span class="string">&#x27;8&#x27;</span>, <span class="string">&#x27;7&#x27;</span>, <span class="string">&#x27;6&#x27;</span>, <span class="string">&#x27;5&#x27;</span>, <span class="string">&#x27;4&#x27;</span>, <span class="string">&#x27;3&#x27;</span>, <span class="string">&#x27;2&#x27;</span>&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 取身份证号码最后一位校验码</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> certNo</span></span><br><span class="line"><span class="comment">* <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">char</span> <span class="title">getCheckCode</span><span class="params">(String certNo)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">char</span>[] cs = certNo.toCharArray();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//校验位数</span></span><br><span class="line">    <span class="keyword">int</span> power = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 取身份证前17位</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">17</span>; i++) &#123;</span><br><span class="line">        power += (cs[i] - <span class="string">&#x27;0&#x27;</span>) * POWER_LIST[i];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> PARITY_BIT[power % <span class="number">11</span>];</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h3 id="一代证与二代证号码转换"><a href="#一代证与二代证号码转换" class="headerlink" title="一代证与二代证号码转换"></a>一代证与二代证号码转换</h3><p>前面讲到了有些人的身份证是15位的一代证，后来可能换成了18位的二代证，这样在不同的系统中就回存在两个身份证号码。我们知道一个身份证号码代表一个人，那么现在两个号码如何都代表这个人呢？</p>
+<div class="note info"><p>我们可以通过身份证号码组合规则以及校验码的计算方法，将一代身份证号码转换为二代证号码，以确保两个号码都能识别出同一个人。</p>
+</div>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 根据15位身份证号码计算出18位身份证号码</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> certNo 身份证号码</span></span><br><span class="line"><span class="comment">* <span class="doctag">@return</span> 15位身份证号转化为18位返回，非15位身份证号原值返回</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">get18Ic</span><span class="params">(String certNo)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (certNo == <span class="keyword">null</span> || certNo.length() != <span class="number">15</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> certNo;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1999年10月开始实行18位身份证号码，故15位身份证号码都是19XX年的</span></span><br><span class="line">    String ic17 = <span class="keyword">new</span> StringBuffer()</span><br><span class="line">            .append(certNo.substring(<span class="number">0</span>, <span class="number">6</span>))</span><br><span class="line">            .append(<span class="string">&quot;19&quot;</span>)</span><br><span class="line">            .append(certNo.substring(<span class="number">6</span>)).toString();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ic17 + getCheckCode(ic17);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="身份证验证工具类"><a href="#身份证验证工具类" class="headerlink" title="身份证验证工具类"></a>身份证验证工具类</h3><p>文末最后附上自己写的 <a href="https://gist.github.com/chingov/9924d2986596020232fabf70785fd981">身份证验证工具类 – Java版</a>，有了这个我们在做身份校验的时候可以先对身份证的格式正确性进行验证而不依赖其它渠道了。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>身份证</tag>
+        <tag>工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+NexT(v7.0+) 搭建博客：主题美化</title>
+    <url>/2019/05/17/hexo-theme-beautifed/</url>
+    <content><![CDATA[<p>本文介绍了在 NexT(v7.0+) 主题的基础上整体布局美化的方案，主要包括:</p>
+<ul>
+<li>Font：字体、动态背景canvas_ribbon</li>
+<li>Top：进度条、Follow me、菜单背景收缩</li>
+<li>Footer：备案显示、运行时间、访客统计</li>
+<li>Sidebar：近期文章、浏览进度、左边显示、目录展开</li>
+</ul>
+<p>大家可以选择喜欢的方案美化自己的博客，当然最好可以再加入点自己的想法改造。</p>
+<a id="more"></a>
+
+<h2 id="Font"><a href="#Font" class="headerlink" title="Font"></a>Font</h2><p>前端的美化，可以做的比较多，比如修改字体、修改背景等等。<br>首先在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改配置<code>font</code>：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">font:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span>  <span class="comment"># 开启前端设置</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="修改字体"><a href="#修改字体" class="headerlink" title="修改字体"></a>修改字体</h3><p>默认的字体是微软雅黑，有点审美疲劳了 (lll￢ω￢)，在浏览其他人网站的时候看到了一种很有科技感的字体 『<strong>Monda</strong>』，感觉还是不错的。如何应用到自己的博客呢？<br>首先，可以从 <a href="https://www.fontyukle.net/cn/1,MONDA">frontyukle</a> 下载字体文件，在服务器上安装。<br>然后在 <span id="inline-purple">主题配置文件</span> _config.yml 中的修改全局字体配置：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line">global:</span><br><span class="line"><span class="deletion">- family: Lato</span></span><br><span class="line"><span class="addition">+ family: Monda   # 设置Monda字体</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="设置三角丝带背景"><a href="#设置三角丝带背景" class="headerlink" title="设置三角丝带背景"></a>设置三角丝带背景</h3><div class="note info"><p>该功能由 Vue 作者 <a href="http://evanyou.me/">尤雨溪</a> 首创。注意：添加动态背景会极大增加页面内存占用及 CPU 消耗。</p>
+</div>
+
+<p>首先，在根目录下执行以下命令安装相关依赖：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/theme-next-canvas-ribbon themes/next/<span class="built_in">source</span>/lib/canvas_ribbon</span><br></pre></td></tr></table></figure>
+
+<p>然后，在 <span id="inline-purple">主题配置文件</span> _config.yml 中的修改配置<code>canvas_ribbon</code>：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">canvas_ribbon:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span>	<span class="comment"># 开启随机三角丝带背景</span></span><br><span class="line">  <span class="attr">size:</span> <span class="number">90</span>	<span class="comment"># 设置丝带宽度</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Top"><a href="#Top" class="headerlink" title="Top"></a>Top</h2><p>顶部我们保持简洁为主，设置主要包括：进度条、Fork、菜单等等。</p>
+<h3 id="加载进度条"><a href="#加载进度条" class="headerlink" title="加载进度条"></a>加载进度条</h3><p>当网络不好的时候会出现白屏等待，此时如果能有加载进度提示将会提高用户操作体验。<br>首先，在根目录下执行以下命令安装相关依赖：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/theme-next-pace themes/next/<span class="built_in">source</span>/lib/pace</span><br></pre></td></tr></table></figure>
+
+<p>然后，修改 <span id="inline-purple">主题配置文件</span> _config.yml 中的配置<code>pace</code> 改为 <code>true</code>，并从上面提供的样式中选择一种填入<code>pace_theme</code>中就可以了。</p>
+<h3 id="右上角的Follow-Github"><a href="#右上角的Follow-Github" class="headerlink" title="右上角的Follow-Github"></a>右上角的Follow-Github</h3><p>如果你想大家在看博客的时候能快速链接到你的Github，不妨设置<strong>Github_banner</strong>，效果图如下：<br><img src="https://image.chingow.cn/images/23aaa7f0-a7e7-b170-deef-a8ffb649a473.png?500x" alt="github_banner" title="github_banner"></p>
+<p>修改 <span id="inline-purple">主题配置文件</span> _config.yml 中的配置<code>github_banner</code>，在<code>permalink</code>里配置自己的github地址：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">github_banner:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">permalink:</span> <span class="string">https://github.com/yourname</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="菜单背景收缩"><a href="#菜单背景收缩" class="headerlink" title="菜单背景收缩"></a>菜单背景收缩</h3><p>在 Muse主题方案中 Header 和 Footer 是没有背景色的，的颜色与内容一致不易区分，而且网站标题的字体不够明显，我做了几个修改</p>
+<ul>
+<li>头部和底部颜色修改</li>
+<li>网站标题加粗和颜色修改</li>
+<li>菜单字体增大显示</li>
+</ul>
+<p>在主题自定义样式文件中添加以下样式：</p>
+<figure class="highlight css"><figcaption><span>themes/next/sources/_custom/custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">//窗口效果相关样式</span><br><span class="line"><span class="selector-class">.sidebar</span> &#123;</span><br><span class="line">  <span class="attribute">box-shadow</span>: none;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 为Header和Footer添加背景色</span><br><span class="line"><span class="selector-id">#header</span>, <span class="selector-id">#footer</span> &#123;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="built_in">rgb</span>(<span class="number">245</span>, <span class="number">245</span>, <span class="number">245</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//防止sidebar和footer同时开启动效时堆叠异常</span><br><span class="line"><span class="selector-id">#sidebar</span>, <span class="selector-tag">header</span> &#123;</span><br><span class="line">  <span class="attribute">z-index</span>: <span class="number">1</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//防止挡住页末文章的阅读全文按钮</span><br><span class="line"><span class="selector-class">.main</span> &#123;</span><br><span class="line">  <span class="attribute">padding-bottom</span>: <span class="number">30px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 加宽菜单间距，放大菜单图标</span><br><span class="line"><span class="selector-id">#menu</span> <span class="selector-class">.menu-item</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0px</span> <span class="number">14px</span>;</span><br><span class="line"></span><br><span class="line">  .fa &#123;</span><br><span class="line">    <span class="selector-tag">font-size</span>: 16<span class="selector-tag">px</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Muse主题下自定义样式</span><br><span class="line">if hexo-config(&#x27;scheme&#x27;) == &quot;Muse&quot; &#123;</span><br><span class="line">  <span class="selector-class">.site-meta</span> &#123;</span><br><span class="line">    .brand &#123;</span><br><span class="line">      <span class="selector-tag">color</span>: <span class="selector-tag">rgb</span>(34, 34, 34);</span><br><span class="line">      <span class="selector-tag">background</span>: <span class="selector-tag">none</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="selector-class">.site-title</span> &#123;</span><br><span class="line">      <span class="attribute">font-size</span>: <span class="number">24px</span>;</span><br><span class="line">      <span class="attribute">font-weight</span>: bold;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>改完才发现顶部菜单的空间太大了，于是调节菜单高度，在自定义布局文件中添加以下代码：</p>
+<figure class="highlight html"><figcaption><span>themes/next/layout/_custom/custom.swig</span></figcaption><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">&#123;# 页面加载时header高度收缩动效 #&#125;</span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">  $(<span class="built_in">document</span>).ready(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">    $(<span class="string">&quot;.header-inner&quot;</span>).animate(&#123;<span class="attr">padding</span>: <span class="string">&quot;25px 0 25px&quot;</span>&#125;, <span class="number">1000</span>);</span></span><br><span class="line">  &#125;);</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果 custom.swig 文件不存在，需要手动新建并在布局页面中 body 末尾引入：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_layout.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">    ...</span><br><span class="line">  &#123;% include &#x27;_third-party/copy-code.swig&#x27; %&#125;</span><br><span class="line">  &#123;% include &#x27;_third-party/chatra.swig&#x27; %&#125;</span><br><span class="line">  &#123;% include &#x27;_third-party/tidio.swig&#x27; %&#125;</span><br><span class="line"></span><br><span class="line"><span class="addition">+  &#123;% include &#x27;_custom/custom.swig&#x27; %&#125;</span></span><br><span class="line">&lt;/body&gt;</span><br></pre></td></tr></table></figure>
+
+<p>调节移动端显示的高度</p>
+<figure class="highlight diff"><figcaption><span>themes/next/source/css/_schemes/Muse/_menu.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">mobile() &#123;</span><br><span class="line">  position: absolute;</span><br><span class="line">  left: 0;</span><br><span class="line"><span class="deletion">-  top: 52px;</span></span><br><span class="line"><span class="addition">+  top: 95px;</span></span><br><span class="line">  margin: 0;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Footer"><a href="#Footer" class="headerlink" title="Footer"></a>Footer</h2><p>底部设置的可完性就比较多了，建站信息、备案信息、以及访客和统计信息等信息都可以个性化定制。</p>
+<h3 id="ICP备案和公安备案"><a href="#ICP备案和公安备案" class="headerlink" title="ICP备案和公安备案"></a>ICP备案和公安备案</h3><p>我们的网站已经有备案号了，但是应该如何添加备案号到博客最下面呢？<br>首先，在 <span id="inline-purple">主题配置文件</span> _config.yml 中的配置添加备案配置：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"> # 这里打开备案信息，填写ICP备案号</span><br><span class="line">   beian:</span><br><span class="line">    enable: true</span><br><span class="line">    icp: 鄂ICP证18014719号</span><br><span class="line"></span><br><span class="line"> # 这里是新加的内容，填写公安备案信息</span><br><span class="line"><span class="addition">+  gongan:</span></span><br><span class="line"><span class="addition">+    enable: true</span></span><br><span class="line"><span class="addition">+    local: 鄂</span></span><br><span class="line"><span class="addition">+    num: 42011102003178</span></span><br></pre></td></tr></table></figure>
+
+<p>然后，在语言配置文件里，添加表述文案<code>beian</code>：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/languages/zh-CN.yml</span></figcaption><table><tr><td class="code"><pre><span class="line">footer:</span><br><span class="line"><span class="addition">+   beian: </span></span><br><span class="line"><span class="addition">+    gongan: 公网安备%s号</span></span><br></pre></td></tr></table></figure>
+
+<p>接下来，删除原有的布局文件中备案样式的代码：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_partials/footer.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">  #&#125;&#123;% set current = date(Date.now(), &quot;YYYY&quot;) %&#125;&#123;#</span><br><span class="line"><span class="deletion">- #&#125;&#123;% if theme.footer.beian.enable %&#125;&#123;#</span></span><br><span class="line"><span class="deletion">- #&#125;  &#123;&#123; next_url(&#x27;http://www.beian.miit.gov.cn&#x27;, theme.footer.beian.icp + &#x27; &#x27;) &#125;&#125;&#123;#</span></span><br><span class="line"><span class="deletion">- #&#125;&#123;% endif %&#125;&#123;#</span></span><br><span class="line">  #&#125;&amp;copy; &#123;% if theme.footer.since and theme.footer.since != current %&#125;&#123;&#123; theme.footer.since &#125;&#125; – &#123;% endif %&#125;&#123;#</span><br><span class="line">  ...</span><br><span class="line">  &lt;span class=&quot;author&quot; itemprop=&quot;copyrightHolder&quot;&gt;&#123;&#123; theme.footer.copyright || author &#125;&#125;&lt;/span&gt;</span><br><span class="line"></span><br><span class="line"><span class="addition">+  &lt;span class=&quot;post-meta-divider footer-ages-icon&quot;&gt; | &lt;/span&gt;</span></span><br><span class="line"></span><br><span class="line">  &#123;% if config.symbols_count_time.total_symbols %&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后，在主题布局文件中添加我们自定义的备案样式：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_layout.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">  &lt;div class=&quot;footer-inner&quot;&gt;</span><br><span class="line">    &#123;&#123; partial(&#x27;_partials/footer.swig&#x27;, &#123;&#125;, &#123;cache: theme.cache.enable&#125;) &#125;&#125;</span><br><span class="line">    &#123;% include &#x27;_third-party/analytics/analytics-with-widget.swig&#x27; %&#125;</span><br><span class="line"><span class="addition">+        &lt;div class=&quot;footer-custom&quot;&gt;</span></span><br><span class="line"><span class="addition">+            &#123;% if theme.footer.beian.enable %&#125;&#123;#</span></span><br><span class="line"><span class="addition">+          #&#125;&#123;&#123; next_url(&#x27;http://www.beian.miit.gov.cn&#x27;, theme.footer.beian.icp + &#x27; &#x27;) &#125;&#125;&#123;#</span></span><br><span class="line"><span class="addition">+          #&#125;&#123;% endif %&#125;</span></span><br><span class="line"><span class="addition">+          &#123;% if theme.footer.beian.enable and theme.footer.gongan.enable %&#125;</span></span><br><span class="line"><span class="addition">+            &lt;span class=&quot;post-meta-divider&quot;&gt;|&lt;/span&gt;</span></span><br><span class="line"><span class="addition">+          &#123;% endif %&#125;</span></span><br><span class="line"><span class="addition">+          &#123;% if theme.footer.gongan.enable %&#125;&#123;#</span></span><br><span class="line"><span class="addition">+          #&#125; &lt;span style=&quot;padding-left:25px;background:url(/images/beian.png) no-repeat left center&quot; rel=&quot;nofollow&quot;&gt;&#123;#</span></span><br><span class="line"><span class="addition">+          #&#125; &#123;&#123; theme.footer.gongan.local&#125;&#125;&#123;&#123;__(&#x27;footer.beian.gongan&#x27;, next_url(&#x27;http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=&#x27;+theme.footer.gongan.num, theme.footer.gongan.num )) &#125;&#125;&#123;#</span></span><br><span class="line"><span class="addition">+          #&#125;&#123;% endif %&#125;</span></span><br><span class="line"><span class="addition">+        &lt;/div&gt;</span></span><br><span class="line">    &#123;% block footer %&#125;&#123;% endblock %&#125;</span><br><span class="line">  &lt;/div&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="网站的建站时间"><a href="#网站的建站时间" class="headerlink" title="网站的建站时间"></a>网站的建站时间</h3><p>NexT主题已经内置了添加建站时间。在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改配置<code>since</code> ：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="comment"># Specify the date when the site was setup. If not defined, current year will be used.</span></span><br><span class="line">  <span class="attr">since:</span> <span class="number">2018</span>  <span class="comment"># 修改建站时间</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># Icon between year and copyright info.</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="comment"># `heart` is recommended with animation in red (#ff0000).</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">heart</span>  <span class="comment"># 改成心型图标</span></span><br><span class="line">    <span class="comment"># Change the color of icon, using Hex Code.</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#ff0000&quot;</span> <span class="comment"># 改成红色图标</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="网站的运行时间"><a href="#网站的运行时间" class="headerlink" title="网站的运行时间"></a>网站的运行时间</h3><div class="note info"><p>本章节受 <a href="http://yearito.cn/posts/hexo-advanced-settings.html">Yearito’s Blog | 站点运行时间统计 </a> 的启发，自行重构了代码逻辑。</p>
+</div>
+
+<p>接下来我们显示网站的运行时间，在这里我做了一些个性化文案，可供大家参考：<br><img src="https://image.chingow.cn/images/00c3834a-cf72-22a3-cd7c-6486649fd648.png?550x" alt="网站建站运行时间" title="网站建站运行时间"></p>
+<p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中的添加 <code>ages</code>配置：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">ages:</span> <span class="comment"># site running time</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">birthday:</span> <span class="number">20190419</span>    <span class="comment"># 网站运行时间</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#1094e8&quot;</span>  </span><br></pre></td></tr></table></figure>
+
+<p>在语言配置文件里，添加表述文案<code>age</code>：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/languages/zh-CN.yml</span></figcaption><table><tr><td class="code"><pre><span class="line">footer:</span><br><span class="line"><span class="addition">+   age: 我已在此等候你</span></span><br></pre></td></tr></table></figure>
+
+<p>在主题自定义布局文件中添加以下代码：</p>
+<figure class="highlight html"><figcaption><span>themes/next/layout/_custom/custom.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">&#123;# 页脚站点运行时间统计 #&#125;</span><br><span class="line">  &#123;% if theme.footer.ages.enable %&#125;</span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;https://cdn.jsdelivr.net/npm/moment@2.22.2/moment.min.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;https://cdn.jsdelivr.net/npm/moment-precise-range-plugin@1.3.0/moment-precise-range.min.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">      <span class="function"><span class="keyword">function</span> <span class="title">timer</span>(<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="handlebars"><span class="xml">        var ages = moment.preciseDiff(moment(),moment(</span><span class="template-variable">&#123;&#123; <span class="name">theme.footer.ages.birthday</span> &#125;&#125;</span><span class="xml">,&quot;YYYYMMDD&quot;));</span></span></span><br><span class="line"><span class="javascript">        <span class="comment">//去除时分秒信息</span></span></span><br><span class="line"><span class="javascript">        ages = ages.replace(<span class="regexp">/\s?\d&#123;0,2&#125;\s+hours?/</span>, <span class="string">&quot;&quot;</span>);</span></span><br><span class="line"><span class="javascript">        ages = ages.replace(<span class="regexp">/\s?\d&#123;0,2&#125;\s+minutes?/</span>, <span class="string">&quot;&quot;</span>);</span></span><br><span class="line"><span class="javascript">        ages = ages.replace(<span class="regexp">/\s?\d&#123;0,2&#125;\s+seconds?/</span>, <span class="string">&quot;&quot;</span>);</span></span><br><span class="line"><span class="javascript">        <span class="comment">//将年月日转换为中文</span></span></span><br><span class="line"><span class="javascript">        ages = ages.replace(<span class="regexp">/years?/</span>, <span class="string">&quot;年&quot;</span>);</span></span><br><span class="line"><span class="javascript">        ages = ages.replace(<span class="regexp">/months?/</span>, <span class="string">&quot;月&quot;</span>);</span></span><br><span class="line"><span class="javascript">        ages = ages.replace(<span class="regexp">/days?/</span>, <span class="string">&quot;天&quot;</span>);</span></span><br><span class="line"><span class="handlebars"><span class="xml">        ages = ages.replace(/\d+/g, &#x27;<span class="tag">&lt;<span class="name">span</span> <span class="attr">style</span>=<span class="string">&quot;color:</span></span></span><span class="template-variable">&#123;&#123; <span class="name">theme.footer.ages.color</span> &#125;&#125;</span><span class="xml"><span class="tag"><span class="string">&quot;</span>&gt;</span>$&amp;<span class="tag">&lt;/<span class="name">span</span>&gt;</span>&#x27;);</span></span></span><br><span class="line"><span class="handlebars"><span class="xml">        span.innerHTML = `</span><span class="template-variable">&#123;&#123; <span class="name">__</span>(<span class="name">&#x27;footer.age&#x27;</span>)&#125;&#125;</span><span class="xml"> $&#123;ages&#125;`;</span></span></span><br><span class="line">      &#125;</span><br><span class="line"><span class="javascript">      <span class="keyword">var</span> span = <span class="built_in">document</span>.createElement(<span class="string">&quot;span&quot;</span>);</span></span><br><span class="line"><span class="javascript">      <span class="comment">//插入到agesicon之后</span></span></span><br><span class="line"><span class="javascript">      <span class="keyword">var</span> agesicon = <span class="built_in">document</span>.querySelector(<span class="string">&quot;.footer-ages-icon&quot;</span>);</span></span><br><span class="line"><span class="javascript">      <span class="built_in">document</span>.querySelector(<span class="string">&quot;.copyright&quot;</span>).insertBefore(span, agesicon.nextSibling);</span></span><br><span class="line">      timer();</span><br><span class="line">    <span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  &#123;% endif %&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="添加访客统计"><a href="#添加访客统计" class="headerlink" title="添加访客统计"></a>添加访客统计</h3><p>该功能由 <a href="http://ibruce.info/2015/04/04/busuanzi/">不蒜子</a> 提供。UV：独立访客数，PV：网站浏览量，访客数和浏览量的区别在于一个用户连续点击n篇文章，会记录n次浏览量，但只记录一次访客数，效果如图：<br><img src="https://image.chingow.cn/images/0298aada-faa2-1f09-f68a-e0382168a5ed.png?550x" alt="网站访客统计" title="网站访客统计"></p>
+<div class="note info"><p>由于不蒜子是基于域名来进行统计计算的，所以通过 localhost:4000 端口访问的时候统计数据UV和PV都会异常的大，属于正常现象。</p>
+</div>
+
+<p>首先，在 <span id="inline-purple">主题配置文件</span> _config.yml 中打开不蒜子功能：</p>
+<figure class="highlight yaml"><figcaption><span>themes\next\_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">busuanzi_count:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">total_visitors:</span> <span class="literal">true</span>   <span class="comment"># 访客数</span></span><br><span class="line">  <span class="attr">total_visitors_icon:</span> <span class="string">user</span></span><br><span class="line">  <span class="attr">total_views:</span> <span class="literal">true</span>   <span class="comment"># 访问量</span></span><br></pre></td></tr></table></figure>
+
+<p>然后，在语言配置文件里，修改个性化表述文案：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/languages/zh-CN.yml</span></figcaption><table><tr><td class="code"><pre><span class="line">footer:</span><br><span class="line"><span class="deletion">- total_views: 总访问量</span></span><br><span class="line"><span class="deletion">- total_visitors: 总访客量</span></span><br><span class="line"><span class="addition">+ total_views: &quot;历经 %s 次回眸才与你相遇&quot;</span></span><br><span class="line"><span class="addition">+ total_visitors: &quot;我的第 %s 位朋友，&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>最后，修改不蒜子模板文件：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_third-party/analytics/busuanzi-counter.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">&lt;div class=&quot;busuanzi-count&quot;&gt;</span><br><span class="line">  &lt;script async src=&quot;https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js&quot;&gt;&lt;/script&gt;</span><br><span class="line"></span><br><span class="line"><span class="addition">+  &#123;% if theme.busuanzi_count.enable %&#125;</span></span><br><span class="line"><span class="addition">+  &lt;script async src=&quot;https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js&quot;&gt;&lt;/script&gt;</span></span><br><span class="line"><span class="addition">+</span></span><br><span class="line">    &#123;% if theme.busuanzi_count.total_visitors %&#125;</span><br><span class="line"><span class="deletion">-    &lt;span class=&quot;post-meta-item-icon&quot;&gt;</span></span><br><span class="line"><span class="deletion">-      &lt;i class=&quot;fa fa-&#123;&#123; theme.busuanzi_count.total_visitors_icon &#125;&#125;&quot;&gt;&lt;/i&gt;</span></span><br><span class="line"><span class="deletion">-    &lt;/span&gt;</span></span><br><span class="line"><span class="deletion">-    &lt;span class=&quot;site-uv&quot; title=&quot;&#123;&#123; __(&#x27;footer.total_visitors&#x27;) &#125;&#125;&quot;&gt;</span></span><br><span class="line"><span class="deletion">-      &lt;span class=&quot;busuanzi-value&quot; id=&quot;busuanzi_value_site_uv&quot;&gt;&lt;/span&gt;</span></span><br><span class="line"><span class="addition">+       &lt;span class=&quot;site-uv&quot;&gt;</span></span><br><span class="line"><span class="addition">+       &#123;&#123; __(&#x27;footer.total_visitors&#x27;, &#x27;&lt;span class=&quot;busuanzi-value&quot; id=&quot;busuanzi_value_site_uv&quot;&gt;&lt;/span&gt;&#x27;) &#125;&#125;</span></span><br><span class="line">    &lt;/span&gt;</span><br><span class="line">    &#123;% endif %&#125;</span><br><span class="line"></span><br><span class="line"><span class="deletion">-   &#123;% if theme.busuanzi_count.total_visitors and theme.busuanzi_count.total_views %&#125;</span></span><br><span class="line"><span class="deletion">-     &lt;span class=&quot;post-meta-divider&quot;&gt;|&lt;/span&gt;</span></span><br><span class="line"><span class="deletion">-   &#123;% endif %&#125;</span></span><br><span class="line"><span class="deletion">-</span></span><br><span class="line">    &#123;% if theme.busuanzi_count.total_views %&#125;</span><br><span class="line"><span class="deletion">-     &lt;span class=&quot;post-meta-item-icon&quot;&gt;</span></span><br><span class="line"><span class="deletion">-       &lt;i class=&quot;fa fa-&#123;&#123; theme.busuanzi_count.total_views_icon &#125;&#125;&quot;&gt;&lt;/i&gt;</span></span><br><span class="line"><span class="deletion">-     &lt;/span&gt;</span></span><br><span class="line"><span class="deletion">-     &lt;span class=&quot;site-pv&quot; title=&quot;&#123;&#123; __(&#x27;footer.total_views&#x27;) &#125;&#125;&quot;&gt;</span></span><br><span class="line"><span class="deletion">-       &lt;span class=&quot;busuanzi-value&quot; id=&quot;busuanzi_value_site_pv&quot;&gt;&lt;/span&gt;</span></span><br><span class="line"><span class="addition">+     &lt;span class=&quot;site-pv&quot;&gt;</span></span><br><span class="line"><span class="addition">+       &#123;&#123; __(&#x27;footer.total_views&#x27;, &#x27;&lt;span class=&quot;busuanzi-value&quot; id=&quot;busuanzi_value_site_pv&quot;&gt;&lt;/span&gt;&#x27;) &#125;&#125;</span></span><br><span class="line">      &lt;/span&gt;</span><br><span class="line">    &#123;% endif %&#125;</span><br><span class="line"><span class="addition">+ &#123;% endif %&#125;</span></span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure>
+
+<p>在自定义样式文件中添加如下样式：</p>
+<figure class="highlight css"><figcaption><span>themes/next/source/css/_custom/custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">//修改不蒜子数据颜色</span><br><span class="line"><span class="selector-class">.busuanzi-value</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#1890ff</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Sidebar"><a href="#Sidebar" class="headerlink" title="Sidebar"></a>Sidebar</h2><p>侧边栏里的信息有很多，比如站点信息、RSS、链接信息、目录信息等等，我们要有选择性的显示。尽量保持Next主题的宗旨 – <span id="inline-green">简洁</span></p>
+<h3 id="显示近期文章"><a href="#显示近期文章" class="headerlink" title="显示近期文章"></a>显示近期文章</h3><p>当你新写了一些好文章，想尽快告诉大家要怎么办呢？放在侧边栏里那是最合适不过了～(￣▽￣～)(～￣▽￣)～ 比如这样：<br><img src="https://image.chingow.cn/images/f2840b83-ff46-dd56-0aa1-1af57c5e5dad.png" alt="近期文章" title="近期文章"></p>
+<p>首先配置开关和文案，便于随时修改。<br>在 <span id="inline-purple">主题配置文件</span> _config.yml 中添加近期文章<code>recent_posts</code>的配置：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="comment"># 近期文章</span></span><br><span class="line"><span class="attr">recent_posts:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">recent_posts_layout:</span> <span class="string">block</span></span><br></pre></td></tr></table></figure>
+
+<p>在语言配置文件里，添加表述文案<code>recent_posts</code>：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/languages/zh-CN.yml</span></figcaption><table><tr><td class="code"><pre><span class="line">sidebar:</span><br><span class="line"><span class="addition">+   recent_posts: 近期文章</span></span><br></pre></td></tr></table></figure>
+
+<p>在侧边栏原有布局文件中的合适位置添加近期文章显示代码：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/layout/_macro/sidebar.swig</span></figcaption><table><tr><td class="code"><pre><span class="line">  &#123;% if theme.social %&#125;</span><br><span class="line">  ...</span><br><span class="line">  &#123;% endif %&#125;</span><br><span class="line"></span><br><span class="line"><span class="addition">+ &lt;!-- 添加近期文章 --&gt;</span></span><br><span class="line"><span class="addition">+ &#123;% if theme.recent_posts %&#125;</span></span><br><span class="line"><span class="addition">+   &lt;div class=&quot;links-of-blogroll motion-element &#123;&#123; &quot;links-of-blogroll-&quot; + theme.recent_posts_layout  &#125;&#125;&quot;&gt;</span></span><br><span class="line"><span class="addition">+     &lt;div class=&quot;links-of-blogroll-title&quot;&gt;</span></span><br><span class="line"><span class="addition">+       &lt;!-- modify icon to fire by szw --&gt;</span></span><br><span class="line"><span class="addition">+       &lt;i class=&quot;fa fa-history fa-&#123;&#123; theme.recent_posts_icon | lower &#125;&#125;&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;</span></span><br><span class="line"><span class="addition">+       &#123;&#123; __(&#x27;sidebar.recent_posts&#x27;) &#125;&#125;</span></span><br><span class="line"><span class="addition">+     &lt;/div&gt;</span></span><br><span class="line"><span class="addition">+     &lt;ul class=&quot;links-of-blogroll-list&quot;&gt;</span></span><br><span class="line"><span class="addition">+       &#123;% set posts = site.posts.sort(&#x27;-date&#x27;) %&#125;</span></span><br><span class="line"><span class="addition">+       &#123;% for post in posts.slice(&#x27;0&#x27;, &#x27;5&#x27;) %&#125;</span></span><br><span class="line"><span class="addition">+         &lt;li&gt;</span></span><br><span class="line"><span class="addition">+           &lt;a href=&quot;&#123;&#123; url_for(post.path) &#125;&#125;&quot; title=&quot;&#123;&#123; post.title &#125;&#125;&quot; target=&quot;_blank&quot;&gt;&#123;&#123; post.title &#125;&#125;&lt;/a&gt;</span></span><br><span class="line"><span class="addition">+         &lt;/li&gt;</span></span><br><span class="line"><span class="addition">+       &#123;% endfor %&#125;</span></span><br><span class="line"><span class="addition">+     &lt;/ul&gt;</span></span><br><span class="line"><span class="addition">+   &lt;/div&gt;</span></span><br><span class="line"><span class="addition">+ &#123;% endif %&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="显示当前浏览进度"><a href="#显示当前浏览进度" class="headerlink" title="显示当前浏览进度"></a>显示当前浏览进度</h3><p>在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改<code>back2top</code>的<code>scrollpercent</code>：</p>
+<figure class="highlight yaml"><figcaption><span>themes\next\_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">back2top:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">sidebar:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">scrollpercent:</span> <span class="literal">true</span>  <span class="comment">#  浏览页面的时候显示当前浏览进度  </span></span><br></pre></td></tr></table></figure>
+
+<p>配置完之后，发现这个按钮颜色有点单调，让它炫酷点的吧 &lt;(￣ˇ￣)/ ，每次刷新可以生成不同的颜色，在自定义样式文件中添加如下样式：</p>
+<figure class="highlight css"><figcaption><span>themes/next/source/css/_custom/custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">// 回到顶部样式</span><br><span class="line"><span class="selector-class">.back-to-top</span> <span class="selector-class">.fa-arrow-up</span><span class="selector-pseudo">:before</span>&#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="built_in">rgb</span>(random-color(<span class="number">0</span>, <span class="number">255</span>) - <span class="number">50%</span>, <span class="built_in">random-color</span>(<span class="number">0</span>, <span class="number">255</span>) - <span class="number">50%</span>, <span class="built_in">random-color</span>(<span class="number">0</span>, <span class="number">255</span>) - <span class="number">50%</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="侧边栏移到左边"><a href="#侧边栏移到左边" class="headerlink" title="侧边栏移到左边"></a>侧边栏移到左边</h3><p>用惯了<strong>Ofice</strong>的人习惯导航菜单在左边的格式，如何把侧边栏放在左侧呢？<br>NexT 主题中 Pisces 和 Gemini 支持通过主题配置文件来将侧边栏置于左侧或右侧。<br>在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改配置<code>sidebar</code> ：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">sidebar:</span></span><br><span class="line"><span class="comment"># Sidebar Position, available values: left | right (only for Pisces | Gemini).</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">left</span>   <span class="comment"># 调整侧边栏显示位置，仅支持 Pisces 和 Gemini 主题</span></span><br></pre></td></tr></table></figure>
+
+<p>而 Muse 和 Mist 则需要深度修改源码才能实现改变侧边栏位置：</p>
+<figure class="highlight css"><figcaption><span>themes/next/source/css/_custom/custom.styl</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="selector-class">.sidebar-toggle</span> &#123;</span><br><span class="line">  <span class="attribute">left</span>: <span class="number">30px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.sidebar</span> &#123;</span><br><span class="line">  <span class="attribute">left</span>: <span class="number">0px</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>修改动效脚本代码：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/source/js/src/motion.js</span></figcaption><table><tr><td class="code"><pre><span class="line">$(document)</span><br><span class="line">  .on(&#x27;sidebar.isShowing&#x27;, function() &#123;</span><br><span class="line">    NexT.utils.isDesktop() &amp;&amp; $(&#x27;body&#x27;).velocity(&#x27;stop&#x27;).velocity(</span><br><span class="line"><span class="deletion">-     &#123;paddingRight: SIDEBAR_WIDTH&#125;,</span></span><br><span class="line"><span class="addition">+     &#123;paddingLeft: SIDEBAR_WIDTH&#125;,</span></span><br><span class="line">      SIDEBAR_DISPLAY_DURATION</span><br><span class="line">    );</span><br><span class="line">  &#125;)</span><br><span class="line">  ...</span><br><span class="line">  hideSidebar: function() &#123;</span><br><span class="line"><span class="deletion">-   NexT.utils.isDesktop() &amp;&amp; $(&#x27;body&#x27;).velocity(&#x27;stop&#x27;).velocity(&#123;paddingRight: 0&#125;);</span></span><br><span class="line"><span class="addition">+   NexT.utils.isDesktop() &amp;&amp; $(&#x27;body&#x27;).velocity(&#x27;stop&#x27;).velocity(&#123;paddingLeft: 0&#125;);</span></span><br><span class="line">    this.sidebarEl.find(&#x27;.motion-element&#x27;).velocity(&#x27;stop&#x27;).css(&#x27;display&#x27;, &#x27;none&#x27;);</span><br><span class="line">    this.sidebarEl.velocity(&#x27;stop&#x27;).velocity(&#123;width: 0&#125;, &#123;display: &#x27;none&#x27;&#125;);</span><br><span class="line"></span><br><span class="line">    sidebarToggleLines.init();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如此以来就可以将侧边栏放置在左边了，但当窗口宽度缩小到991px之后会出现样式错误：侧边栏收缩消失但是页面左侧仍留有空白间距，此时修改如下代码即可：</p>
+<figure class="highlight diff"><figcaption><span>themes/next/source/css/_common/scaffolding/base.styl</span></figcaption><table><tr><td class="code"><pre><span class="line">body &#123;</span><br><span class="line">  position: relative; // Required by scrollspy</span><br><span class="line">  font-family: $font-family-base;</span><br><span class="line">  font-size: $font-size-base;</span><br><span class="line">  line-height: $line-height-base;</span><br><span class="line">  color: $text-color;</span><br><span class="line">  background: $body-bg-color;</span><br><span class="line"></span><br><span class="line"><span class="deletion">- +mobile() &#123; padding-left: 0 !important; &#125;</span></span><br><span class="line"><span class="deletion">- +tablet() &#123; padding-left: 0 !important; &#125;  </span></span><br><span class="line"><span class="addition">+ +mobile() &#123; padding-right: 0 !important; &#125;</span></span><br><span class="line"><span class="addition">+ +tablet() &#123; padding-right: 0 !important; &#125;</span></span><br><span class="line">  +desktop-large() &#123; font-size: $font-size-large; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="侧边栏目录展开"><a href="#侧边栏目录展开" class="headerlink" title="侧边栏目录展开"></a>侧边栏目录展开</h3><p>侧边栏的TOC目录每次滑到哪儿，目录展开到哪。这样查看文章结构就很不方便，如何设置才能让文章目录默认全部都展开？<br>在 <span id="inline-purple">主题配置文件</span> _config.yml 中修改配置<code>toc</code> ：</p>
+<figure class="highlight yaml"><figcaption><span>themes/next/_config.yml</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="attr">toc:</span></span><br><span class="line">  <span class="attr">wrap:</span> <span class="literal">false</span>  <span class="comment">## 如果标题超长，是否换行</span></span><br><span class="line">  <span class="attr">expand_all:</span> <span class="literal">true</span>  <span class="comment">## 侧边栏是否完全展开</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>博客</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+      </tags>
+  </entry>
+</search>
