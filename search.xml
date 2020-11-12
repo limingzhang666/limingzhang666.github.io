@@ -230,6 +230,61 @@
       </tags>
   </entry>
   <entry>
+    <title>Hexo+NexT(v7.0+) 搭建博客：基础安装</title>
+    <url>/2019/04/29/hexo-satrted/</url>
+    <content><![CDATA[<p><img src="https://image.chingow.cn/background/006tNc79gy1g37jxk0kq5j327a0ki0th.jpg" alt="Hexo" title="Hexo"></p>
+<p>关于如何搭建Hexo博客的文章已经有很多人写过了，并且有很多人已经写的很深刻很到位了，为什么还要重复写一遍呢？直到我看到了这位同学的博客 <a href="yearito.cn">yearito</a> <strong>（ ps：本站的建站优化大都参考自这里）</strong> ，我有了说服自己的理由：</p>
+<ul>
+<li>你可以参考别人的技术方案，集众所长，亲自实践，然后融入自己的思考写出一篇新文章</li>
+<li>即使并没有做出创新性的贡献，自己重新归纳一遍也有助于梳理流程，深化理解</li>
+</ul>
+<a id="more"></a>
+<p id="div-border-left-red">现在百度 Google 很方便，动动手指就可以搜索到想要的答案，但是太多人都是**『顺手拈来、过目就忘』**，下次遇到同样的问题再搜索一遍。
+为什么会这样呢？不善于总结，不情愿动手思考，时而久之就会变成所谓的 “代码搬运工” ！<p>
+
+<p>闲话不多说了，我们开始吧！</p>
+<h2 id="安装node-js"><a href="#安装node-js" class="headerlink" title="安装node.js"></a>安装node.js</h2><p>在 <a href="https://nodejs.org/en/download/">官方下载网站</a> 下载源代码，选择最后一项 <code>Source Code</code><br>解压到某一目录, 然后进入此目录,依次执行以下 3 条命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ ./configure</span><br><span class="line">$ make</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
+
+<p>安装完后查看<code>node.js</code>版本，检验是否安装成功</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ node -v</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装hexo"><a href="#安装hexo" class="headerlink" title="安装hexo"></a>安装hexo</h2><p>在命令行中通过 <strong>npm</strong> 来安装 hexo：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<h3 id="本地启动hexo"><a href="#本地启动hexo" class="headerlink" title="本地启动hexo"></a>本地启动hexo</h3><p>创建一个博客目录（例如 <code>/my-blog</code>），在此目录下，执行初始化命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ mkdir -p my-blog</span><br><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ hexo init</span><br></pre></td></tr></table></figure>
+
+<p>执行完毕后，将会生成以下文件结构：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">|-- node_modules       &#x2F;&#x2F;依赖安装目录</span><br><span class="line">|-- scaffolds          &#x2F;&#x2F;模板文件夹，新建的文章将会从此目录下的文件中继承格式</span><br><span class="line">|-- source             &#x2F;&#x2F;资源文件夹，用于放置图片、数据、文章等资源</span><br><span class="line">|   |-- _posts          &#x2F;&#x2F;文章目录</span><br><span class="line">|-- themes             &#x2F;&#x2F;主题文件夹</span><br><span class="line">|   |-- landscape      &#x2F;&#x2F;默认主题</span><br><span class="line">|-- .gitignore         &#x2F;&#x2F;指定不纳入git版本控制的文件</span><br><span class="line">|-- _config.yml        &#x2F;&#x2F;站点配置文件</span><br><span class="line">|-- db.json</span><br><span class="line">|-- package.json</span><br><span class="line">&#96;-- package-lock.json</span><br></pre></td></tr></table></figure>
+
+<p>在根目录下执行如下命令启动<strong>hexo</strong>内置的web容器</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate     <span class="comment"># 生成静态文件</span></span><br><span class="line">$ hexo server       <span class="comment"># 在本地服务器运行</span></span><br></pre></td></tr></table></figure>
+
+<p>在浏览器输入IP地址 <a href="http://localhost:4000/">http://localhost:4000</a>  就可以看到我们熟悉的** Hello Word **了。</p>
+<p><img src="https://image.chingow.cn/images/d7cced3b-950e-6d7b-6edc-dc3058646ddb.png" alt="Hello Word" title="Hello Word"></p>
+<h3 id="常用命令简化和组合"><a href="#常用命令简化和组合" class="headerlink" title="常用命令简化和组合"></a>常用命令简化和组合</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo g    <span class="comment"># 等同于hexo generate</span></span><br><span class="line">$ hexo s    <span class="comment"># 等同于hexo server</span></span><br><span class="line">$ hexo p    <span class="comment"># 等同于hexo port </span></span><br><span class="line">$ hexo d    <span class="comment"># 等同于hexo deploy </span></span><br></pre></td></tr></table></figure>
+
+<p>当本地不想使用默认的4000端口时（比如在服务器上，默认使用80端口），可以使用 port 命令更改启动端口<br>另外，<strong>hexo</strong>支持命令合并，比方说 生成静态文件 → 本地启动80端口，我们可以执行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo s -g -p 80</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装NexT主题"><a href="#安装NexT主题" class="headerlink" title="安装NexT主题"></a>安装NexT主题</h2><p>hexo 安装主题的方式非常简单, 只需几个简单的命令即可。<br>将NexT主题文件拷贝至<strong>themes</strong>目录下，然后修改 <span id="inline-blue">站点配置文件</span> _config.yml 中的 <code>theme</code>字段为<code>next</code>即可。</p>
+<p>cd 到博客的根目录下执行以下命令下载主题文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/hexo-theme-next.git themes/next</span><br><span class="line"></span><br><span class="line">$ vim _config.yml</span><br><span class="line">theme: next</span><br></pre></td></tr></table></figure>
+
+<p>清除 <strong>hexo</strong>缓存，重启服务</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo clean</span><br><span class="line">$ hexo s -g</span><br></pre></td></tr></table></figure>
+
+<p>大部分的设定都能在 <a href="http://theme-next.iissnan.com/getting-started.html">NexT官方文档</a> 里找到, 如主题设定、侧栏、头像、友情链接、打赏等等，在此就不多讲了，照着文档走就行了。</p>
+]]></content>
+      <categories>
+        <category>博客</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Hexo+NexT(v7.0+) 搭建博客：性能优化</title>
     <url>/2019/05/20/hexo-performance-optimization/</url>
     <content><![CDATA[<p>在访问很多博客的时候，页面加载和响应速度往往都要上十秒，严重影响用户的体验。<br>本文将探究如何利用常用的方案来进行性能优化，主要包括:</p>
@@ -526,58 +581,46 @@ width: 15%;
       </tags>
   </entry>
   <entry>
-    <title>Hexo+NexT(v7.0+) 搭建博客：基础安装</title>
-    <url>/2019/04/29/hexo-satrted/</url>
-    <content><![CDATA[<p><img src="https://image.chingow.cn/background/006tNc79gy1g37jxk0kq5j327a0ki0th.jpg" alt="Hexo" title="Hexo"></p>
-<p>关于如何搭建Hexo博客的文章已经有很多人写过了，并且有很多人已经写的很深刻很到位了，为什么还要重复写一遍呢？直到我看到了这位同学的博客 <a href="yearito.cn">yearito</a> <strong>（ ps：本站的建站优化大都参考自这里）</strong> ，我有了说服自己的理由：</p>
-<ul>
-<li>你可以参考别人的技术方案，集众所长，亲自实践，然后融入自己的思考写出一篇新文章</li>
-<li>即使并没有做出创新性的贡献，自己重新归纳一遍也有助于梳理流程，深化理解</li>
-</ul>
+    <title>MacOS VPN(Cisco IPSec)断线解决办法</title>
+    <url>/2020/05/19/macos-vpn-disconnection-resolve/</url>
+    <content><![CDATA[<p>现在很多VPN客户端都是不支持Mac的，所以更多的时候我们需要使用Mac系统内置的<code>IPsec VPN </code>客户端工具去连接。</p>
+<p>但是在链接 Cisco VPN 服务器后，一般每隔45分钟到一小时就会自动断线，这无疑是令人沮丧的。虽然说这是Mac系统为了电脑的安全性所做的考虑，但是实际使用时可能会很不方便。</p>
+<p>本文章将介绍一种的解决方法来让 VPN 客户端正常连接不断线。</p>
 <a id="more"></a>
-<p id="div-border-left-red">现在百度 Google 很方便，动动手指就可以搜索到想要的答案，但是太多人都是**『顺手拈来、过目就忘』**，下次遇到同样的问题再搜索一遍。
-为什么会这样呢？不善于总结，不情愿动手思考，时而久之就会变成所谓的 “代码搬运工” ！<p>
 
-<p>闲话不多说了，我们开始吧！</p>
-<h2 id="安装node-js"><a href="#安装node-js" class="headerlink" title="安装node.js"></a>安装node.js</h2><p>在 <a href="https://nodejs.org/en/download/">官方下载网站</a> 下载源代码，选择最后一项 <code>Source Code</code><br>解压到某一目录, 然后进入此目录,依次执行以下 3 条命令</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ ./configure</span><br><span class="line">$ make</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
-
-<p>安装完后查看<code>node.js</code>版本，检验是否安装成功</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ node -v</span><br></pre></td></tr></table></figure>
-
-<h2 id="安装hexo"><a href="#安装hexo" class="headerlink" title="安装hexo"></a>安装hexo</h2><p>在命令行中通过 <strong>npm</strong> 来安装 hexo：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<h3 id="本地启动hexo"><a href="#本地启动hexo" class="headerlink" title="本地启动hexo"></a>本地启动hexo</h3><p>创建一个博客目录（例如 <code>/my-blog</code>），在此目录下，执行初始化命令</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ mkdir -p my-blog</span><br><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ hexo init</span><br></pre></td></tr></table></figure>
-
-<p>执行完毕后，将会生成以下文件结构：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">|-- node_modules       &#x2F;&#x2F;依赖安装目录</span><br><span class="line">|-- scaffolds          &#x2F;&#x2F;模板文件夹，新建的文章将会从此目录下的文件中继承格式</span><br><span class="line">|-- source             &#x2F;&#x2F;资源文件夹，用于放置图片、数据、文章等资源</span><br><span class="line">|   |-- _posts          &#x2F;&#x2F;文章目录</span><br><span class="line">|-- themes             &#x2F;&#x2F;主题文件夹</span><br><span class="line">|   |-- landscape      &#x2F;&#x2F;默认主题</span><br><span class="line">|-- .gitignore         &#x2F;&#x2F;指定不纳入git版本控制的文件</span><br><span class="line">|-- _config.yml        &#x2F;&#x2F;站点配置文件</span><br><span class="line">|-- db.json</span><br><span class="line">|-- package.json</span><br><span class="line">&#96;-- package-lock.json</span><br></pre></td></tr></table></figure>
-
-<p>在根目录下执行如下命令启动<strong>hexo</strong>内置的web容器</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate     <span class="comment"># 生成静态文件</span></span><br><span class="line">$ hexo server       <span class="comment"># 在本地服务器运行</span></span><br></pre></td></tr></table></figure>
-
-<p>在浏览器输入IP地址 <a href="http://localhost:4000/">http://localhost:4000</a>  就可以看到我们熟悉的** Hello Word **了。</p>
-<p><img src="https://image.chingow.cn/images/d7cced3b-950e-6d7b-6edc-dc3058646ddb.png" alt="Hello Word" title="Hello Word"></p>
-<h3 id="常用命令简化和组合"><a href="#常用命令简化和组合" class="headerlink" title="常用命令简化和组合"></a>常用命令简化和组合</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo g    <span class="comment"># 等同于hexo generate</span></span><br><span class="line">$ hexo s    <span class="comment"># 等同于hexo server</span></span><br><span class="line">$ hexo p    <span class="comment"># 等同于hexo port </span></span><br><span class="line">$ hexo d    <span class="comment"># 等同于hexo deploy </span></span><br></pre></td></tr></table></figure>
-
-<p>当本地不想使用默认的4000端口时（比如在服务器上，默认使用80端口），可以使用 port 命令更改启动端口<br>另外，<strong>hexo</strong>支持命令合并，比方说 生成静态文件 → 本地启动80端口，我们可以执行</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo s -g -p 80</span><br></pre></td></tr></table></figure>
-
-<h2 id="安装NexT主题"><a href="#安装NexT主题" class="headerlink" title="安装NexT主题"></a>安装NexT主题</h2><p>hexo 安装主题的方式非常简单, 只需几个简单的命令即可。<br>将NexT主题文件拷贝至<strong>themes</strong>目录下，然后修改 <span id="inline-blue">站点配置文件</span> _config.yml 中的 <code>theme</code>字段为<code>next</code>即可。</p>
-<p>cd 到博客的根目录下执行以下命令下载主题文件：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/hexo-theme-next.git themes/next</span><br><span class="line"></span><br><span class="line">$ vim _config.yml</span><br><span class="line">theme: next</span><br></pre></td></tr></table></figure>
-
-<p>清除 <strong>hexo</strong>缓存，重启服务</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo clean</span><br><span class="line">$ hexo s -g</span><br></pre></td></tr></table></figure>
-
-<p>大部分的设定都能在 <a href="http://theme-next.iissnan.com/getting-started.html">NexT官方文档</a> 里找到, 如主题设定、侧栏、头像、友情链接、打赏等等，在此就不多讲了，照着文档走就行了。</p>
-]]></content>
+<h2 id="方案参考"><a href="#方案参考" class="headerlink" title="方案参考"></a>方案参考</h2><p>本解决方案来自苹果的官方支持社区 <a href="https://discussions.apple.com/thread/3275811?start=0&tstart=0">Apple Support Communities</a></p>
+<h2 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h2><ol>
+<li><p>连接 VPN(Cisco IPSec) ，让系统生成配置文件</p>
+</li>
+<li><p>执行拷贝命令，将配置文件拷贝到/etc/racoon（xxx.xxx 即VPN服务器ip地址）：</p>
+ <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ sudo cp /var/run/racoon/xxx.xxx.xxx.xxx.conf /etc/racoon</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改 racoon 配置文件，使用定制的配置文件：<br>将最后一行注释掉（目的是不使用系统生成配置），修改为使用定制的配置文件，注意行尾的分号：</p>
+ <figure class="highlight diff"><figcaption><span>/etc/racoon/racoon.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- # include &quot;/var/run/racoon/*.conf” ;  </span></span><br><span class="line"><span class="addition">+ include “/etc/racoon/xxx.xxx.xxx.xxx.conf” ;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>修改 IPSec 配置文件（注意使用 sudo 命令）:</p>
+<ul>
+<li><p>取消 dead peer 检测（原来为 20）: </p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  dpd_delay 20; </span></span><br><span class="line"><span class="addition">+  dpd_delay 0;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改请求方式为 claim（重要，原来为 obey）:</p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  proposal_check obey;</span></span><br><span class="line"><span class="addition">+  proposal_check claim;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改请求周期（所有 proposal 中的值，原来为 3600 sec）:</p>
+<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- lifetime time 3600 sec; </span></span><br><span class="line"><span class="addition">+ lifetime time 24 hours;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>重新链接 VPN(Cisco IPSec)，即可永不断线。</p>
+</li>
+</ol>
+<div class="note danger"><p>注意：当原来的ip地址发生变化时，会拨号失败。<br>解决方法：将xxx.xxx.xxx.xxx.conf 文件名改为新的ip地址，再执行一次步骤3即可。</p>
+</div>]]></content>
       <categories>
-        <category>博客</category>
+        <category>Mac</category>
       </categories>
       <tags>
-        <tag>Hexo</tag>
+        <tag>Mac</tag>
+        <tag>VPN</tag>
       </tags>
   </entry>
   <entry>
@@ -647,49 +690,6 @@ width: 15%;
       <tags>
         <tag>身份证</tag>
         <tag>工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>MacOS VPN(Cisco IPSec)断线解决办法</title>
-    <url>/2020/05/19/macos-vpn-disconnection-resolve/</url>
-    <content><![CDATA[<p>现在很多VPN客户端都是不支持Mac的，所以更多的时候我们需要使用Mac系统内置的<code>IPsec VPN </code>客户端工具去连接。</p>
-<p>但是在链接 Cisco VPN 服务器后，一般每隔45分钟到一小时就会自动断线，这无疑是令人沮丧的。虽然说这是Mac系统为了电脑的安全性所做的考虑，但是实际使用时可能会很不方便。</p>
-<p>本文章将介绍一种的解决方法来让 VPN 客户端正常连接不断线。</p>
-<a id="more"></a>
-
-<h2 id="方案参考"><a href="#方案参考" class="headerlink" title="方案参考"></a>方案参考</h2><p>本解决方案来自苹果的官方支持社区 <a href="https://discussions.apple.com/thread/3275811?start=0&tstart=0">Apple Support Communities</a></p>
-<h2 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h2><ol>
-<li><p>连接 VPN(Cisco IPSec) ，让系统生成配置文件</p>
-</li>
-<li><p>执行拷贝命令，将配置文件拷贝到/etc/racoon（xxx.xxx 即VPN服务器ip地址）：</p>
- <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ sudo cp /var/run/racoon/xxx.xxx.xxx.xxx.conf /etc/racoon</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改 racoon 配置文件，使用定制的配置文件：<br>将最后一行注释掉（目的是不使用系统生成配置），修改为使用定制的配置文件，注意行尾的分号：</p>
- <figure class="highlight diff"><figcaption><span>/etc/racoon/racoon.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- # include &quot;/var/run/racoon/*.conf” ;  </span></span><br><span class="line"><span class="addition">+ include “/etc/racoon/xxx.xxx.xxx.xxx.conf” ;</span></span><br></pre></td></tr></table></figure></li>
-<li><p>修改 IPSec 配置文件（注意使用 sudo 命令）:</p>
-<ul>
-<li><p>取消 dead peer 检测（原来为 20）: </p>
-<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  dpd_delay 20; </span></span><br><span class="line"><span class="addition">+  dpd_delay 0;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改请求方式为 claim（重要，原来为 obey）:</p>
-<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">-  proposal_check obey;</span></span><br><span class="line"><span class="addition">+  proposal_check claim;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改请求周期（所有 proposal 中的值，原来为 3600 sec）:</p>
-<figure class="highlight diff"><figcaption><span>/etc/racoon/xxx.xxx.xxx.xxx.conf</span></figcaption><table><tr><td class="code"><pre><span class="line"><span class="deletion">- lifetime time 3600 sec; </span></span><br><span class="line"><span class="addition">+ lifetime time 24 hours;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>重新链接 VPN(Cisco IPSec)，即可永不断线。</p>
-</li>
-</ol>
-<div class="note danger"><p>注意：当原来的ip地址发生变化时，会拨号失败。<br>解决方法：将xxx.xxx.xxx.xxx.conf 文件名改为新的ip地址，再执行一次步骤3即可。</p>
-</div>]]></content>
-      <categories>
-        <category>Mac</category>
-      </categories>
-      <tags>
-        <tag>Mac</tag>
-        <tag>VPN</tag>
       </tags>
   </entry>
   <entry>
