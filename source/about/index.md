@@ -8,7 +8,7 @@ comments: false
 
 ## 关于我
 
-目前主要使用 **Java** 语言，从事 **Java** 应用开发近6年，略懂一些 Android/JavaScript/Node.js 等其他语言，对开源有浓厚的兴趣。
+目前主要使用 **Java** 语言，从事 **Java** 应用开发近5年，略懂一些 Android/JavaScript/Node.js 等其他语言，对开源有浓厚的兴趣。
 
 ## 关于本站
 
