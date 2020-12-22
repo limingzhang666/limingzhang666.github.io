@@ -1,5 +1,5 @@
 ---
-title: gitstats-java-01-命令介绍
+title: git提交统计-gitstats-java
 copyright: true
 related_posts: true
 date: 2020-11-24 23:58:24
@@ -72,6 +72,17 @@ cef5d95041b1c1a6e03466325258d627386afbd2 1570969065 jackfrued 更新了最后10�
 ### 后续思路（已实现）：
 
 - 将需要统计的项目信息配置在数据库中
+
 - 使用egit 自动git clone代码或者 git checkout  and pull最新分支的代码
+
 - 自动将git log 信息写入文件，再读取并解析文件信息写入数据库中 
+
+  ![](/uploads/gitstats-vue/data-back.png)
+
+  ![](/uploads/gitstats-vue/back-code.png)
 ###  todo （前端echart  图标可视化展示 ）
+
+![](/uploads/gitstats-vue/front-page.png)
+
+![](/uploads/gitstats-vue/front-page02.png)
+
