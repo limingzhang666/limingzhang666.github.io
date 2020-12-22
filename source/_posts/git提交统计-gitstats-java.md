@@ -3,10 +3,12 @@ title: git提交统计-gitstats-java
 copyright: true
 related_posts: true
 date: 2020-11-24 23:58:24
-tags: gitstats
+tags: 
+  - git
+  - gitlog统计
+    
 categories: 
 	- git
-	- gitstats
 ---
 
 ## gitstats java版
