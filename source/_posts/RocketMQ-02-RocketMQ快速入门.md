@@ -11,7 +11,7 @@ categories: RocketMQ
 
 ## 核心概念说明
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ01.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ01.png)
 
 ### Producer
 
@@ -341,7 +341,7 @@ SendResult [sendStatus=SEND_OK, msgId=C0A80069251814DAD5DC1E63D08D0000, offsetMs
 
 在某些业务中，consumer在消费消息时，是需要按照生产者发送消息的顺序进行消费的，比如在电商系统中，订单的消息，会有创建订单、订单支付、订单完成，如果消息的顺序发生改变，那么这样的消息就没有意义了。
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ02.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ02.png)
 
 
 
@@ -458,11 +458,11 @@ public class OrderConsumer {
 
 
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ03.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ03.png)
 
 ### 执行流程
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ04.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ04.png)
 
 1. 发送方向 MQ 服务端发送消息。
 2. MQ Server 将消息持久化成功之后，向发送方 ACK 确认消息已经发送成功，此时消息为半消息。
@@ -607,7 +607,7 @@ public class TransactionConsumer {
 客户端像传统轮询一样从服务端请求数据，服务端会阻塞请求不会立刻返回，直到有数据或超时才返回给客
 户端，然后关闭连接，客户端处理完响应信息后再向服务器发送新的请求。
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ05.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ05.png)
 
 ## 消息模式
 
@@ -669,7 +669,7 @@ RocketMQ中的消息数据存储，采用了零拷贝技术（使用 mmap + writ
 RocketMQ消息的存储是由ConsumeQueue和CommitLog配合完成的，CommitLog是真正存储数据的文件，
 ConsumeQueue是索引文件，存储数据指向到物理文件的配置。
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ06.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ06.png)
 
 如上图所示：
 
@@ -680,7 +680,7 @@ ConsumeQueue是索引文件，存储数据指向到物理文件的配置。
 
 文件位置：
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ07.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ07.png)
 
 ## 同步刷盘与异步刷盘
 
@@ -699,4 +699,4 @@ RocketMQ 为了提高性能，会尽可能地保证 磁盘的顺序写。消息�
   - flushDiskType=ASYNC_FLUSH -- 异步
   - flushDiskType=SYNC_FLUSH -- 同步
 
-![image-20210106210340592](uploads/RocketMQ/RocketMQ08.png)
+![image-20210106210340592](/uploads/RocketMQ/RocketMQ08.png)
