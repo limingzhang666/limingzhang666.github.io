@@ -1,7 +1,4 @@
-
-
 ---
-
 title:  深入理解jvm-06-类文件结构
 copyright: true
 related_posts: true
@@ -10,7 +7,6 @@ tags: 类文件结构
 categories: jvm
 
 ---
-
 
 
 # 类文件结构
@@ -487,7 +483,7 @@ LocalVariableTable:
 - 这个处理只对实例方法有效，如果代码清单6-1中的inc()方法被声明为static，那Args_size就不会等于1而是等于0了。
 - 
 
-### 异常表：
+#### 异常表：
 
 如果存在异常表，那它的格式应如表6-16所示，包含四个字段，这些字段的含义为：如果当字节码从第start_pc行[1]到第end_pc行之间（不含第end_pc行）出现了类型为catch_type或者其子类的异常（catch_type为指向一个CONSTANT_Class_info型常量的索引），则转到第handler_pc行继续处理。当catch_type的值为0时，代表任意异常情况都需要转到handler_pc处进行处理。
 
