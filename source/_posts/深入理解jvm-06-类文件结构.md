@@ -1,11 +1,9 @@
----
 title: 深入理解jvm-06-类文件结构
 copyright: true
 related_posts: true
 date: 2021-01-11 22:03:21
 tags: 类文件结构
 categories: jvm
----
 
 
 
@@ -522,19 +520,19 @@ public int inc();
             0: iconst_1 // try块中的x=1
             1: istore_1
             2: iload_1 // 保存x到returnValue中，此时x=1
-            3: istore 4
+            3: istore   4
             5: iconst_3 // finaly块中的x=3
             6: istore_1
-            7: iload 4 // 将returnValue中的值放到栈顶，准备给ireturn返回
+            7: iload     4 // 将returnValue中的值放到栈顶，准备给ireturn返回
             9: ireturn
             10: astore_2 // 给catch中定义的Exception e赋值，存储在变量槽 2中
             11: iconst_2 // catch块中的x=2
             12: istore_1
             13: iload_1 // 保存x到returnValue中，此时x=2
-            14: istore 4
+            14: istore    4
             16: iconst_3 // finaly块中的x=3
             17: istore_1
-            18: iload 4 // 将returnValue中的值放到栈顶，准备给ireturn返回
+            18: iload      4 // 将returnValue中的值放到栈顶，准备给ireturn返回
             20: ireturn
             21: astore_3 // 如果出现了不属于java.lang.Exception及其子类的异常才会走到这里
             22: iconst_3 // finaly块中的x=3
@@ -567,16 +565,320 @@ public int inc();
 
 我们一起来分析一下字节码的执行过程，从字节码的层面上看看为何会有这样的返回结果。
 
-1. 字节码中第0～4行所做的操作就是将整数1赋值给变量x，并且将此时x的值复制一份副本到最后一
-   个本地变量表的变量槽中（这个变量槽里面的值在ireturn指令执行前将会被重新读到操作栈顶，作为
-   方法返回值使用。为了讲解方便，给这个变量槽起个名字：returnValue）。
-2. 如果这时候没有出现异常，则会继续走到第5～9行，将变量x赋值为3，然后将之前保存在returnValue中的整数1读入到操作栈
-   顶，最后ireturn指令会以int形式返回操作栈顶中的值，方法结束。
-3. 如果出现了异常，PC寄存器指针转到第10行，第10～20行所做的事情是将2赋值给变量x，然后将变量x此时的值赋给returnValue，最后再
-   将变量x的值改为3。方法返回前同样将returnValue中保留的整数2读到了操作栈顶。从第21行开始的代码，作用是将变量x的值赋为3，并将栈顶的异常抛出，方法结束。
+1. 字节码中第0～4行所做的操作就是将整数1赋值给变量x，并且***将此时x的值复制一份副本到最后一***
+   ***个本地变量表的变量槽中***（***这个变量槽里面的值在ireturn指令执行前将会被重新读到操作栈顶，作为***
+   ***方法返回值使用***。为了讲解方便，给这个变量槽起个名字：returnValue）。
+2. 如果这时候没有出现异常，则会继续走到第5～9行，将变量x赋值为3，然后***将之前保存在returnValue中的整数1***  读入到 ***操作栈***
+   ***顶***，***最后ireturn指令会以int形式返回操作栈顶中的值***，方法结束。
+3. 如果出现了异常，PC寄存器指针转到第10行，第10～20行所做的事情是**将2赋值给变量x**，然后将变量***x此时的值赋给returnValue***，最后**再**
+   **将变量x的值改为3**。***方法返回前同样将returnValue中保留的整数2读到了操作栈顶***。
+4. 从第21行开始的代码，作用是**将变量x的值赋为3**，并**将栈顶的异常抛出**，方法结束。
+
+***总结一下：***
+
+- 如果先给x赋值，再将x值 复制一个副本到本地变量表的 变量槽中，该变量槽中的值在ireturn指令执行时 会被读到操作栈顶，就是最终要 return的值，而不是 x的变量值
+- 如果没有异常，还是会走finally的方法块给x进行赋值，但是最终返回的是 之前本地变量表的变量槽中的值，并不是走完finally块的时候 x的值 
+- 如果发生了异常，且异常属于 catch方法的异常或者其异常子类，则 进catch方法块，给x赋值为2，然后将x=2 的值赋给returnValue，然后执行finally 的x=3,最后将 returnValue的值读到栈顶，输出
+- 如果发生了catch块之外的异常，则 先执行finally 的x=3，再将异常堆栈信息读到栈顶，抛出去，最终不会return x，而是以异常堆栈的形式结束
+
+```bash
+public class Test2 {
+    // Java源码
+    public int inc() {
+        int x;
+        try {
+            x = 1;
+            List<Object> list = Arrays.asList();
+//            list.get(1);
+            System.out.println(1 / 0);
+            System.out.println("异常");
+
+            return x;
+//            ClassCastException("异常外")
+        } catch (Exception e) {
+            System.out.println("catch");
+            x = 2;
+            return x;
+        } finally {
+            System.out.println("finally");
+            x = 3;
+//            return x;
+        }
+    }
+
+    public static void main(String[] args) {
+        Test2 test2 = new Test2();
+        int inc = test2.inc();
+        System.out.println(inc);
+    }
+}
+```
 
 
 
 
 
-TODO ： 其他属性表 集合 && 字节码指令集
+
+
+#### Exceptions属性
+
+- 这里的Exceptions属性是在方法表中与Code属性平级的一项属性，不要与前面刚刚讲解完的异常表产生混淆。
+
+- Exceptions属性的作用是列举出方法中可能抛出的受查异常（Checked Excepitons），也就是方法描述时在throws关键字后面列举的异常。
+
+  它的结构见表6-17。
+
+| 类型 | 名称                  | 数量                |
+| ---- | --------------------- | ------------------- |
+| u2   | attribute_name_index  | 1                   |
+| u4   | attribute_length      | 1                   |
+| u2   | number_of_exceptions  | 1                   |
+| u2   | exception_index_table | number_of_exceptons |
+
+此属性中的number_of_exceptions项表示方法可能抛出number_of_exceptions种受查异常，每一种受查异常使用一个exception_index_table项表示；exception_index_table是一个指向常量池中CONSTANT_Class_info型常量的索引，代表了该受查异常的类型。
+
+
+
+#### LocalVariableTable及LocalVariableTypeTable属性
+
+- LocalVariableTable属性用于描述***栈帧中局部变量表的变量与Java源码中定义的变量之间的关系***，
+
+- 它也不是运行时必需的属性，但默认会生成到Class文件之中，可以在Javac中使用-g：none或-g：vars选项来取消或要求生成这项信息。
+- 如果没有生成这项属性，最大的影响就是当其他人引用这个方法时，所有的参数名称都将会丢失，譬如IDE将会使用诸如arg0、arg1之类的占位符代替原有的参数名，这对程序运行没有影响，但是会对代码编写带来较大不便，而且在调试期间无法根据参数名称从上下文中获得参数值。
+- LocalVariableTable属性的结构如表6-19所示。
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | attribute_name_index       | 1                   |
+| u4                 | attribute_length           | 1                   |
+| u2                 | local_variable_table_length | 1                   |
+| loca_variable_info |       loca_variable_table                     |local_variable_table_length |
+
+其中local_variable_info项目代表了一个栈帧与源码中的局部变量的关联，结构如表6-20所示。
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 |start_pc       | 1                   |
+| u2                 | length           | 1                   |
+| u2                 |name_index | 1                   |
+| u2                 | descriptor_index                     |1 |
+| u2                 | index | 1                   |
+
+- start_pc和length属性分别代表了这个局部变量的生命周期开始的字节码偏移量及其作用范围覆盖的长度，两者结合起来就是这个局部变量在字节码之中的作用域范围
+- name_index和descriptor_index都是指向常量池中CONSTANT_Utf8_info型常量的索引，分别代表了局部变量的名称以及这个局部变量的描述符。
+- index是这个局部变量在栈帧的局部变量表中变量槽的位置。当这个变量数据类型是64位类型时（double和long），它占用的变量槽为index和index+1两个
+
+#### LocalVariableTypeTable（用于支持泛型）
+
+- 在JDK 5引入泛型之后，LocalVariableTable属性增加了一个“姐妹属性”——LocalVariableTypeTable。这个新增的属性结构与LocalVariableTable非常相似，仅仅是把记录的字段描述符的descriptor_index替换成了字段的特征签名（Signature）。
+
+- 对于非泛型类型来说，描述符和特征签名能描述的信息是能吻合一致的，但是泛型引入之后，由于描述符中泛型的参数化类型被擦除掉[3]，描述符就不能准确描述泛型类型了。因此出现了LocalVariableTypeTable属性，使用字段的特征签名来完成泛型的描述。
+
+#### ConstantValue属性
+
+- ConstantValue属性的作用是通知虚拟机自动为静态变量赋值。只有被static关键字修饰的变量（类变量）才可以使用这项属性。
+
+- 类似“int x=123”和“static int x=123”这样的变量定义在Java程序里面是非常常见的事情，但虚拟机对这两种变量赋值的方式和时刻都有所不同。
+- 对***非static类型的变量（也就是实例变量）的赋值是在实例构造器<init>()方法中进行的***；
+
+- 而对于***类变量***，则有两种方式可以选择：
+- - 在类构造器<clinit>()方法中
+  - 或者使用ConstantValue属性。
+
+- 目前Oracle公司实现的Javac编译器的选择是，如果***同时使用final和static来修饰一个变量***（按照习惯，这里称“常量”更贴切），并且这个变量的**数据类型是基本类型或者java.lang.String**的话，就将会**生成ConstantValue属性**来进行初始化；
+
+- 如果这个变量**没有被final修饰**，或者**并非基本类型及字符串**，则将会选择在<clinit>()方法中进行初始化。
+- 虽然有final关键字才更符合“ConstantValue”的语义，但**《Java虚拟机规范》中并没有强制要求字段必须设置ACC_FINAL标志，只要求有ConstantValue属性的字段必须设置ACC_STATIC标志而已，**
+
+- **对final关键字的要求是Javac编译器自己加入的限制**。而对ConstantValue的属性值只能限于基本类型和String这点，其实并不能算是什么限制，这是理所当然的结果。
+
+因为此属性的属性值只是一个常量池的索引号，***由于Class文件格式的常量类型中只有与基本属性和字符串相对应的字面量***，所以就算
+ConstantValue属性想支持别的类型也无能为力。
+
+ConstantValue属性的结构如表6-23所示。
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | attribute_name_index       | 1                   |
+| u4                 | attribute_length           | 1                   |
+| u2                 | constant_value_index | 1                   |
+
+- 从数据结构中可以看出ConstantValue属性是一个定长属性，它的attribute_length数据项值必须固定为2。
+- constantvalue_index数据项代表了常量池中一个字面量常量的引用，
+- 根据字段类型的不同，字面量可以是CONSTANT_Long_info、CONSTANT_Float_info、CONSTANT_Double_info、CONSTANT_Integer_info和CONSTANT_String_info常量中的一种。
+
+#### InnerClasses属性
+
+- InnerClasses属性用于记录**内部类与宿主类之间的关联**。
+- 如果一个类中定义了内部类，那编译器将会为它以及它所包含的内部类生成InnerClasses属性。
+- InnerClasses属性的结构如表6-24所示。
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | attribute_name_index       | 1                   |
+| u4                 | attribute_length           | 1                   |
+| u2                 | number_of_classes | 1                   |
+| loca_classes_info |      inner_classes                     |number_of_classes |
+
+数据项number_of_classes代表需要记录多少个内部类信息，
+
+每一个内部类的信息都由一个inner_classes_info表进行描述。
+
+inner_classes_info表的结构如表6-25所示。
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 |inner_class_of_index     | 1                   |
+| u4                 | outer_class_of_index          | 1                   |
+| u2                 | inner_name_index | 1                   |
+| loca_classes_info |      inner_classes_access_flag                     |1 |
+
+- inner_class_info_index和outer_class_info_index都是指向常量池中CONSTANT_Class_info型常量的索引，分别代表了内部类和宿主类的符号引用。
+- inner_name_index是指向常量池中CONSTANT_Utf8_info型常量的索引，代表这个内部类的名称，如果是匿名内部类，这项值为0。
+- inner_class_access_flags是内部类的访问标志，类似于类的access_flags，
+
+#### Deprecated及Synthetic属性
+
+- Deprecated和Synthetic两个属性都属于标志类型的布尔属性，只存在有和没有的区别，没有属性值的概念。
+- Deprecated属性用于表示某个类、字段或者方法，已经被程序作者定为不再推荐使用，它可以通过代码中使用“@deprecated”注解进行设置。
+- Synthetic属性代表此字段或者方法并不是由Java源码直接产生的，而是由编译器自行添加的，
+- 在JDK 5之后，标识一个类、字段或者方法是编译器自动产生的，也可以设置它们访问标志中的ACC_SYNTHETIC标志位。
+- 编译器通过生成一些在源代码中不存在的Synthetic方法、字段甚至是整个类的方式，实现了越权访问（越过private修饰器）或其他绕开了语言限制的功能，这可以算是一种早期优化的技巧，其中最典型的例子就是枚举类中自动生成的枚举元素数组和嵌套类的桥接方法（Bridge Method）。
+- 所有由不属于用户代码产生的类、方法及字段都应当至少设置Synthetic属性或者ACC_SYNTHETIC标志位中的一项，
+- 唯一的例外是实例构造器“<init>()”方法和类构造器“<clinit>()”方法。
+
+#### StackMapTable属性
+
+- StackMapTable属性在JDK 6增加到Class文件规范之中，它是一个相当复杂的变长属性，位于Code属性的属性表中。
+
+- 这个属性会在虚拟机类加载的字节码验证阶段被新类型检查验证器（TypeChecker）使用，目的在于代替以前比较消耗性能的基于数据流分析的类型推导验证器。
+
+- StackMapTable属性中包含零至多个栈映射帧（Stack Map Frame），每个栈映射帧都显式或隐式地代表了一个字节码偏移量，用于表示执行到该字节码时局部变量表和操作数栈的验证类型。
+- 类型检查验证器会通过检查目标方法的局部变量和操作数栈所需要的类型来确定一段字节码指令是否符合逻辑约束。
+- StackMapTable属性的结构如表6-28所示。
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | attribute_name_index       | 1                   |
+| u4                 | attribute_length           | 1                   |
+| u2                 | number_of_entries| 1                   |
+| stack_map_frame |      stack_map_frame_entries                     |number_of_entries |
+
+- 在Java SE 7版之后的《Java虚拟机规范》中，明确规定对于版本号大于或等于50.0的Class文件，如果方法的Code属性中没有附带StackMapTable属性，那就意味着它带有一个隐式的StackMap属性，这个StackMap属性的作用等同于number_of_entries值为0的StackMapTable属性。
+- 一个方法的Code属性最多只能有一个StackMapTable属性，否则将抛出ClassFormatError异常。
+
+
+
+#### Signature属性
+
+- Signature属性在JDK 5增加到Class文件规范之中，它是一个可选的定长属性，可以出现于类、字段表和方法表结构的属性表中。
+- 在JDK 5里面大幅增强了Java语言的语法，在此之后，任何类、接口、初始化方法或成员的泛型签名如果包含了类型变量（Type Variable）或参数化类型（ParameterizedType），则Signature属性会为它记录泛型签名信息。
+- 之所以要专门使用这样一个属性去记录泛型类型，是因为Java语言的泛型采用的是擦除法实现的伪泛型，字节码（Code属性）中所有的泛型信息编译（类型变量、参数化类型）在编译之后都通通被擦除掉。
+- 使用擦除法的好处是实现简单（主要修改Javac编译器，虚拟机内部只做了很少的改动）、非常容易实现Backport，运行期也能够节省一些类型所占的内存空间。
+- 但坏处是运行期就无法像C#等有真泛型支持的语言那样，将泛型类型与用户定义的普通类型同等对待，例如运行期做反射时无法获得泛型信息。Signature属性就是为了弥补这个缺陷而增设的，
+- 现在Java的反射API能够获取的泛型类型，最终的数据来源也是这个属性。
+  Signature属性的结构如表6-29所示
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | attribute_name_index       | 1                   |
+| u4                 | attribute_length           | 1                   |
+| u2                 |signature_index | 1                   |
+
+- 其中signature_index项的值必须是一个对常量池的有效索引。常量池在该索引处的项必须是CONSTANT_Utf8_info结构，表示类签名或方法类型签名或字段类型签名。
+- 如果当前的Signature属性是类文件的属性，则这个结构表示类签名，
+- 如果当前的Signature属性是方法表的属性，则这个结构表示方法类型签名，
+- 如果当前Signature属性是字段表的属性，则这个结构表示字段类型签名。
+
+#### MethodParameters属性
+
+- MethodParameters是在JDK 8时新加入到Class文件格式中的，它是一个用在方法表中的变长属性。
+- MethodParameters的作用是记录方法的各个形参名称和信息。
+
+##### 背景：
+
+- 最初，基于存储空间的考虑，Class文件默认是不储存方法参数名称的，因为给参数起什么名字对计算机执行程序来说是没有任何区别的，所以只要在源码中妥当命名就可以了。
+- 随着Java的流行，这点确实为程序的传播和二次复用带来了诸多不便，由于Class文件中没有参数的名称，如果只有单独的程序包而不附加JavaDoc的话，在IDE中编辑使用包里面的方法时是无法获得方法调用的智能提示的，这就阻碍了JAR包的传播。
+- 后来，“-g：var”就成为了Javac以及许多IDE编译Class时采用的默认值，这样会将方法参数的名称生成到LocalVariableTable属性之中。
+- 不过此时问题仍然没有全部解决，LocalVariableTable属性是Code属性的子属性——没有方法体存在，自然就不会有局部变量表，
+- 但是对于其他情况，譬如抽象方法和接口方法，是理所当然地可以不存在方法体的，对于方法签名来说，还是没有找到一个统一完整的保留方法参数名称的地方。
+- 所以JDK 8中新增的这个属性，使得编译器可以（编译时加上-parameters参数）将方法名称也写进Class文件中，而且MethodParameters是方法表的属性，与Code属性平级的，可以运行时通过反射API获取
+
+MethodParameters的结构如表6-32所示。
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | attribute_name_index       | 1                   |
+| u4                 | attribute_length           | 1                   |
+| u1                 | parameters_count| 1                   |
+| parameter |      parameters                    |parameters_count |
+
+其中，引用到的parameter结构如表6-33所示。
+表6-33　parameter属性结构
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 |name_index       | 1                   |
+| u2                 |access_flags | 1                   |
+
+
+
+#### 模块化相关属性
+
+- JDK 9的一个重量级功能是Java的模块化功能，
+- 因为模块描述文件（module-info.java）最终是要编译成一个独立的Class文件来存储的，
+- 所以，Class文件格式也扩展了***Module、ModulePackages和ModuleMainClas***s三个属性用于支持Java模块化相关功能
+
+##### Module:
+
+Module属性是一个非常复杂的变长属性，除了表示该模块的名称、版本、标志信息以外，还存储了这个模块***requires、exports、opens、uses***和***provides***定义的全部内容
+
+Module属性是一个非常复杂的变长属性，除了表示该模块的名称、版本、标志信息以外，还存储
+了这个模块requires、exports、opens、uses和provides定义的全部内容，其结构如表6-34所示。
+
+表6-34　Module属性结构
+
+![](/uploads/jvm/22-jvm-Module.png)
+
+***TODO： 暂时用不到，就先不了解了***
+
+##### ModulePackages
+
+ModulePackages是另一个用于支持Java模块化的变长属性，它用于描述该模块中所有的包，不论是
+不是被export或者open的。
+
+##### ModuleMainClass
+
+ModuleMainClass属性是一个定长属性，用于确定该模块的主类（Main Class），其结构
+
+
+
+#### 运行时注解相关属性
+
+##### 背景：
+
+- 早在JDK 5时期，Java语言的语法进行了多项增强，其中之一是提供了对注解（Annotation）的支持。
+- 为了存储源码中注解信息，Class文件同步增加了 ***RuntimeVisibleAnnotations***  、***RuntimeInvisibleAnnotations***、***RuntimeVisibleParameterAnnotations*** 和 ***RuntimeInvisibleParameterAnnotations***四个属性。
+- 到了JDK 8时期，进一步加强了Java语言的注解使用范围，又新增类型注解（JSR 308），所以Class文件中也同步增加了 ***RuntimeVisibleTypeAnnotations*** 和
+  ***RuntimeInvisibleTypeAnnotations*** 两个属性。
+- 由于这六个属性不论结构还是功能都比较雷同，因此我们把它们合并到一起，以***RuntimeVisibleAnnotations***为代表进行介绍。
+- **RuntimeVisibleAnnotations**是一个变长属性，它记录了类、字段或方法的声明上记录运行时可见注解，
+- 当我们使用反射API来获取类、字段或方法上的注解时，返回值就是通过这个属性来取到的。
+- 
+- RuntimeVisibleAnnotations属性的结构如表6-38所示。
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | attribute_name_index       | 1                   |
+| u4                 | attribute_length           | 1                   |
+| u2                 | num_annotations| 1                   |
+| annotation|      annotations                 |num_annotations |
+
+num_annotations是annotations数组的计数器，annotations中每个元素都代表了一个运行时可见的注解，注解在Class文件中以annotation结构来存储，
+
+具体如表6-39所示
+表6-39　annotation属性结构
+
+| 类型               | 名称                       | 数量                |
+| ------------------ | -------------------------- | ------------------- |
+| u2                 | type_index       | 1                   |
+| u2                 |num_element_value_pairs           | 1                   |
+| u2                 |element_value_pairs | num_element_value_pair                   |
