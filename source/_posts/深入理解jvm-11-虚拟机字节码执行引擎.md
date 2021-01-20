@@ -293,3 +293,661 @@ result:  编译期报错：  可能尚未初始化变量a
 
 ## 方法调用详解（TODO）
 
+方法调用并不等同于方法中的代码被执行，方法调用阶段唯一的任务就是确定被调用方法的版本（即调用哪一个方法），暂时还未涉及方法内部的具体执行过程。
+
+在程序执行时，进行方法调用是最普遍最频繁的操作之一，Class文件的编译过程中 不包含传统程序语言编译的连接步骤，一切方法调用在Class文件 里面存储的都是 符号引用，而不是方法在实际运行时内存布局中的入口地址（也就是之前说的直接引用）。 这个特性给了Java带来了更强大的动态扩展能力，也使得Java方法调用过程变得相对复杂，某些调用需要在类加载期间，甚至到运行期间才能确定目标方法的直接引用。
+
+### 解析
+
+所有方法调用的目标方法在Class 文件里面都是一个 常量池的符号引用，在类加载的解析阶段，会将其中的一部分符号引用转化为直接引用，这种解析能够成立的前提是:  方法在程序真正执行之前就有一个可确定的调用版本，并且这个方法的调用版本在运行期是不可改变的。 换句话说，调用目标在程序代码写好、编译器进行编译那一刻就已经确定下来。这类方法的调用被称为**解析**（**Resolution**）
+
+#### 编译期可知，运行期不可变
+
+在Java语言中，符合“编译期可知，运行期不可变”这个要求的方法，主要有 **静态方法** 和**私有方法**两大类，前者与类型直接关联，后者在外部不可访问，这两种方法各自的特点决定了他们都不可能通过继承或 别的方式重写出其他版本，因为它们都适合在类解析阶段进行解析。
+
+#### 方法调用字节码指令
+
+调用不同类型的方法，字节码指令集里面设计了不同的指令。在Java虚拟机支持 以下5条方法调用字节码指令，分别是：
+
+1. invokestatic ： 用于调用静态方法
+2. invokespecial：  用于调用实例构造器<init>()方法、私有方法和父类中的方法
+3. invokevirtual :  用于调用所有的虚方法
+4. invokeinterface: 用于调用接口方法，会在运行时在确定一个实现该接口的对象
+5. invokedynamic：  现在运行时动态解析出调用点限定符所引用的方法，然后再执行该方法。
+
+#### 虚方法与非虚方法
+
+- 前面的1-4条调用指令，分配逻辑都固化在Java虚拟机内部，而invokedynamic指令的分派逻辑是由用户设定的引导方法来决定的。
+- 只要能被invokespecial 和 invokestatic指令调用的方法，都可以在解析阶段中确定唯一的调用版本 ，Java语言里符合这个条件的方法 有： 
+
+**静态方法、私有方法、实例构造器、父类方法**4种，再加上被 final修饰的方法（尽管它用invokevirtual）指令调用，这5种方法调用会再类加载的时候就可以把符号引用解析为该方法的直接引用。这些方法统称为“**非虚方法**”（**Non-Virtual Method**），与之相反的，其他方法就被称为 **虚方法（Virtual Method）**
+
+
+
+方法静态解析演示：
+
+演示了一种常见的解析调用的例子，该样例中，**静态方法sayHello 只可能属于类型 StaticResolution ，没有任何途径可以覆盖或隐藏这个方法**：
+
+
+
+```java
+/**
+ * 方法静态解析演示
+ *
+ * @author zzm
+ */
+public class StaticResolution {
+
+    public static void sayHello() {
+        System.out.println("hello world");
+    }
+
+    public static void main(String[] args) {
+        StaticResolution.sayHello();
+    }
+
+}
+```
+
+
+
+使用 javap -verbose StaticResolution.class   得到下面结果：
+
+使用javap命令查看这段程序对应的字节码，会发现的确是通过**invokestatic**命令来调用sayHello()方法，而且其调用的方法版本已经在编译时就明确以**常量池项的形式**固化在字节码指令的参数之中（ #5 = Methodref ）
+
+```java
+ Last modified 2021-1-18; size 672 bytes
+  MD5 checksum 4041d61106416a1bb60c338694bf8d00
+  Compiled from "StaticResolution.java"
+public class org.fenixsoft.jvm.chapter8.StaticResolution
+  minor version: 0
+  major version: 53
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #7.#22         // java/lang/Object."<init>":()V
+   #2 = Fieldref           #23.#24        // java/lang/System.out:Ljava/io/PrintStream;
+   #3 = String             #25            // hello world
+   #4 = Methodref          #26.#27        // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #5 = Methodref          #6.#28         // org/fenixsoft/jvm/chapter8/StaticResolution.sayHello:()V
+   #6 = Class              #29            // org/fenixsoft/jvm/chapter8/StaticResolution
+   #7 = Class              #30            // java/lang/Object
+   #8 = Utf8               <init>
+   #9 = Utf8               ()V
+  #10 = Utf8               Code
+  #11 = Utf8               LineNumberTable
+  #12 = Utf8               LocalVariableTable
+  #13 = Utf8               this
+  #14 = Utf8               Lorg/fenixsoft/jvm/chapter8/StaticResolution;
+  #15 = Utf8               sayHello
+  #16 = Utf8               main
+  #17 = Utf8               ([Ljava/lang/String;)V
+  #18 = Utf8               args
+  #19 = Utf8               [Ljava/lang/String;
+  #20 = Utf8               SourceFile
+  #21 = Utf8               StaticResolution.java
+  #22 = NameAndType        #8:#9          // "<init>":()V
+  #23 = Class              #31            // java/lang/System
+  #24 = NameAndType        #32:#33        // out:Ljava/io/PrintStream;
+  #25 = Utf8               hello world
+  #26 = Class              #34            // java/io/PrintStream
+  #27 = NameAndType        #35:#36        // println:(Ljava/lang/String;)V
+  #28 = NameAndType        #15:#9         // sayHello:()V
+  #29 = Utf8               org/fenixsoft/jvm/chapter8/StaticResolution
+  #30 = Utf8               java/lang/Object
+  #31 = Utf8               java/lang/System
+  #32 = Utf8               out
+  #33 = Utf8               Ljava/io/PrintStream;
+  #34 = Utf8               java/io/PrintStream
+  #35 = Utf8               println
+  #36 = Utf8               (Ljava/lang/String;)V
+{
+  public org.fenixsoft.jvm.chapter8.StaticResolution();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 8: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lorg/fenixsoft/jvm/chapter8/StaticResolution;
+
+  public static void sayHello();
+    descriptor: ()V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=0, args_size=0
+         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #3                  // String hello world
+         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 11: 0
+        line 12: 8
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=0, locals=1, args_size=1
+         0: invokestatic  #5                  // Method sayHello:()V
+         3: return
+      LineNumberTable:
+        line 15: 0
+        line 16: 3
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       4     0  args   [Ljava/lang/String;
+}
+SourceFile: "StaticResolution.java"
+
+```
+
+Java中的非虚方法除了使用  **invokespecial、invokestatic** 调用的方法之外，还有一种就是 **被final 修饰的实例方法**。历史设计的原因，final 方法使用的是 **invokevirtual** 指令调用的，但是因为它无法被覆盖，没有其他版本的可能，所以也无须 对方法接收者 进行多态选择，又或者说 多态选择的结果肯定是唯一的。
+
+再《Java语言规范》中明确定义了被 final修饰的方法是一种**非虚方法**.
+
+
+
+#### 解析调用：
+
+解析调用一定是一个静态过程，在编译期间就完全确定，在类加载的解析阶段就会把涉及的符号引用全部 转变为 明确的直接引用，不必延迟到运行期再去完成。
+
+#### 分派调用：
+
+另一种主要的方法调用形式：  **分派（Dispatch）**调用则复杂许多，它可能是静态的也可能是动态的，按照分派依据 的宗量数可分为 **单分派** 和 **多分派**。 这两类分派两两组合就构成了静态单分派、静态多分派、动态单分派、动态多分派 4种分派组合情况 
+
+### 分派
+
+As we all know, Java 是一门面向对象的程序语言，因为java具备面向对象的 3个基本特征：  **继承、封装 和多态。**
+
+#### 静态分派
+
+ **“分派”（Dispatch）** 这个词本身就具有动态性，一般不应用在静态语境中。这部分原本在 英文原版的《Java虚拟机规范》和 《Java语言规范》里的说法都是:  
+
+"Method Overload Resolution 方法重载解析" ,但部分外文资料和国内翻译的许多中文资料都将这种行为 称为 “静态分派”。
+
+为了解释静态分派和重载（Overload），笔者准备了一段经常出现在面试题中的程序代码，读者不妨先看一遍，想一下程序的输出结果是什么。后面的话题将围绕这个类的方法来编写重载代码，以分析虚拟机和编译器确定方法版本的过程。程序如代码清单8-6所示。
+
+```java
+/**
+ * 方法静态分派演示
+ * @author zzm
+ */
+public class StaticDispatch {
+
+    static abstract class Human {
+    }
+
+    static class Man extends Human {
+    }
+
+    static class Woman extends Human {
+    }
+
+    public void sayHello(Human guy) {
+        System.out.println("hello,guy!");
+    }
+
+    public void sayHello(Man guy) {
+        System.out.println("hello,gentleman!");
+    }
+
+    public void sayHello(Woman guy) {
+        System.out.println("hello,lady!");
+    }
+
+    public static void main(String[] args) {
+        Human man = new Man();
+        Human woman = new Woman();
+        StaticDispatch sr = new StaticDispatch();
+        sr.sayHello(man);
+        sr.sayHello(woman);
+    }
+}
+
+
+运行结果：
+    hello,guy!
+hello,guy!
+
+```
+
+
+
+为什么虚拟机会选择执行参数类型为Human的重载版本呢？在解决这个问题之前，我们先通过如下代码来定义两个关键概念：
+
+```java
+Human man = new Man();
+```
+
+- 我们把上面代码中的 “Human” 称为 变量的 **“静态类型”（static Type）**，或者叫 **“外观类型”（Apparent Type）**,
+- "Man" 则被称为变量的 **“实际类型”（Actual Type）**或者叫做 **“运行时类型”（Runtime Type）**.
+- 静态类型和实际类型在程序中都可能会发生变化，区别是 静态类型的变化仅仅在使用时发生， 变量本身的静态类型不会被改变，并且最终的静态类型在编译期可知的；而 实际类型变化的结果在运行期才可确定，编译期在编译程序的时候并不知道一个对象的实际类型时什么
+
+```java
+// 实际类型变化
+Human human = (new Random()).nextBoolean() ? new Man() : new Woman();
+// 静态类型变化
+sr.sayHello((Man) human)
+sr.sayHello((Woman) human)
+
+```
+
+- 对象human 的实际类型是可变的，编译期间 它完全是个 “薛定谔的人”，到底是 Man 还是woman，必须等到程序运行到这行的时候才能确定。
+
+- 而human的静态类型是Human，也可以在使用时（如sayHello()方法中的强制转型）临时改变这个类型，但这个改变仍是在编译期是可知的，两次sayHello()
+  方法的调用，在编译期完全可以明确转型的是Man还是Woman。
+
+main()里面的两次sayHello()方法调用，在方法接收者已经确定是对象“sr”的前提下，使用哪个重载版本，就完全**取决于传入参数的数量和数据类型**。
+
+代码中故意**定义了两个静态类型相同**，而**实际类型不同的变量**，但虚拟机（或者准确地说是编译器）**在重载时是通过参数的静态类型**而**不是实际类型**作为判定依据的。由于**静态类型在编译期可知**，所以**在编译阶段**，Javac编译器就**根据参数的静态类型决定了会使用哪个重载版本**，因此选择了**sayHello(Human)作为调用目标**，并把**这个方法的符号引用写到main()方法里的两条invokevirtual指令的参数中。**
+
+
+
+```java
+public class org.fenixsoft.jvm.chapter8.StaticDispatch
+  minor version: 0
+  major version: 53
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #14.#44        // java/lang/Object."<init>":()V
+   #2 = Fieldref           #45.#46        // java/lang/System.out:Ljava/io/PrintStream;
+   #3 = String             #47            // hello,guy!
+   #4 = Methodref          #48.#49        // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #5 = String             #50            // hello,gentleman!
+   #6 = String             #51            // hello,lady!
+   #7 = Class              #52            // org/fenixsoft/jvm/chapter8/StaticDispatch$Man
+   #8 = Methodref          #7.#44         // org/fenixsoft/jvm/chapter8/StaticDispatch$Man."<init>":()V
+   #9 = Class              #53            // org/fenixsoft/jvm/chapter8/StaticDispatch$Woman
+  #10 = Methodref          #9.#44         // org/fenixsoft/jvm/chapter8/StaticDispatch$Woman."<init>":()V
+  #11 = Class              #54            // org/fenixsoft/jvm/chapter8/StaticDispatch
+  #12 = Methodref          #11.#44        // org/fenixsoft/jvm/chapter8/StaticDispatch."<init>":()V
+  #13 = Methodref          #11.#55        // org/fenixsoft/jvm/chapter8/StaticDispatch.sayHello:(Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;)V
+  #14 = Class              #56            // java/lang/Object
+  #15 = Utf8               Woman
+  #16 = Utf8               InnerClasses
+  #17 = Utf8               Man
+  #18 = Class              #57            // org/fenixsoft/jvm/chapter8/StaticDispatch$Human
+  #19 = Utf8               Human
+  #20 = Utf8               <init>
+  #21 = Utf8               ()V
+  #22 = Utf8               Code
+  #23 = Utf8               LineNumberTable
+  #24 = Utf8               LocalVariableTable
+  #25 = Utf8               this
+  #26 = Utf8               Lorg/fenixsoft/jvm/chapter8/StaticDispatch;
+  #27 = Utf8               sayHello
+  #28 = Utf8               (Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;)V
+  #29 = Utf8               guy
+  #30 = Utf8               Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;
+  #31 = Utf8               (Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Man;)V
+  #32 = Utf8               Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Man;
+  #33 = Utf8               (Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Woman;)V
+  #34 = Utf8               Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Woman;
+  #35 = Utf8               main
+  #36 = Utf8               ([Ljava/lang/String;)V
+  #37 = Utf8               args
+  #38 = Utf8               [Ljava/lang/String;
+  #39 = Utf8               man
+  #40 = Utf8               woman
+  #41 = Utf8               sr
+  #42 = Utf8               SourceFile
+  #43 = Utf8               StaticDispatch.java
+  #44 = NameAndType        #20:#21        // "<init>":()V
+  #45 = Class              #58            // java/lang/System
+  #46 = NameAndType        #59:#60        // out:Ljava/io/PrintStream;
+  #47 = Utf8               hello,guy!
+  #48 = Class              #61            // java/io/PrintStream
+  #49 = NameAndType        #62:#63        // println:(Ljava/lang/String;)V
+  #50 = Utf8               hello,gentleman!
+  #51 = Utf8               hello,lady!
+  #52 = Utf8               org/fenixsoft/jvm/chapter8/StaticDispatch$Man
+  #53 = Utf8               org/fenixsoft/jvm/chapter8/StaticDispatch$Woman
+  #54 = Utf8               org/fenixsoft/jvm/chapter8/StaticDispatch
+  #55 = NameAndType        #27:#28        // sayHello:(Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;)V
+  #56 = Utf8               java/lang/Object
+  #57 = Utf8               org/fenixsoft/jvm/chapter8/StaticDispatch$Human
+  #58 = Utf8               java/lang/System
+  #59 = Utf8               out
+  #60 = Utf8               Ljava/io/PrintStream;
+  #61 = Utf8               java/io/PrintStream
+  #62 = Utf8               println
+  #63 = Utf8               (Ljava/lang/String;)V
+{
+  public org.fenixsoft.jvm.chapter8.StaticDispatch();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 7: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lorg/fenixsoft/jvm/chapter8/StaticDispatch;
+
+  public void sayHello(org.fenixsoft.jvm.chapter8.StaticDispatch$Human);
+    descriptor: (Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;)V
+    flags: ACC_PUBLIC
+    Code:
+      stack=2, locals=2, args_size=2
+         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #3                  // String hello,guy!
+         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 19: 0
+        line 20: 8
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       9     0  this   Lorg/fenixsoft/jvm/chapter8/StaticDispatch;
+            0       9     1   guy   Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;
+
+  public void sayHello(org.fenixsoft.jvm.chapter8.StaticDispatch$Man);
+    descriptor: (Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Man;)V
+    flags: ACC_PUBLIC
+    Code:
+      stack=2, locals=2, args_size=2
+         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #5                  // String hello,gentleman!
+         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 23: 0
+        line 24: 8
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       9     0  this   Lorg/fenixsoft/jvm/chapter8/StaticDispatch;
+            0       9     1   guy   Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Man;
+
+  public void sayHello(org.fenixsoft.jvm.chapter8.StaticDispatch$Woman);
+    descriptor: (Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Woman;)V
+    flags: ACC_PUBLIC
+    Code:
+      stack=2, locals=2, args_size=2
+         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #6                  // String hello,lady!
+         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 27: 0
+        line 28: 8
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       9     0  this   Lorg/fenixsoft/jvm/chapter8/StaticDispatch;
+            0       9     1   guy   Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Woman;
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=4, args_size=1
+         0: new           #7                  // class org/fenixsoft/jvm/chapter8/StaticDispatch$Man
+         3: dup
+         4: invokespecial #8                  // Method org/fenixsoft/jvm/chapter8/StaticDispatch$Man."<init>":()V
+         7: astore_1
+         8: new           #9                  // class org/fenixsoft/jvm/chapter8/StaticDispatch$Woman
+        11: dup
+        12: invokespecial #10                 // Method org/fenixsoft/jvm/chapter8/StaticDispatch$Woman."<init>":()V
+        15: astore_2
+        16: new           #11                 // class org/fenixsoft/jvm/chapter8/StaticDispatch
+        19: dup
+        20: invokespecial #12                 // Method "<init>":()V
+        23: astore_3
+        24: aload_3
+        25: aload_1
+        26: invokevirtual #13                 //这里： Method sayHello:(Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;)V
+        29: aload_3
+        30: aload_2
+        31: invokevirtual #13                 //这里： Method sayHello:(Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;)V
+        34: return
+      LineNumberTable:
+        line 31: 0
+        line 32: 8
+        line 33: 16
+        line 34: 24
+        line 35: 29
+        line 36: 34
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      35     0  args   [Ljava/lang/String;
+            8      27     1   man   Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;
+           16      19     2 woman   Lorg/fenixsoft/jvm/chapter8/StaticDispatch$Human;
+           24      11     3    sr   Lorg/fenixsoft/jvm/chapter8/StaticDispatch;
+}
+SourceFile: "StaticDispatch.java"
+InnerClasses:
+     static #15= #9 of #11; //Woman=class org/fenixsoft/jvm/chapter8/StaticDispatch$Woman of class org/fenixsoft/jvm/chapter8/StaticDispatch
+     static #17= #7 of #11; //Man=class org/fenixsoft/jvm/chapter8/StaticDispatch$Man of class org/fenixsoft/jvm/chapter8/StaticDispatch
+     static abstract #19= #18 of #11; //Human=class org/fenixsoft/jvm/chapter8/StaticDispatch$Human of class org/fenixsoft/jvm/chapter8/StaticDispatch
+```
+
+
+
+所有依赖静态类型来决定执行版本的分派动作，都被称为 **静态分派**。 静态分配的最典型应用表现就是 **方法重载**。 静态分派 发生在编译阶段，因此确定静态分派的动作实际上并不是由虚拟机来执行的 ，这点也是为什么一些资料选择把它归入 为 “解析”而不是 “分派”的原因。
+
+
+
+##### 重载方法匹配优先级
+
+需要注意Javac编译器虽然能确定出方法的重载版本，但在很多情况下这个重载版本并不是“唯一”的，往往只能确定一个“相对更合适的”版本。这种模糊的结论在由0和1构成的计算机世界中算是个比较稀罕的事件，产生这种模糊结论的主要原因是字面量天生的模糊性，它不需要定义，所以字面量就没有显式的静态类型，它的静态类型只能通过语言、语法的规则去理解和推断。代码清单8-7演示了何谓“更加合适的”版本。
+
+代码清单8-7　重载方法匹配优先级
+
+```java
+/**
+ * @author zzm
+ */
+public class Overload {
+
+    public static void sayHello(Object arg) {
+        System.out.println("hello Object");
+    }
+
+    public static void sayHello(int arg) {
+        System.out.println("hello int");
+    }
+
+    public static void sayHello(long arg) {
+        System.out.println("hello long");
+    }
+
+    public static void sayHello(Character arg) {
+        System.out.println("hello Character");
+    }
+
+    public static void sayHello(char arg) {
+        System.out.println("hello char");
+    }
+
+    public static void sayHello(char... arg) {
+        System.out.println("hello char ...");
+    }
+
+    public static void sayHello(Serializable arg) {
+        System.out.println("hello Serializable");
+    }
+
+    public static void main(String[] args) {
+        sayHello('a');
+    }
+}
+```
+
+- 第一次运行结果： **hello char**，这很好理解，'a'是一个char类型的数据，自然会寻找参数类型为char的重载方法，
+- 如果注释掉 sayHello(char arg)方法，那输出会变为：**hello int** ，这时发生了一次自动类型转换，'a'除了可以代表一个字符串，还可以代表数字97（字符'a'的
+  Unicode数值为十进制数字97），因此参数类型为int的重载也是合适的
+
+- 我们继续注释掉sayHello(int arg)方法，那输出会变为： **hello long** .这时发生了两次自动类型转换，'a'转型为整数97之后，进一步转型为长整数97L，匹配了参数类型为long的重载。笔者在代码中没有写其他的类型如float、double等的重载，不过实际上自动转型还能继续发生多次，按照**char>int>long>float>double的顺序转型进行匹配**，但**不会匹配到byte和short类型的重载**，因为**char到byte或short的转型是不安全的**。
+- 继续注释掉sayHello(long arg)方法，那输出会变为 : **hello Character**  ，这时发生了一次自动装箱，'a'被包装为它的封装类型java.lang.Character，所以匹配到了参数类型为Character的重载
+- 继续注释掉sayHello(Character arg)方法，那输出会变为： **hello Serializable**,  出现hello Serializable，是因为java.lang.Serializable是java.lang.Character类实现的一个接口，当自动装箱之后发现还是找不到装箱类，但是找到了装箱类所实现的接口类型，所以紧接着又发生一次自动转型。char可以转型成int，
+  但是Character是绝对不会转型为Integer的，它只能安全地转型为它实现的接口或父类。Character还实现了另外一个接口java.lang.Comparable<Character>，如果同时出现两个参数分别为Serializable和Comparable<Character>的重载方法，那它们在此时的优先级是一样的。编译器无法确定要自动转型为哪种类型，会提示“类型模糊”（Type Ambiguous），并拒绝编译。程序必须在调用时显式地指定字面量的静态类型，如：sayHello((Comparable<Character>)'a')，才能编译通过
+- 继续注释掉sayHello(Serializable arg)方法，输出会变为： **hello Object** ，这时是char装箱后转型为父类了，如果有多个父类，那将在继承关系中从下往上开始搜索，越接上层的优先级越低。即使方法调用传入的参数值为null时，这个规则仍然适用。
+- 我们把sayHello(Objectarg)也注释掉，输出将会变为： **hello char ...**,7个重载方法已经被注释得只剩1个了，可见变长参数的重载优先级是最低的，这时候字符'a'被当作了一个char[]数组的元素。笔者使用的是char类型的变长参数，读者在验证时还可以选择int类型、Character类型、Object类型等的变长参数重载来把上面的过程重新折腾一遍。但是要注意的是，有一些在单个参数中能成立的自动转型，如char转型为int，在变长参数中是不成立的[2]。
+
+另外还有一点读者可能比较容易混淆：笔者讲述的**解析与分派这两者之间的关系并不是二选一的排他关系**，它们是在**不同层次上去筛选、确定目标方法**的过程。例如前面说过静态方法会在编译期确定、在类加载期就进行解析，而静态方法显然也是可以拥有重载版本的，选择重载版本的过程也是通过静态分派完成的
+
+
+
+#### 动态分派
+
+看一下Java语言里动态分派的实现过程，它与Java语言多态性的另外一个重要体现[3]——重写（Override）有着很密切的关联。我们还是用前面的Man和Woman一起 sayHello的例子来讲解动态分派，请看代码清单8-8中所示的代码。
+
+代码清单8-8　方法动态分派演示
+
+```java
+/**
+ * 方法动态分派演示
+ * @author zzm
+ */
+public class DynamicDispatch {
+
+    static abstract class Human {
+        protected abstract void sayHello();
+    }
+
+    static class Man extends Human {
+        @Override
+        protected void sayHello() {
+            System.out.println("man say hello");
+        }
+    }
+
+    static class Woman extends Human {
+        @Override
+        protected void sayHello() {
+            System.out.println("woman say hello");
+        }
+    }
+
+    public static void main(String[] args) {
+        Human man = new Man();
+        Human woman = new Woman();
+        man.sayHello();
+        woman.sayHello();
+        man = new Woman();
+        man.sayHello();
+    }
+}
+
+
+运行结果：
+    man say hello
+woman say hello
+woman say hello
+```
+
+##### Java虚拟机是如何判断应该调用哪个方法
+
+显然这里选择调用的方法版本是不可能再根据静态类型来决定的，因为静态类型同样都是Human的两个变量man和woman在调用sayHello()方法时产生了不同的行为，甚至变量man在两次调用中还执行了两个不同的方法。导致这个现象的原因很明显，是因为这两个变量的实际类型不同，Java虚拟机是如何根据实际类型来分派方法执行版本的呢？我们使用javap命令输出这段代码的字节码，尝试从中寻找答案，输出结果如代码清单8-9所示。
+
+```bash
+public static void main(java.lang.String[]);
+	Code:
+        Stack=2, Locals=3, Args_size=1
+        0: new #16; //class org/fenixsoft/polymorphic/DynamicDispatch$Man
+        3: dup
+        4: invokespecial #18; //Method org/fenixsoft/polymorphic/Dynamic Dispatch$Man."<init>":()V
+        7: astore_1
+        8: new #19; //class org/fenixsoft/polymorphic/DynamicDispatch$Woman
+        11: dup
+        12: invokespecial #21; //Method org/fenixsoft/polymorphic/DynamicDispatch$Woman."<init>":()V
+        15: astore_2
+        16: aload_1
+        17: invokevirtual #22; //Method org/fenixsoft/polymorphic/Dynamic Dispatch$Human.sayHello:()V
+        20: aload_2
+        21: invokevirtual #22; //Method org/fenixsoft/polymorphic/Dynamic Dispatch$Human.sayHello:()V
+        24: new #19; //class org/fenixsoft/polymorphic/DynamicDispatch$Woman
+        27: dup
+        28: invokespecial #21; //Method org/fenixsoft/polymorphic/DynamicDispatch$Woman."<init>":()V
+        31: astore_1
+        32: aload_1
+        33: invokevirtual #22; //Method org/fenixsoft/polymorphic/Dynamic Dispatch$Human.sayHello:()V
+        36: return
+```
+
+0～15行的字节码是准备动作，作用是建立man和woman的内存空间、调用Man和Woman类型的实例构造器，将这两个实例的引用存放在第1、2个局部变量表的变量槽中，这些动作实际对应了Java源码中的这两行： 
+
+```java
+Human man = new Man();
+Human woman = new Woman();
+```
+
+接下来的16～21行是关键部分，16和20行的aload指令分别把刚刚创建的两个对象的引用压到栈顶，这两个对象是将要执行的sayHello()方法的所有者，称为接收者（Receiver）；
+
+17和21行是方法调用指令，这两条调用指令单从字节码角度来看，无论是指令（都是invokevirtual）还是参数（都是常量池中第22项的常量，注释显示了这个常量是Human.sayHello()的符号引用）都完全一样，但是这两句指令最终执行的目标方法并不相同。那看来解决问题的关键还必须从invokevirtual指令本身入手，要弄清楚它是如何确定调用方法版本、如何实现多态查找来着手分析才行。根据《Java虚拟机规范》，invokevirtual指令的运行时解析过程[4]大致分为以下几步：
+
+1. 找到操作数栈顶的第一个元素所指向的对象的实际类型，记作C。
+2. 如果在类型C中找到与常量中的描述符和简单名称都相符的方法，则进行访问权限校验，如果通过则返回这个方法的直接引用，查找过程结束；不通过则返回java.lang.IllegalAccessError异常。
+3. 否则，按照继承关系从下往上依次对C的各个父类进行第二步的搜索和验证过程。
+4. 如果始终没有找到合适的方法，则抛出java.lang.AbstractMethodError异常。
+
+正是因为invokevirtual指令执行的**第一步就是在运行期确定接收者的实际类型**，所以两次调用中的invokevirtual指令并不是把**常量池中方法的符号引用解析到直接引用上**就结束了，还会**根据方法接收者的实际类型来选择方法版本**，这个过程就是**Java语言中方法重写的本质**。我们把这种在运行期根据实际类型确定方法执行版本的分派过程称为动态分派。
+
+既然这种多态性的**根源在于虚方法调用指令invokevirtual的执行逻辑**，那自然我们得出的结论就**只会对方法有效，对字段是无效的，因为字段不使用这条指令**。事实上，在Java里面只有虚方法存在，字段永远不可能是虚的，
+
+换句话说，字段永远不参与多态，哪个类的方法访问某个名字的字段时，该名字指的就是这个类能看到的那个字段。**当子类声明了与父类同名的字段时**，虽然在子类的内存中两个字段都会存在，但是**子类的字段会遮蔽父类的同名字段**。
+
+为了加深理解，又编撰了一份“劣质面试题式”的代码片段，请阅读代码清单8-10，思考运行后会输出什么结果。
+
+代码清单8-10　字段没有多态性
+
+```java
+/**
+ * 字段不参与多态
+ * @author zzm
+ */
+public class FieldHasNoPolymorphic {
+
+    static class Father {
+        public int money = 1;
+
+        public Father() {
+            money = 2;
+            showMeTheMoney();
+        }
+
+        public void showMeTheMoney() {
+            System.out.println("I am Father, i have $" + money);
+        }
+    }
+
+    static class Son extends Father {
+        public int money = 3;
+
+        public Son() {
+            money = 4;
+            showMeTheMoney();
+        }
+
+        public void showMeTheMoney() {
+            System.out.println("I am Son,  i have $" + money);
+        }
+    }
+
+    public static void main(String[] args) {
+        Father gay = new Son();
+        System.out.println("This gay has $" + gay.money);
+    }
+}
+
+运行结果为: 
+I am Son,  i have $0
+I am Son,  i have $4
+This gay has $2
+
+```
+
+输出两句都是“I am Son”，这是因为Son类在创建的时候，首先隐式调用了Father的构造函数，而Father构造函数中对showMeTheMoney()的调用是一次虚方法调用，实际执行的版本是Son::showMeTheMoney()方法，所以输出的是“I am Son”，这点经过前面的分析相信读者是没有疑问的了。而这时候虽然父类的money字段已经被初始化成2了，但Son::showMeTheMoney()方法中访问的却是子类的money字段，这时候结果自然还是0，因为它要到子类的构造函数执行时才会被初始化。main()的最后一句通过静态类型访问到了父类中的money，输出了2。
+
+**todo  消化一下**
+
+
+
+#### 单分派与多分派(TODO )
