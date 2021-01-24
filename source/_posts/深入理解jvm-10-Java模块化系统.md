@@ -99,7 +99,7 @@ jlink -p $JAVA_HOME/jmods --add-modules java.base --output jre
 
 ![](/uploads/jvm/09ClassLoader/01-ClassLoader_before.png)
 
-![](source/uploads/jvm/09ClassLoader/02-ClassLoader_after.png)
+![](/uploads/jvm/09ClassLoader/02-ClassLoader_after.png)
 
 图7-6中有“BootClassLoader”存在，启动类加载器现在是在Java虚拟机内部和Java类库共同协作实现的类加载器，尽管有了BootClassLoader这样的Java类，但为了与之前的代码保持兼容，所有在获取启动类加载器的场景（譬如Object.class.getClassLoader()）中仍然会返回null来代替，而不会得到BootClassLoader的实例。
 
