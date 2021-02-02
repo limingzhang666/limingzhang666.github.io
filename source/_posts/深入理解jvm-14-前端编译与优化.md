@@ -415,7 +415,7 @@ public class AutoBoxing {
 ```
 
 鉴于**包装类的“==”运算在不遇到算术运算的情况下不会自动拆箱**，以及**它们equals()方法不处理数据转型的关系**，
- 
+
 
 Integer::valueOf(int i),  当i的值 处于[-128,127]时，从缓存Cache中取， 否则 new Integer(i)，包装类==比较hash地址，所以  返回false
 
