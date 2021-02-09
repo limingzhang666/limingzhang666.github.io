@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="HCj467TtuvFkAzzdCvYvbniAeNiUy7TUwp2hG1qGWQE">
+  <meta name="baidu-site-verification" content="LppFIbSdZO">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
+  </script>
+
+  <meta name="description" content="垃圾收集算法分代收集理论两个分代假说： 弱分代假说（Weak Generational Hypothesis）：  绝大多数对象都是朝生夕灭的   强分代假说（Strong Generaional Hypothesis）：  熬过越多次GC过程的对象 就越难以消亡  这两个分代假说共同奠定了多款常用GC器一致的设计原则：  GC器应该将Java 堆Heap 划分出不同的区域，然后将回收对象依据其">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解jvm-04-垃圾收集算法">
+<meta property="og:url" content="https://limingzhang666.github.io/2020/12/27/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-04-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="Yinshi&#39;s Blog">
+<meta property="og:description" content="垃圾收集算法分代收集理论两个分代假说： 弱分代假说（Weak Generational Hypothesis）：  绝大多数对象都是朝生夕灭的   强分代假说（Strong Generaional Hypothesis）：  熬过越多次GC过程的对象 就越难以消亡  这两个分代假说共同奠定了多款常用GC器一致的设计原则：  GC器应该将Java 堆Heap 划分出不同的区域，然后将回收对象依据其">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/jvm/05-mark-sweep.png">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/jvm/06-mark_copy.png">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/jvm/07-mark-compact.png">
+<meta property="article:published_time" content="2020-12-27T04:01:23.000Z">
+<meta property="article:modified_time" content="2021-02-09T13:21:53.680Z">
+<meta property="article:author" content="Yinshi">
+<meta property="article:tag" content="垃圾收集算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://limingzhang666.github.io/uploads/jvm/05-mark-sweep.png">
+
+
+<link rel="canonical" href="https://limingzhang666.github.io/2020/12/27/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-04-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>深入理解jvm-04-垃圾收集算法 | Yinshi's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Yinshi's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">垃圾收集算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%90%86%E8%AE%BA"><span class="nav-number">1.1.</span> <span class="nav-text">分代收集理论</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%B1%E5%88%86%E4%BB%A3%E5%81%87%E8%AF%B4%EF%BC%88Weak-Generational-Hypothesis%EF%BC%89%EF%BC%9A"><span class="nav-number">1.1.0.1.</span> <span class="nav-text">弱分代假说（Weak Generational Hypothesis）：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%BA%E5%88%86%E4%BB%A3%E5%81%87%E8%AF%B4%EF%BC%88Strong-Generaional-Hypothesis%EF%BC%89%EF%BC%9A"><span class="nav-number">1.1.0.2.</span> <span class="nav-text">强分代假说（Strong Generaional Hypothesis）：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B7%A8%E4%BB%A3%E5%BC%95%E7%94%A8%E5%81%87%E8%AF%B4%EF%BC%88Intergenerational-Reference-Hypothesis%EF%BC%89%EF%BC%9A"><span class="nav-number">1.1.0.3.</span> <span class="nav-text">跨代引用假说（Intergenerational Reference Hypothesis）：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GC-%E5%90%8D%E8%AF%8D%E5%AD%97%E5%85%B8"><span class="nav-number">1.2.</span> <span class="nav-text">GC 名词字典</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0-%E6%B8%85%E9%99%A4%EF%BC%88Mark-Sweep%EF%BC%89%E7%AE%97%E6%B3%95"><span class="nav-number">1.3.</span> <span class="nav-text">标记-清除（Mark-Sweep）算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">1.3.1.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0-%E5%A4%8D%E5%88%B6%EF%BC%88Mark-Copy%EF%BC%89%E7%AE%97%E6%B3%95"><span class="nav-number">1.4.</span> <span class="nav-text">标记-复制（Mark-Copy）算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8A%E5%8C%BA%E5%A4%8D%E5%88%B6-%EF%BC%88Semispace-Copying%EF%BC%89"><span class="nav-number">1.4.1.</span> <span class="nav-text">半区复制 （Semispace Copying）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%82%B9"><span class="nav-number">1.4.2.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-1"><span class="nav-number">1.4.3.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%8D%8A%E5%8C%BA%E5%A4%8D%E5%88%B6-%EF%BC%88Appel%E5%BC%8F%E5%9B%9E%E6%94%B6%EF%BC%89"><span class="nav-number">1.4.4.</span> <span class="nav-text">优化半区复制 （Appel式回收）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E5%81%9A%E6%B3%95%EF%BC%9A"><span class="nav-number">1.4.4.1.</span> <span class="nav-text">具体做法：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%83%E7%94%9F%E9%97%A8%E2%80%9D%E7%9A%84%E5%AE%89%E5%85%A8%E8%AE%BE%E8%AE%A1%EF%BC%88%E5%88%86%E9%85%8D%E6%8B%85%E4%BF%9D%EF%BC%89%EF%BC%9A"><span class="nav-number">1.4.4.2.</span> <span class="nav-text">逃生门”的安全设计（分配担保）：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E9%85%8D%E6%8B%85%E4%BF%9D-%EF%BC%88Todo%EF%BC%89"><span class="nav-number">1.4.4.3.</span> <span class="nav-text">分配担保 （Todo）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0%E6%95%B4%E7%90%86%EF%BC%88Mark-Compact%EF%BC%89%E7%AE%97%E6%B3%95"><span class="nav-number">1.5.</span> <span class="nav-text">标记整理（Mark-Compact）算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%87%E7%A8%8B"><span class="nav-number">1.5.1.</span> <span class="nav-text">过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9%EF%BC%9A"><span class="nav-number">1.5.2.</span> <span class="nav-text">缺点：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">1.5.3.</span> <span class="nav-text">总结：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B9%E8%8A%82%E7%82%B9%E6%9E%9A%E4%B8%BE"><span class="nav-number">1.6.</span> <span class="nav-text">根节点枚举</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E7%82%B9%EF%BC%88SafePoint%EF%BC%89"><span class="nav-number">1.6.1.</span> <span class="nav-text">安全点（SafePoint）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A2%E5%85%88%E5%BC%8F%E4%B8%AD%E6%96%AD%EF%BC%88Preemptive-Suspension%EF%BC%89%EF%BC%9A"><span class="nav-number">1.6.1.1.</span> <span class="nav-text">抢先式中断（Preemptive Suspension）：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E5%8A%A8%E5%BC%8F%E4%B8%AD%E6%96%AD%EF%BC%88Voluntary-Suspension%EF%BC%89"><span class="nav-number">1.6.1.2.</span> <span class="nav-text">主动式中断（Voluntary Suspension）:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E5%8C%BA%E5%9F%9F%EF%BC%88Safe-Region%EF%BC%89%EF%BC%9A"><span class="nav-number">1.6.2.</span> <span class="nav-text">安全区域（Safe Region）：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%B0%E5%BF%86%E9%9B%86%E4%B8%8E%E5%8D%A1%E8%A1%A8%EF%BC%88Remembered-Set%EF%BC%89%EF%BC%9A"><span class="nav-number">1.6.3.</span> <span class="nav-text">记忆集与卡表（Remembered Set）：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%A1%E7%B2%BE%E5%BA%A6%EF%BC%9A"><span class="nav-number">1.6.3.1.</span> <span class="nav-text">卡精度：</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yinshi"
+      src="/images/yinshi01_avatar.jpg">
+  <p class="site-author-name" itemprop="name">Yinshi</p>
+  <div class="site-description" itemprop="description">拨开云雾见青天</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">48</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/limingzhang666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;limingzhang666" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:laimingcham@163.com" title="E-Mail → mailto:laimingcham@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/limingzhang666" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/27/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-04-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          深入理解jvm-04-垃圾收集算法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-27 12:01:23" itemprop="dateCreated datePublished" datetime="2020-12-27T12:01:23+08:00">2020-12-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/jvm/" itemprop="url" rel="index"><span itemprop="name">jvm</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>5.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="垃圾收集算法"><a href="#垃圾收集算法" class="headerlink" title="垃圾收集算法"></a>垃圾收集算法</h1><h2 id="分代收集理论"><a href="#分代收集理论" class="headerlink" title="分代收集理论"></a>分代收集理论</h2><p>两个分代假说：</p>
+<h4 id="弱分代假说（Weak-Generational-Hypothesis）："><a href="#弱分代假说（Weak-Generational-Hypothesis）：" class="headerlink" title="弱分代假说（Weak Generational Hypothesis）："></a>弱分代假说（Weak Generational Hypothesis）：</h4><ul>
+<li> 绝大多数对象都是朝生夕灭的 </li>
+</ul>
+<h4 id="强分代假说（Strong-Generaional-Hypothesis）："><a href="#强分代假说（Strong-Generaional-Hypothesis）：" class="headerlink" title="强分代假说（Strong Generaional Hypothesis）："></a>强分代假说（Strong Generaional Hypothesis）：</h4><ul>
+<li> 熬过越多次GC过程的对象 就越难以消亡</li>
+</ul>
+<p>这两个分代假说共同奠定了多款常用GC器一致的设计原则：</p>
+<ul>
+<li>GC器应该将Java 堆Heap 划分出不同的区域，然后将回收对象依据其 年龄（对象熬过GC收集的次数） 分配到不同的区域进行存储 。</li>
+<li>而不同的区域 因为其对象的不同特性，可以采用不同的垃圾收集算法 。</li>
+<li>如果区域对象 大多数对象都是朝生夕灭 的，难以熬过GC过程的 ，那把他们放在一起，每次回收只标记那些少量存活的对象实例，这样就可以用少量代价回收大量空间</li>
+<li>如果剩下的都是难以消亡的对象，就把这个年龄大的对象 集中放在一起，jvm使用低频率区回收这个区域。  </li>
+<li>这样就兼顾了GC的时间开销 和内存空间的有效利用</li>
+</ul>
+<p>将java堆进行划分成 不同区域后，gc器 才可以每次只收集其中某一个 或某些部分的区域， 因此 出现了  MInor GC , Major GC, Full GC</p>
+<p>这样的回收类型划分，</p>
+<p>针对不同区域的，安排与里面存储对象存亡特征相匹配的 GC 算法，如 标记删除，标记复制，标记整理 </p>
+<p>因为存在 跨代引用的场景，老年代与新生代 可能存在互相引用的情况，这样 纪要通过GCRoot的可达性分析 ，也要额外遍历整个老年代的对象 来确保可达性分析结果的正确性， 这样由很大的性能负担</p>
+<p> 所以出行第三条经验法则</p>
+<h4 id="跨代引用假说（Intergenerational-Reference-Hypothesis）："><a href="#跨代引用假说（Intergenerational-Reference-Hypothesis）：" class="headerlink" title="跨代引用假说（Intergenerational Reference Hypothesis）："></a>跨代引用假说（Intergenerational Reference Hypothesis）：</h4><ul>
+<li><p>跨代引用相对于同代引用来说 仅仅占极少数</p>
+</li>
+<li><p>这其实是通过强分代假说和 弱分代假说逻辑推理得出的推论： </p>
+</li>
+<li><p>存在互相引用关系的2个对象，应该是倾向于同时生存和同时消亡的，</p>
+</li>
+<li><p>如果某个新生代对象存在跨代引用，那么由于老年代对象难以消亡，所以 新生代对象在GC过程的时候也难以消亡，从而得以存活。慢慢的随着 之前新生代对象的年龄的增长，它也会被 晋升到老年代之中，这时候就不存在 跨代引用了</p>
+</li>
+<li><p>ps:  依据这条假说，我们就不应再为了少量的跨代引用去扫描整个老年代，也不必浪费空间专门记录每一个对象是否存在及存在哪些跨代引用，只需在新生代上建立一个全局的数据结构（该结构被称为“记忆集”，Remembered Set），这个结构把老年代划分成若干小块，标识出老年代的哪一块内存会存在跨代引用。此后当发生Minor GC时，只有包含了跨代引用的小块内存里的对象才会被加入到GCRoots进行扫描</p>
+</li>
+</ul>
+<h2 id="GC-名词字典"><a href="#GC-名词字典" class="headerlink" title="GC 名词字典"></a>GC 名词字典</h2><ul>
+<li><p>部分收集（Partial GC）：指目标不是完整收集整个Java堆的垃圾收集</p>
+<ul>
+<li>新生代收集（Minor GC/Young GC）：指目标只是新生代的垃圾收集。</li>
+<li>老年代收集（Major GC/Old GC）：指目标只是老年代的垃圾收集。目前只有CMS收集器会有单独收集老年代的行为。另外请注意“Major GC”这个说法现在有点混淆，在不同资料上常有不同所指，需按上下文区分到底是指老年代的收集还是整堆收集。</li>
+<li>混合收集（Mixed GC）：指目标是收集整个新生代以及部分老年代的垃圾收集。目前只有G1收集器会有这种行为。</li>
+</ul>
+</li>
+<li><p>整堆收集（Full GC）：收集整个Java堆和方法区的垃圾收集。</p>
+</li>
+</ul>
+<h2 id="标记-清除（Mark-Sweep）算法"><a href="#标记-清除（Mark-Sweep）算法" class="headerlink" title="标记-清除（Mark-Sweep）算法"></a>标记-清除（Mark-Sweep）算法</h2><p>算法分为“标记”和“清除”两个阶段：</p>
+<ul>
+<li>首先标记出所有需要回收的对象，在标记完成后，统一回收掉所有被标记的对象，</li>
+<li>也可以反过来，标记存活的对象，统一回收所有未被标记的对象。</li>
+<li>标记过程就是对象是否属于垃圾的判定过程，</li>
+<li>后续的收集算法大多都是以标记-清除算法为基础，对其缺点进行改进而得到的</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>第一个是执行效率不稳定，如果Java堆中包含大量对象，而且其中大部分是需要被回收的，这时必须进行大量标记和清除的动作，导致标记和清除两个过<br>程的执行效率都随对象数量增长而降低</li>
+<li>第二个是内存空间的碎片化问题，标记、清除之后会产生大量不连续的内存碎片，空间碎片太多可能会导致当以后在程序运行过程中需要分配较大对象时无法找到足够的连续内存而不得不提前触发另一次垃圾收集动作</li>
+</ul>
+<p><img src="/uploads/jvm/05-mark-sweep.png"></p>
+<h2 id="标记-复制（Mark-Copy）算法"><a href="#标记-复制（Mark-Copy）算法" class="headerlink" title="标记-复制（Mark-Copy）算法"></a>标记-复制（Mark-Copy）算法</h2><h3 id="半区复制-（Semispace-Copying）"><a href="#半区复制-（Semispace-Copying）" class="headerlink" title="半区复制 （Semispace Copying）"></a>半区复制 （Semispace Copying）</h3><ul>
+<li><p>将可用内存按容量分为大小相等的2块 ，每次只使用其中1块 。 </p>
+</li>
+<li><p>当这一块的内存用完了，就将还存活的对象复制到另一块上面 ，</p>
+</li>
+<li><p>然后就将还存活的对象复制到另一块上面，</p>
+</li>
+<li><p>然后再把已经使用过的内存空间一次清理掉。 </p>
+</li>
+</ul>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li><p>如果内存中多数对象都是存活的，这种算法会产生大量的内存间的复制 开销</p>
+</li>
+<li><p><strong><em>但是</em></strong>   在新生代这个 内存区域，98%的对象实例都熬不过第一轮收集，所以 不是算法有问题，是将算法 没有用到对的区域</p>
+</li>
+<li><p> 因为多数对象都是可回收的状态，所以算法复制的就是占少数的存活对象 </p>
+</li>
+<li><p>而且因为每次都是针对整个半区进行回收，分配内存时候也不用考虑 空间碎片整理的情况，只需要移动堆顶指针，按顺序分配即可，简单 高效</p>
+</li>
+</ul>
+<h3 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>复制回收算法的代价是 将内存缩小一半，空间浪费未免太多了一点</li>
+</ul>
+<p><img src="/uploads/jvm/06-mark_copy.png"></p>
+<h3 id="优化半区复制-（Appel式回收）"><a href="#优化半区复制-（Appel式回收）" class="headerlink" title="优化半区复制 （Appel式回收）"></a>优化半区复制 （Appel式回收）</h3><p>因为IBM 对 对象的朝生夕灭 特点做了调研，新生代中的对象 98% 熬不过第一轮收集，所以 提出了优化版的半区复制算法，即： </p>
+<p>Appel 式回收：</p>
+<h4 id="具体做法："><a href="#具体做法：" class="headerlink" title="具体做法："></a>具体做法：</h4><ul>
+<li>将新生代  分为一块较大的Eden区（80%）  + Survivor_1（10%）+Survivor_2（10%）</li>
+<li>每次分配内存时候，只使用 Eden（80%） 和 Survivor_1（10%），而 Survivor_2（10%）就暂时浪费掉</li>
+<li>当 发生 GC的时候，就将 Eden（80%） 和 Survivor_1（10%）中的存活对象 复制到 Survivor_2（10%） 中</li>
+<li>然后直接清理掉Eden（80%） 和 Survivor_1（10%）</li>
+</ul>
+<h4 id="逃生门”的安全设计（分配担保）："><a href="#逃生门”的安全设计（分配担保）：" class="headerlink" title="逃生门”的安全设计（分配担保）："></a>逃生门”的安全设计（分配担保）：</h4><p>98%的对象都熬不过第一轮GC 这个是 普通场景， 没有人能保证 每一次 GC后 ，继续存活的对象 不超过10% ，所以 Survivor_2（10%） 有可能装不下了。</p>
+<p>这个时候 Appel 有一个 “逃生门”的安全设计 ：</p>
+<ul>
+<li>当 Survivor_2（10%）容纳不了一次  Minor GC （新生代GC，Young GC）存活对象， </li>
+<li>就需要 依赖其他内存区域（实际上大多数是老年代） 进行分配担保，就将一部分 存活对象移入 老年代</li>
+</ul>
+<h4 id="分配担保-（Todo）"><a href="#分配担保-（Todo）" class="headerlink" title="分配担保 （Todo）"></a>分配担保 （Todo）</h4><ul>
+<li>内存的分配担保好比我们去银行借款，如果我们信誉很好，在98%的情况下都能按时偿还，于是银行可能会默认我们下一次也能按时按量地偿还贷款，只需要有一个担保人能保证如果我不能还款时，可以从他的账户扣钱，那银行就认为没有什么风险了。</li>
+<li>内存的分配担保也一样，如果另外一块Survivor空间没有足够空间存放上一次新生代收集下来的存活对象，这些对象便将通过分配担保机制直接进入老年代，这对虚拟机来说就是安全的</li>
+</ul>
+<h2 id="标记整理（Mark-Compact）算法"><a href="#标记整理（Mark-Compact）算法" class="headerlink" title="标记整理（Mark-Compact）算法"></a>标记整理（Mark-Compact）算法</h2><ul>
+<li><p>标记-复制算法在对象存活率较高时就要进行较多的复制操作，效率将会降低。更关键的是，如果不想浪费50%的空间，就需要有额外的空间进行分配担保，以应对被使用的内存中所有对象都100%存活的极端情况，所以在老年代一般不能直接选用这种标记-复制算法 .</p>
+</li>
+<li><p>针对老年代对象的存亡特征，提出了 有针对性的 “标记-整理”（Mark-Compact）算法</p>
+</li>
+</ul>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ul>
+<li>首先标记出所有需要回收的对象，</li>
+<li>让所有存活的对象都向内存空间一端移动，然后直接清理掉边界以外的内存，“标记-整理”算法的示意图如图3-4所示。</li>
+</ul>
+<p><img src="/uploads/jvm/07-mark-compact.png"></p>
+<h3 id="缺点："><a href="#缺点：" class="headerlink" title="缺点："></a>缺点：</h3><ul>
+<li><p>如果移动存活对象，尤其是在老年代 这种每次回收都有大量对象存活区域 ，移动存活对象并更新所有 引用这些对象的地方将会是一种极为负重的操作 ，</p>
+<p>而且这种对象移动操作必须全程暂停用户应用程序才能进行。 Stop The World</p>
+</li>
+<li><p>如果不考虑移动和整理存活对象的话，，存活对象倒置 的空间碎片化问题就 只能依赖更为复杂的内存分配器和内存访问器来解决。</p>
+</li>
+<li><p>内存的访问 是用户程序最频繁的操作，如果这个环节上增加了额外的负担，势必影响用户程序的吞吐量</p>
+</li>
+</ul>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ul>
+<li><p>基于以上两点，是否移动对象都存在弊端，移动则内存回收时会更复杂，不移动则内存分配时会更复杂。</p>
+</li>
+<li><p>从垃圾收集的停顿时间来看，不移动对象停顿时间会更短，甚至可以不需要停顿</p>
+</li>
+<li><p>但是从整个程序的吞吐量来看，移动对象会更划算。即使不移动对象会使得收集器的效率提升一些，但因内存分配和访问相比垃圾收集频率要高得多，这部分的耗时增加，总吞吐量仍然是下降的</p>
+</li>
+<li><p>HotSpot虚拟机里面关注吞吐量的ParallelScavenge收集器是基于标记-整理算法的，而关注延迟的CMS收集器则是基于标记-清除算法的</p>
+</li>
+<li><p>还有一种“和稀泥式”解决方案可以不在内存分配和访问上增加太大额外负担，做法是让虚拟机平时多数时间都采用标记-清除算法，暂时容忍内存碎片的存在，直到内存空间的碎片化程度已经大到影响对象分配时，再采用标记-整理算法收集一次，以获得规整的内存空间。前面提到的基于标记-清除算法的CMS收集器面临空间碎片过多时采用的就是这种处理办法。</p>
+</li>
+</ul>
+<h2 id="根节点枚举"><a href="#根节点枚举" class="headerlink" title="根节点枚举"></a>根节点枚举</h2><ul>
+<li><p>枚举根节点的时候，用户线程必须要停顿。</p>
+</li>
+<li><p>根节点枚举始终还是必须在一个能保障一致性的快照中才得以进行</p>
+</li>
+<li><p>这里“一致性”的意思是整个枚举期间执行子系统看起来就像被冻结在某个时间点上，不会出现分析过程中，根节点集合的对象引用关系还在不断变化的情况，若这点不能满足的话，分析结果准确性也就无法保证。这是导致垃圾收集过程必须停顿所有用户线程的其中一个重要原因</p>
+</li>
+</ul>
+<ul>
+<li>虚拟机应当是有办法直接得到哪些地方存放着对象引用的。</li>
+<li>在HotSpot的解决方案里，是使用一组称为OopMap的数据结构来达到这个目的。一旦类加载动作完成的时候，HotSpot就会把对象内什么偏移量上是什么类型的数据计算出来，</li>
+<li>在即时编译过程中，也会在特定的位置记录下栈里和寄存器里哪些位置是引用。这样收集器在扫描时就可以直接得知这些信息了，并不需要真正一个不漏地从方法区等GC Roots开始查找。</li>
+</ul>
+<h3 id="安全点（SafePoint）"><a href="#安全点（SafePoint）" class="headerlink" title="安全点（SafePoint）"></a>安全点（SafePoint）</h3><ul>
+<li>实际上HotSpot也的确没有为每条指令都生成OopMap,只是在“特定的位置”记录了这些信息，这些位置被称为安全点（Safepoint）</li>
+<li>安全点的设定，决定了用户程序执行时并非在代码指令流的任意位置都能够停顿下来开始垃圾收集，而是强制要求必须执行到达安全点后才能够暂停</li>
+<li>安全点的选定既不能太少以至于让收集器等待时间过长，也不能太过频繁以至于过分增大运行时的内存负荷。</li>
+</ul>
+<h4 id="抢先式中断（Preemptive-Suspension）："><a href="#抢先式中断（Preemptive-Suspension）：" class="headerlink" title="抢先式中断（Preemptive Suspension）："></a>抢先式中断（Preemptive Suspension）：</h4><p>抢先式中断不需要线程的执行代码主动去配合，在垃圾收集发生时，系统首先把所有用户线程全部中断，如果发现有用户线程中断的地方不在安全点上，就恢复这条线程执行，让它一会再重新中断，直到跑到安全点上。</p>
+<p>现在几乎没有虚拟机实现采用抢先式中断来暂停线程响应GC事件。</p>
+<h4 id="主动式中断（Voluntary-Suspension）"><a href="#主动式中断（Voluntary-Suspension）" class="headerlink" title="主动式中断（Voluntary Suspension）:"></a>主动式中断（Voluntary Suspension）:</h4><ul>
+<li>当垃圾收集需要中断线程的时候，不直接对线程操作，仅仅简单地设置一个标志位，各个线程执行过程时会不停地主动去轮询这个标志，一旦发现中断标志为真时就自己在最近的安全点上主动中断挂起。</li>
+<li>轮询标志的地方和安全点是重合的，</li>
+<li>另外还要加上所有创建对象和其他需要在Java堆上分配内存的地方，这是为了检查是否即将要发生垃圾收集，避免没有足够内存分配新对象。</li>
+</ul>
+<h3 id="安全区域（Safe-Region）："><a href="#安全区域（Safe-Region）：" class="headerlink" title="安全区域（Safe Region）："></a>安全区域（Safe Region）：</h3><ul>
+<li><p>用户线程处于Sleep状态或者Blocked状态，这时候线程无法响应虚拟机的中断请求，不能再走到安全的地方去中断挂起自己，虚拟机也显然不可能持续等待线程重新被激活分配处理器时间。</p>
+</li>
+<li><p>对于这种情况，就必须引入安全区域（Safe Region）来解决。</p>
+</li>
+<li><p>安全区域是指能够确保在某一段代码片段之中，引用关系不会发生变化，因此，在这个区域中任意地方开始垃圾收集都是安全的。</p>
+</li>
+<li><p>我们也可以把安全区域看作被扩展拉伸了的安全点 </p>
+</li>
+</ul>
+<p>当用户线程执行到安全区域里面的代码时，</p>
+<ul>
+<li>首先会标识自己已经进入了安全区域，那样当这段时间里虚拟机要发起垃圾收集时就不必去管这些已声明自己在安全区域内的线程了。</li>
+<li>当线程要离开安全区域时，它要检查虚拟机是否已经完成了根节点枚举（或者垃圾收集过程中其他需要暂停用户线程的阶段），</li>
+<li>如果完成了，那线程就当作没事发生过，继续执行；</li>
+<li>否则它就必须一直等待，直到收到可以离开安全区域的信号为止。</li>
+</ul>
+<h3 id="记忆集与卡表（Remembered-Set）："><a href="#记忆集与卡表（Remembered-Set）：" class="headerlink" title="记忆集与卡表（Remembered Set）："></a>记忆集与卡表（Remembered Set）：</h3><ul>
+<li><p>为解决对象跨代引用所带来的问题，垃圾收集器在新生代中建立了名为记忆集（Remembered Set）的数据结构，用以避免把整个老年代加进GC Roots扫描范围</p>
+</li>
+<li><p>记忆集是一种用于记录从非收集区域指向收集区域的指针集合的抽象数据结构</p>
+</li>
+<li><p>在垃圾收集的场景中，收集器只需要通过记忆集判断出某一块非收集区域是否存在有指向了收集区域的指针就可以了，并不需要了解这些跨代指针的全部细节</p>
+</li>
+</ul>
+<h4 id="卡精度："><a href="#卡精度：" class="headerlink" title="卡精度："></a>卡精度：</h4><p>  每个记录精确到一块内存区域，该区域内有对象含有跨代指针。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>Yinshi
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://limingzhang666.github.io/2020/12/27/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-04-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95/" title="深入理解jvm-04-垃圾收集算法">https://limingzhang666.github.io/2020/12/27/深入理解jvm-04-垃圾收集算法/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95/" rel="tag"># 垃圾收集算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/26/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-03-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8/" rel="prev" title="深入理解jvm-03-垃圾收集器">
+                  <i class="fa fa-chevron-left"></i> 深入理解jvm-03-垃圾收集器
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/28/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-05-%E8%B0%83%E4%BC%98%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/" rel="next" title="深入理解jvm-05-调优案例分析与实战">
+                  深入理解jvm-05-调优案例分析与实战 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yinshi</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8.8.2/dist/mermaid.min.js', () => {
+    mermaid.init({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    }, '.mermaid');
+  }, window.mermaid);
+}
+</script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
