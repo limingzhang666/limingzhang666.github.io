@@ -3,7 +3,7 @@ title: java高并发详解-02-Thread构造函数
 copyright: true
 related_posts: true
 date: 2021-02-17 23:04:23
-tags: 线程
+tags: Thread构造函数
 categories: 高并发详解
 ---
 
@@ -336,4 +336,9 @@ public class DaemonThread
 
 
 
-## 总结：TODO
+## 总结：
+
+- 详细了解Thread的构造函数，挖掘里面的各类细节，如 threadStatus =0代表 new状态，构造函数调用init函数，尤其是 stacksize  对Thread的影响
+- 了解了线程的父子关系， 默认情况下子线程从父线程那里 继承了守护线程、优先级、ThreadGroup等特性
+- 守护线程的特性以及使用场景
+
