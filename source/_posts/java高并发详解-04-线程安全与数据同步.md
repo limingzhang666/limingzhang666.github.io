@@ -266,18 +266,167 @@ public static class Task implements Runnable{
 
 
 
-### This Monitor和Class Monitor
+### 4.4 This Monitor和Class Monitor 
 
+#### This Monitor:
 
+##### 问题：
 
-TODO： 
-
-This Monitor:
+synchronized 关键字修饰了同一个实例对象的两个不同方法，那么与之对应的monitor 是什么？ 两个 monitor是否一致呢。
 
 实例锁
 
+```java
+public class ThisMonitor
+{
+
+    public synchronized void method1()
+    {
+        System.out.println(currentThread().getName() + " enter to method1");
+        try
+        {
+            TimeUnit.MINUTES.sleep(10);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void method2()
+    {
+        synchronized (this)
+        {
+            System.out.println(currentThread().getName() + " enter to method2");
+            try
+            {
+                TimeUnit.MINUTES.sleep(10);
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        ThisMonitor thisMonitor = new ThisMonitor();
+        new Thread(thisMonitor::method1, "T1").start();
+        new Thread(thisMonitor::method2, "T2").start();
+    }
+}
+
+```
+
+![](/uploads/java-concurrency-master/thread-thisMonitor.png)
+
+![](/uploads/java-concurrency-master/thread-thisMonitor2.png)
+
+#### 结论： 
+
+- 由上图可以看出 T1获取了 monitor lock  并处于休眠状态，而 T2 线程企图获取 monitor 的lock时陷入了 BLOCKED 状态，可见 使用synchronized 关键字同步类的不同实例方法，争抢的时 同一个monitor的lock ，而 与之关联的引用则是 ThisMonitor 的实例引用
+- 其中 method1 保持方法同步的方式，method2 则采用了同步代码块 的方式，并且使用的是 this的monitor
+
+when a thread invokes a synchronized method, it automatically acquires the intrinsic lock  for that method's object and releases it when the method returns .  The lock release occurs even if the return was caused by an uncaught exception .
 
 
-Class Monitor:
 
-对象锁，static修饰
+#### Class Monitor:
+
+对象锁，static修饰 ,有两个类方法（静态方法）分别使用 synchronized对其进行同步
+
+```java
+public class ClassMonitor
+{
+    public static synchronized void method1()
+    {
+        System.out.println(currentThread().getName() + " enter to method1");
+        try
+        {
+            TimeUnit.MINUTES.sleep(10);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    public static void method2()
+    {
+        synchronized (ClassMonitor.class)
+        {
+            System.out.println(currentThread().getName() + " enter to method2");
+            try
+            {
+                TimeUnit.MINUTES.sleep(10);
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+    public static void main(String[] args)
+    {
+        new Thread(ClassMonitor::method1, "T1").start();
+        new Thread(ClassMonitor::method2, "T2").start();
+    }
+}
+```
+
+![](/uploads/java-concurrency-master/thread-classMonitor.png)
+
+![](/uploads/java-concurrency-master/thread-classMonitor2.png)
+
+-  从上图可以看出 用synchronized 同步某个类的不同静态方法争抢的也是 同一个 monitor的lock ，
+- 与 This monitor 信息不一样的地方在于 （a java.lang.Class for ........）
+- 由此推断与 该 monitor关联的引用是 ClassMonitor.class  实例
+
+
+
+since  a static method is associated with a class, not an object  . In this case, the thread acquires the intrinstic lock for the Class  object associated with the class . Thus access to class's static fields is controlled by a lock that's distinct from the lock for any instance of the class .
+
+
+
+### 4.5 程序死锁的原因以及如何诊断
+
+1. 交叉锁可导致程序出现死锁
+
+   典型的哲学家吃面问题，
+
+2. 内存不足
+
+   当并发请求系统可用内存时，如果此时系统内存不足，则可能会出现死锁的情况，举个例子，两个线程 T1 和 T2，执行某个任务，其中T1 已经获取了10MB内存， T2 获取了20MB内存，如果每个线程都需要30MB的内存，但是剩余可用内存刚好为20MB，那么两个线程 有可能都在等待彼此能够释放内存资源。
+
+3. 一问一答式的数据交换
+
+4. 数据库锁
+
+   无论是数据库表级别的锁，还是行级别的锁， 比如 某个线程执行 for update语句退出了事务，其他线程访问该数据库时 都将陷入死锁。
+
+5. 文件锁
+
+   某线程获得了文件锁意外退出，其他读取该文件的线程也将会 进入死锁知道系统释放文件句柄资源
+
+6. 死循环引起的死锁
+
+#### 死锁诊断
+
+1. 交叉锁引起的死锁
+
+- 打开jstack 工具或者 jconsole工具，一般交叉锁引起的死锁线程都会进入 BLOCKED状态，CPU资源占用不高，很容易借助工具来发现
+
+![](/uploads/java-concurrency-master/deadLock_read.png)
+
+![](/uploads/java-concurrency-master/deadLock_write.png)
+
+2. 死循环引起的死锁（假死）
+
+- 工作的线程并未BLOCKED ,而是始终处于 RUNNABLE状态，CPU使用率高居不下，
+
+
+
+## 总结：
+
+- synchronized 关键字在Java 中提供了同步语义，它可以保证在同一时间 只允许一个线程访问 共享数据资源。
+- 本章介绍了synchronized的详细用法，修饰 方法，或者修饰代码块，
+  - 如果修饰的是  static 方法或者static 方法快，那么 使用的就是 CLASS monitor，是 class 实例的monitor
+  - 如果修饰的不带static ，那就是 this monitor，使用的是某个对象的 monitor
+
+- 介绍死锁场景，以及定位死锁问题
