@@ -226,7 +226,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-count">46</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -239,7 +239,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">48</span>
+        <span class="site-state-item-count">51</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -285,6 +285,723 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/28/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-05-%E8%B0%83%E4%BC%98%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/28/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-05-%E8%B0%83%E4%BC%98%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/" class="post-title-link" itemprop="url">深入理解jvm-05-调优案例分析与实战</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-28 23:12:21" itemprop="dateCreated datePublished" datetime="2020-12-28T23:12:21+08:00">2020-12-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/jvm/" itemprop="url" rel="index"><span itemprop="name">jvm</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>9.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>8 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="调优案例分析与实战"><a href="#调优案例分析与实战" class="headerlink" title="调优案例分析与实战"></a>调优案例分析与实战</h1><h2 id="大内存硬件上的程序部署策略"><a href="#大内存硬件上的程序部署策略" class="headerlink" title="大内存硬件上的程序部署策略"></a>大内存硬件上的程序部署策略</h2><h3 id="问题："><a href="#问题：" class="headerlink" title="问题："></a>问题：</h3><p>服务器的硬件为四路志强处理器、16GB物理内存，操作系统为64位CentOS 5.4，Resin作为Web服务器。整个服务器暂时没有部署别的应用，所有硬件资源都可以提供给这访问量并不算太大的文档网站使用。软件版本选用的是64位的JDK 5，管理员启用了一个虚拟机实例，使用-Xmx和-Xms参数将Java堆大小固定在12GB。使用一段时间后发现服务器的运行效果十分不理想，网站经常不定期出现长时间失去响应。</p>
+<p>监控服务器运行状况后发现网站失去响应是由垃圾收集停顿所导致的，在该系统软硬件条件下，HotSpot虚拟机是以服务端模式运行，默认使用的是吞吐量优先收集器，回收12GB的Java堆，一次FullGC的停顿时间就高达14秒。由于程序设计的原因，访问文档时会把文档从磁盘提取到内存中，导致内存中出现很多由文档序列化产生的大对象，这些大对象大多在分配时就直接进入了老年代，没有在Minor GC中被清理掉。这种情况下即使有12GB的堆，内存也很快会被消耗殆尽，由此导致每隔几分钟出现十几秒的停顿，令网站开发、管理员都对使用Java技术开发网站感到很失望</p>
+<ul>
+<li><strong><em>回收大块堆内存而导致的长时间停顿</em></strong></li>
+</ul>
+<h3 id="解决方案（单体）："><a href="#解决方案（单体）：" class="headerlink" title="解决方案（单体）："></a>解决方案（单体）：</h3><p><strong><em>程序部署上的主要问题显然是过大的堆内存进行回收时带来的长时间的停顿</em></strong></p>
+<ul>
+<li><p>将Java堆分配的内存重新缩小到1.5GB或者2GB ，在深夜执行定时任务的方式触发Full GC甚至是自动重启应用服务器来保持内存可用空间在一个稳定的水平。</p>
+</li>
+<li><p>这样的确可以避免长时间停顿，</p>
+</li>
+</ul>
+<h5 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>在硬件上的投资就显得非常浪费。</li>
+</ul>
+<h3 id="解决方案（集群）："><a href="#解决方案（集群）：" class="headerlink" title="解决方案（集群）："></a>解决方案（集群）：</h3><ul>
+<li>建立5个32位JDK的逻辑集群，每个进程按2GB内存计算（其中堆固定为1.5GB），占用了10GB内存。</li>
+<li>另外建立一个Apache服务作为前端均衡代理作为访问门户。</li>
+<li>考虑到用户对响应速度比较关心，并且文档服务的主要压力集中在磁盘和内存访问，处理器资源敏感度较低，</li>
+<li>因此改为CMS收集器进行垃圾回收。</li>
+</ul>
+<h5 id="缺点："><a href="#缺点：" class="headerlink" title="缺点："></a>缺点：</h5><ul>
+<li>节点竞争全局的资源，最典型的就是磁盘竞争，各个节点如果同时访问某个磁盘文件的话（尤其是并发写操作容易出现问题），很容易导致I/O异常。</li>
+<li>很难最高效率地利用某些资源池，譬如连接池，一般都是在各个节点建立自己独立的连接池，这样有可能导致一些节点的连接池已经满了，而另外一些节点仍有较多空余</li>
+</ul>
+<h3 id="扩展："><a href="#扩展：" class="headerlink" title="扩展："></a>扩展：</h3><p><strong><em>控制Full GC频率的关键是老年代的相对稳定</em></strong></p>
+<p>这主要取决于应用中绝大多数对象能否符合“朝生夕灭”的原则，即大多数对象的生存时间不应当太长，尤其是不能有成批量的、长生存时间的大对象产生，这样才能保障老年代空间的稳定。</p>
+<p>目前单体应用在较大内存的硬件上主要的部署方式有两种：</p>
+<ul>
+<li>通过一个单独的Java虚拟机实例来管理大量的Java堆内存。</li>
+<li>同时使用若干个Java虚拟机，建立逻辑集群来利用硬件资源。</li>
+</ul>
+<h2 id="堆外内存导致的溢出错误"><a href="#堆外内存导致的溢出错误" class="headerlink" title="堆外内存导致的溢出错误"></a>堆外内存导致的溢出错误</h2><h3 id="问题：-1"><a href="#问题：-1" class="headerlink" title="问题："></a>问题：</h3><p>这是一个学校的小型项目：基于B/S的电子考试系统，为了实现客户端能实时地从服务器端接收考试数据，系统使用了逆向AJAX技术（也称为Comet或者Server Side Push），选用CometD 1.1.1作为服务端推送框架，服务器是Jetty 7.1.4，硬件为一台很普通PC机，Core i5 CPU，4GB内存，运行32位Windows操作系统。</p>
+<ul>
+<li><p>测试期间发现服务端不定时抛出内存溢出异常，服务不一定每次都出现异常</p>
+</li>
+<li><p>尝试过把堆内存调到最大，32位系统最多到1.6GB基本无法再加大了，而且开大了基本没效果，抛出内存溢出异常好像还更加频繁</p>
+</li>
+<li><p>加入-XX：+HeapDumpOnOutOfMemoryError参数，居然也没有任何反应，抛出内存溢出异常时什么文件都没有产生</p>
+</li>
+<li><p>无奈之下只好挂着jstat紧盯屏幕，发现垃圾收集并不频繁，Eden区、Survivor区、老年代以及方法区的内存全部都很稳定，压力并不大，但就是照样不停抛出内存溢出异常</p>
+</li>
+<li><p>在内存溢出后从系统日志中找到异常堆栈如代码清单5-1所示。</p>
+</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// 异常堆栈</span><br><span class="line"></span><br><span class="line">[org.eclipse.jetty.util.log] handle failed java.lang.OutOfMemoryError: null</span><br><span class="line">at sun.misc.Unsafe.allocateMemory(Native Method)</span><br><span class="line">at java.nio.DirectByteBuffer.&lt;init&gt;(DirectByteBuffer.java:99)</span><br><span class="line">at java.nio.ByteBuffer.allocateDirect(ByteBuffer.java:288)</span><br><span class="line">at org.eclipse.jetty.io.nio.DirectNIOBuffer.&lt;init&gt;</span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+
+<h3 id="原因："><a href="#原因：" class="headerlink" title="原因："></a>原因：</h3><ul>
+<li>操作系统对每个进程能管理的内存是有限制的，这台服务器使用的32位Windows平台的限制是2GB，其中划了1.6GB给Java堆，</li>
+<li>而Direct Memory耗用的内存并不算入这1.6GB的堆之内，因此它最大也只能在剩余的0.4GB空间中再分出一部分而已</li>
+<li> 直接内存（Direct Memory）空间不足之后，不会主动触发GC ，只能等待老年代满了之后Full GC，顺便帮忙清理 直接内存的废弃对象 </li>
+<li>否则就不得不一直等到抛出内存溢出异常时，先捕获到异常，再在Catch块里面通过System.gc()命令来触发垃圾收集</li>
+<li>如果Java虚拟机再打开了-XX：+DisableExplicitGC开关，禁止了人工触发垃圾收集的话，那就只能眼睁睁看着堆中还有许多空闲内存，自己却不得不抛出内存溢出异常</li>
+</ul>
+<h3 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h3><ul>
+<li>直接内存：可通过-XX：MaxDirectMemorySize调整大小，内存不足时抛出OutOf-MemoryError或者OutOfMemoryError：Direct buffer memory。</li>
+<li>线程堆栈：可通过-Xss调整大小，内存不足时抛出StackOverflowError（如果线程请求的栈深度大于虚拟机所允许的深度）或者OutOfMemoryError</li>
+<li>Socket缓存区：每个Socket连接都Receive和Send两个缓存区，分别占大约37KB和25KB内存，连接多的话这块内存占用也比较可观。如果无法分配，可能会抛出IOException：Too many open files异常。</li>
+<li>JNI代码：如果代码中使用了JNI调用本地库，那本地库使用的内存也不在堆中，而是占用Java虚拟机的本地方法栈和本地内存的。</li>
+<li>虚拟机和垃圾收集器：虚拟机、垃圾收集器的工作也是要消耗一定数量的内存的。</li>
+</ul>
+<h2 id="外部命令导致系统缓慢："><a href="#外部命令导致系统缓慢：" class="headerlink" title="外部命令导致系统缓慢："></a>外部命令导致系统缓慢：</h2><h3 id="问题：-2"><a href="#问题：-2" class="headerlink" title="问题："></a>问题：</h3><p>一个数字校园应用系统，运行在一台四路处理器的Solaris 10操作系统上，中间件为GlassFish服务器。系统在做大并发压力测试的时候，发现请求响应时间比较慢，通过操作系统的mpstat工具发现处理器使用率很高，但是系统中占用绝大多数处理器资源的程序并不是该应用本身。这是个不正常的现象，通常情况下用户应用的处理器占用率应该占主要地位，才能说明系统是在正常工作。</p>
+<p>通过Solaris 10的dtrace脚本可以查看当前情况下哪些系统调用花费了最多的处理器资源，dtrace运行后发现最消耗处理器资源的竟然是“fork”系统调用。众所周知，“fork”系统调用是Linux用来产生新进程的，在Java虚拟机中，用户编写的Java代码通常最多只会创建新的线程，不应当有进程的产生，这又是个相当不正常的现象。</p>
+<p><strong><em>最终找到了答案：</em></strong> </p>
+<ul>
+<li>每个用户请求的处理都需要执行一个外部Shell脚本来获得系统的一些信息。</li>
+<li>执行这个Shell脚本是通过 <strong><em>Java的Runtime.getRuntime().exec()</em></strong> 方法来调用的。</li>
+<li>这种调用方式可以达到执行Shell脚本的目的，但是它在Java虚拟机中是非常消耗资源的操作，即使外部命令本身能很快执行完毕，频繁调用时创建进程的开销也会非常可观。</li>
+<li>Java虚拟机执行这个命令的过程是首先**<em>复制一个和当前虚拟机拥有一样环境变量的进程，再用这个新的进程去执行外部命令，最后再退出这个进程**</em>。</li>
+<li>如果频繁执行这个操作，系统的消耗必然会很大，而且不仅是处理器消耗，内存负担也很重。</li>
+</ul>
+<h3 id="解决方案：-1"><a href="#解决方案：-1" class="headerlink" title="解决方案："></a>解决方案：</h3><p>建议去掉这个Shell脚本执行的语句，改为使用Java的API去获取这些信息后，系统很快恢复了正常。</p>
+<h2 id="服务器虚拟机进程崩溃"><a href="#服务器虚拟机进程崩溃" class="headerlink" title="服务器虚拟机进程崩溃"></a>服务器虚拟机进程崩溃</h2><h3 id="问题：-3"><a href="#问题：-3" class="headerlink" title="问题："></a>问题：</h3><ul>
+<li><p>一个基于B/S的MIS系统，硬件为两台双路处理器、8GB内存的HP系统，服务器是WebLogic9.2</p>
+</li>
+<li><p>正常运行一段时间后，最近发现在运行期间频繁出现集群节点的虚拟机进程自动关闭的现象，留下了一个hs_err_pid###.log文件后，虚拟机进程就消失了</p>
+</li>
+<li><p>两台物理机器里的每个节点都出现过进程崩溃的现象。从系统日志中注意到，每个节点的虚拟机进程在崩溃之前，都发生过大量相同的异常，</p>
+</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">//异常堆栈2</span><br><span class="line"></span><br><span class="line">java.net.SocketException: Connection reset</span><br><span class="line">at java.net.SocketInputStream.read(SocketInputStream.java:168)</span><br><span class="line">at java.io.BufferedInputStream.fill(BufferedInputStream.java:218)</span><br><span class="line">at java.io.BufferedInputStream.read(BufferedInputStream.java:235)</span><br><span class="line">at org.apache.axis.transport.http.HTTPSender.readHeadersFromSocket(HTTPSender.java:583)</span><br><span class="line">at org.apache.axis.transport.http.HTTPSender.invoke(HTTPSender.java:143)</span><br><span class="line">... 99 more</span><br></pre></td></tr></table></figure>
+
+<h3 id="分析："><a href="#分析：" class="headerlink" title="分析："></a>分析：</h3><ul>
+<li>这是一个远端断开连接的异常，通过系统管理员了解到系统最近与一个OA门户做了集成，在MIS系统工作流的待办事项变化时，要通过Web服务通知OA门户系统，把待办事项的变化同步到OA门户之中。</li>
+<li>通过SoapUI测试了一下同步待办事项的几个Web服务，发现调用后竟然需要长达3分钟才能返回，并且返回结果都是超时导致的连接中断。</li>
+<li>由于MIS系统的用户多，待办事项变化很快，为了不被OA系统速度拖累，使用了异步的方式调用Web服务</li>
+<li>但由于**<em>两边服务速度的完全不对等，时间越长就累积了越多Web服务没有调用完成，导致在等待的线程和Socket连接越来越多，最终超过虚拟机的承受能力后导致虚拟机进程崩溃**</em></li>
+</ul>
+<h3 id="解决方案：-2"><a href="#解决方案：-2" class="headerlink" title="解决方案："></a>解决方案：</h3><p>通知OA门户方修复无法使用的集成接口，并**<em>将异步调用改为生产者/消费者模式的消息队列实现**</em>后，系统恢复正常。</p>
+<h2 id="不恰当数据结构导致内存占用过大"><a href="#不恰当数据结构导致内存占用过大" class="headerlink" title="不恰当数据结构导致内存占用过大"></a>不恰当数据结构导致内存占用过大</h2><h3 id="问题：-4"><a href="#问题：-4" class="headerlink" title="问题："></a>问题：</h3><ul>
+<li><p>一个后台RPC服务器，使用64位Java虚拟机，内存配置为-Xms4g-Xmx8g-Xmn1g，使用ParNew加CMS的收集器组合。</p>
+</li>
+<li><p>平时对外服务的Minor GC时间约在30毫秒以内，完全可以接受。但业务上需要每10分钟加载一个约80MB的数据文件到内存进行数据分析，这些数据会在内存中形成超过100万个HashMap&lt;Long，Long&gt;Entry，</p>
+</li>
+<li><p>在这段时间里面Minor GC就会造成超过500毫秒的停顿</p>
+</li>
+<li><p>，对于这种长度的停顿时间就接受不了了，具体情况如下面的收集器日志所示。</p>
+</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#123;Heap before GC invocations=95 (full 4):</span><br><span class="line">par new generation total 903168K, used 803142K [0x00002aaaae770000, 0x00002aaaebb70000, 0x00002aaaebb70000)</span><br><span class="line">eden space 802816K, 100% used [0x00002aaaae770000, 0x00002aaadf770000, 0x00002aaadf770000)</span><br><span class="line">from space 100352K, 0% used [0x00002aaae5970000, 0x00002aaae59c1910, 0x00002aaaebb70000)</span><br><span class="line">to space 100352K, 0% used [0x00002aaadf770000, 0x00002aaadf770000, 0x00002aaae5970000)</span><br><span class="line">concurrent mark-sweep generation total 5845540K, used 3898978K [0x00002aaaebb70000, 0x00002aac507f9000, 0x00002aacae770000)</span><br><span class="line">concurrent-mark-sweep perm gen total 65536K, used 40333K [0x00002aacae770000, 0x00002aacb2770000, 0x00002aacb2770000)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">2011-10-28T11:40:45.162+0800: 226.504: [GC 226.504: [ParNew: 803142K-&gt; 100352K(903168K), 0.5995670 secs] 4702120K-&gt;Heap after GC invocations=96 (full 4):</span><br><span class="line">par new generation total 903168K, used 100352K [0x00002aaaae770000, 0x00002-aaaebb70000, 0x00002aaaebb70000)</span><br><span class="line">eden space 802816K, 0% used [0x00002aaaae770000, 0x00002aaaae770000, 0x00002aaadf770000)</span><br><span class="line">from space 100352K, 100% used [0x00002aaadf770000, 0x00002aaae5970000, 0x00002aaae5970000)</span><br><span class="line">to space 100352K, 0% used [0x00002aaae5970000, 0x00002aaae5970000, 0x00002aaaebb70000)</span><br><span class="line">concurrent mark-sweep generation total 5845540K, used 3955980K [0x00002aaaebb70000, 0x00002aac507f9000, 0x00002aacae770000)</span><br><span class="line">concurrent-mark-sweep perm gen total 65536K, used 40333K [0x00002aacae770000, 0x00002aacb2770000, 0x00002aacb2770000)</span><br><span class="line">&#125;T</span><br><span class="line">otal time <span class="keyword">for</span> <span class="built_in">which</span> application threads were stopped: 0.6070570 seconds</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="分析-："><a href="#分析-：" class="headerlink" title="分析 ："></a>分析 ：</h3><ul>
+<li>观察这个案例的日志，平时Minor GC时间很短，原因是新生代的绝大部分对象都是可清除的，在Minor GC之后Eden和Survivor基本上处于完全空闲的状态。</li>
+<li>但是在分析数据文件期间，800MB的Eden空间很快被填满引发垃圾收集</li>
+<li>但Minor GC之后，新生代中绝大部分对象依然是存活的</li>
+<li>ParNew收集器使用的是复制算法，这个算法的高效是建立在大部分对象都“朝生夕灭”的特性上的，</li>
+<li>如果存活对象过多，把这些对象复制到Survivor并维持这些对象引用的正确性就成为一个沉重的负担，因此导致垃圾收集的暂停时间明显变长。</li>
+</ul>
+<h3 id="解决方案1："><a href="#解决方案1：" class="headerlink" title="解决方案1："></a>解决方案1：</h3><p>如果不修改程序，仅从GC调优的角度去解决这个问题，可以考虑直接将Survivor空间去掉（加入参数-XX：SurvivorRatio=65536、</p>
+<p>-XX ：MaxTenuringThreshold=0或者-XX：+Always-Tenure），让新生代中存活的对象在第一次Minor GC后立即进入老年代，等到Major GC的时候再去清理它们。</p>
+<h4 id="缺点：-1"><a href="#缺点：-1" class="headerlink" title="缺点："></a>缺点：</h4><p>这种措施可以治标，但也有很大副作用</p>
+<h3 id="解决方案2："><a href="#解决方案2：" class="headerlink" title="解决方案2："></a>解决方案2：</h3><p>治本的方案必须要修改程序，因为这里产生问题的根本原因是用HashMap&lt;Long，Long&gt;结构来存储数据文件空间效率太低了。</p>
+<ul>
+<li>我们具体分析一下HashMap空间效率，在HashMap&lt;Long，Long&gt;结构中，只有Key和Value所存放的两个长整型数据是有效数据，共16字节（2×8字节）。</li>
+<li>这两个长整型数据包装成java.lang.Long对象之后，就分别具有8字节的Mark Word、8字节的Klass指针，再加8字节存储数据的long值。</li>
+<li>然后这2个Long对象组成Map.Entry之后，又多了16字节的对象头，然后一个8字节的next字段和4字节的int型的hash字段，为了对齐，还必须添加4字节的空白填充，</li>
+<li>最后还有HashMap中对这个Entry的8字节的引用，这样增加两个长整型数字，实际耗费的内存为(Long(24byte)×2)+Entry(32byte)+HashMapRef(8byte)=88byte，空间效率为有效数据除以全部内存空间，即16字节/88字节=18%，这确实太低了。</li>
+</ul>
+<ul>
+<li>如果是写入数据库，是否可以采用 ，边读边写，200条commit 一次</li>
+</ul>
+<h2 id="由安全点导致长时间停顿"><a href="#由安全点导致长时间停顿" class="headerlink" title="　由安全点导致长时间停顿"></a>　由安全点导致长时间停顿</h2><h3 id="问题：-5"><a href="#问题：-5" class="headerlink" title="问题："></a>问题：</h3><p>有一个比较大的承担公共计算任务的离线HBase集群，运行在JDK 8上，使用G1收集器。每天都有大量的MapReduce或Spark离线分析任务对其进行访问，同时有很多其他在线集群Replication过来的数据写入，因为集群读写压力较大，而离线分析任务对延迟又不会特别敏感，所以将-XX：MaxGCPauseMillis参数设置到了500毫秒。</p>
+<ul>
+<li><p>不过运行一段时间后发现垃圾收集的停顿经常达到3秒以上，</p>
+</li>
+<li><p>而且实际垃圾收集器进行回收的动作就只占其中的几百毫秒，现象如以下日志所示。</p>
+</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[Times: user=1.51 sys=0.67, real=0.14 secs]</span><br><span class="line">2019-06-25T 12:12:43.376+0800: 3448319.277: Total time <span class="keyword">for</span> <span class="built_in">which</span> application threads were stopped: 2.2645818</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="分析：-1"><a href="#分析：-1" class="headerlink" title="分析："></a>分析：</h3><p>在垃圾收集调优时，我们主要依据real时间为目标来优化程序，因为最终用户只关心发出请求到得到响应所花费的时间，也就是响应速度，而不太关心程序到底使用了多少个线程或者处理器来完成任务。</p>
+<p>日志显示这次垃圾收集一共花费了0.14秒，但其中用户线程却足足停顿了有2.26秒，两者差距已经远远超出了正常的TTSP（Time To Safepoint）耗时的范畴。</p>
+<ul>
+<li>所以先加入参数-XX：+PrintSafepointStatistics和-XX：PrintSafepointStatisticsCount=1去查看安全点日志，具体如下所示：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">vmop [threads: total initially_running wait_to_block]</span><br><span class="line">65968.203: ForceAsyncSafepoint [931 1 2]</span><br><span class="line">[time: spin block sync cleanup vmop] page_trap_count</span><br><span class="line">[2255 0 2255 11 0] 1</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>日志显示当前虚拟机的操作（VM Operation，VMOP）是等待所有用户线程进入到安全点，</li>
+<li>但是有两个线程特别慢，导致发生了很长时间的自旋等待。</li>
+<li>日志中的2255毫秒自旋（Spin）时间就是指由于部分线程已经走到了安全点，但还有一些特别慢的线程并没有到，</li>
+<li>所以垃圾收集线程无法开始工作，只能空转（自旋）等待。</li>
+</ul>
+<ul>
+<li>解决问题的第一步是把这两个特别慢的线程给找出来，这个倒不困难，添加-XX：+SafepointTimeout和-XX：SafepointTimeoutDelay=2000两个参数，</li>
+<li>让虚拟机在等到线程进入安全点的时间超过2000毫秒时就认定为超时，这样就会输出导致问题的线程名称，得到的日志如下所示：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># SafepointSynchronize::begin: Timeout detected:</span></span><br><span class="line"><span class="comment"># SafepointSynchronize::begin: Timed out while spinning to reach a safepoint.</span></span><br><span class="line"><span class="comment"># SafepointSynchronize::begin: Threads which did not reach the safepoint:</span></span><br><span class="line"><span class="comment"># &quot;RpcServer.listener,port=24600&quot; #32 daemon prio=5 os_prio=0 tid=0x00007f4c14b22840</span></span><br><span class="line">nid=0xa621 runnable [0x0000000000000000]</span><br><span class="line">java.lang.Thread.State: RUNNABLE</span><br><span class="line"><span class="comment"># SafepointSynchronize::begin: (End of list)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>从错误日志中顺利得到了导致问题的线程名称为“RpcServer.listener，port=24600”</li>
+<li>有什么因素可以阻止线程进入安全点？</li>
+<li>安全点是以“是否具有让程序长时间执行的特征”为原则进行选定的，</li>
+<li>所以方法调用、循环跳转、异常跳转这些位置都可能会设置有安全点，</li>
+<li>但是HotSpot虚拟机为了避免安全点过多带来过重的负担，对循环还有一项优化措施，认为循环次数较少的话，执行时间应该也不会太长，所以使用int类型或范围更小的数据类型作为索引值的循环默认是不会被放置安全点的。这种循环被称为可数循环（CountedLoop），相对应地，使用long或者范围更大的数据类型作为索引值的循环就被称为不可数循环（Uncounted Loop），将会被放置安全点。</li>
+<li>通常情况下这个优化措施是可行的，但循环执行的时间不单单是由其次数决定，如果循环体单次执行就特别慢，那即使是可数循环也可能会耗费很多的时间。</li>
+</ul>
+<h3 id="解决方案：-3"><a href="#解决方案：-3" class="headerlink" title="解决方案："></a>解决方案：</h3><p>最终查明导致这个问题是HBase中一个连接超时清理的函数，由于集群会有多个MapReduce或Spark任务进行访问，而每个任务又会同时起多个Mapper/Reducer/Executer，其每一个都会作为一个HBase的客户端，这就导致了同时连接的数量会非常多。更为关键的是，清理连接的索引值就是int类型，所以这是一个可数循环，HotSpot不会在循环中插入安全点。当垃圾收集发生时，如果RpcServer的Listener线程刚好执行到该函数里的可数循环时，则必须等待循环全部跑完才能进入安全点，此时其他线程也必须一起等着，所以从现象上看就是长时间的停顿。找到了问题，解决起来就非常简单了，</p>
+<p><strong><em>把循环索引的数据类型从int改为long即可，</em></strong></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/27/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-04-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/27/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-04-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95/" class="post-title-link" itemprop="url">深入理解jvm-04-垃圾收集算法</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-27 12:01:23" itemprop="dateCreated datePublished" datetime="2020-12-27T12:01:23+08:00">2020-12-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/jvm/" itemprop="url" rel="index"><span itemprop="name">jvm</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>5.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="垃圾收集算法"><a href="#垃圾收集算法" class="headerlink" title="垃圾收集算法"></a>垃圾收集算法</h1><h2 id="分代收集理论"><a href="#分代收集理论" class="headerlink" title="分代收集理论"></a>分代收集理论</h2><p>两个分代假说：</p>
+<h4 id="弱分代假说（Weak-Generational-Hypothesis）："><a href="#弱分代假说（Weak-Generational-Hypothesis）：" class="headerlink" title="弱分代假说（Weak Generational Hypothesis）："></a>弱分代假说（Weak Generational Hypothesis）：</h4><ul>
+<li> 绝大多数对象都是朝生夕灭的 </li>
+</ul>
+<h4 id="强分代假说（Strong-Generaional-Hypothesis）："><a href="#强分代假说（Strong-Generaional-Hypothesis）：" class="headerlink" title="强分代假说（Strong Generaional Hypothesis）："></a>强分代假说（Strong Generaional Hypothesis）：</h4><ul>
+<li> 熬过越多次GC过程的对象 就越难以消亡</li>
+</ul>
+<p>这两个分代假说共同奠定了多款常用GC器一致的设计原则：</p>
+<ul>
+<li>GC器应该将Java 堆Heap 划分出不同的区域，然后将回收对象依据其 年龄（对象熬过GC收集的次数） 分配到不同的区域进行存储 。</li>
+<li>而不同的区域 因为其对象的不同特性，可以采用不同的垃圾收集算法 。</li>
+<li>如果区域对象 大多数对象都是朝生夕灭 的，难以熬过GC过程的 ，那把他们放在一起，每次回收只标记那些少量存活的对象实例，这样就可以用少量代价回收大量空间</li>
+<li>如果剩下的都是难以消亡的对象，就把这个年龄大的对象 集中放在一起，jvm使用低频率区回收这个区域。  </li>
+<li>这样就兼顾了GC的时间开销 和内存空间的有效利用</li>
+</ul>
+<p>将java堆进行划分成 不同区域后，gc器 才可以每次只收集其中某一个 或某些部分的区域， 因此 出现了  MInor GC , Major GC, Full GC</p>
+<p>这样的回收类型划分，</p>
+<p>针对不同区域的，安排与里面存储对象存亡特征相匹配的 GC 算法，如 标记删除，标记复制，标记整理 </p>
+<p>因为存在 跨代引用的场景，老年代与新生代 可能存在互相引用的情况，这样 纪要通过GCRoot的可达性分析 ，也要额外遍历整个老年代的对象 来确保可达性分析结果的正确性， 这样由很大的性能负担</p>
+<p> 所以出行第三条经验法则</p>
+<h4 id="跨代引用假说（Intergenerational-Reference-Hypothesis）："><a href="#跨代引用假说（Intergenerational-Reference-Hypothesis）：" class="headerlink" title="跨代引用假说（Intergenerational Reference Hypothesis）："></a>跨代引用假说（Intergenerational Reference Hypothesis）：</h4><ul>
+<li><p>跨代引用相对于同代引用来说 仅仅占极少数</p>
+</li>
+<li><p>这其实是通过强分代假说和 弱分代假说逻辑推理得出的推论： </p>
+</li>
+<li><p>存在互相引用关系的2个对象，应该是倾向于同时生存和同时消亡的，</p>
+</li>
+<li><p>如果某个新生代对象存在跨代引用，那么由于老年代对象难以消亡，所以 新生代对象在GC过程的时候也难以消亡，从而得以存活。慢慢的随着 之前新生代对象的年龄的增长，它也会被 晋升到老年代之中，这时候就不存在 跨代引用了</p>
+</li>
+<li><p>ps:  依据这条假说，我们就不应再为了少量的跨代引用去扫描整个老年代，也不必浪费空间专门记录每一个对象是否存在及存在哪些跨代引用，只需在新生代上建立一个全局的数据结构（该结构被称为“记忆集”，Remembered Set），这个结构把老年代划分成若干小块，标识出老年代的哪一块内存会存在跨代引用。此后当发生Minor GC时，只有包含了跨代引用的小块内存里的对象才会被加入到GCRoots进行扫描</p>
+</li>
+</ul>
+<h2 id="GC-名词字典"><a href="#GC-名词字典" class="headerlink" title="GC 名词字典"></a>GC 名词字典</h2><ul>
+<li><p>部分收集（Partial GC）：指目标不是完整收集整个Java堆的垃圾收集</p>
+<ul>
+<li>新生代收集（Minor GC/Young GC）：指目标只是新生代的垃圾收集。</li>
+<li>老年代收集（Major GC/Old GC）：指目标只是老年代的垃圾收集。目前只有CMS收集器会有单独收集老年代的行为。另外请注意“Major GC”这个说法现在有点混淆，在不同资料上常有不同所指，需按上下文区分到底是指老年代的收集还是整堆收集。</li>
+<li>混合收集（Mixed GC）：指目标是收集整个新生代以及部分老年代的垃圾收集。目前只有G1收集器会有这种行为。</li>
+</ul>
+</li>
+<li><p>整堆收集（Full GC）：收集整个Java堆和方法区的垃圾收集。</p>
+</li>
+</ul>
+<h2 id="标记-清除（Mark-Sweep）算法"><a href="#标记-清除（Mark-Sweep）算法" class="headerlink" title="标记-清除（Mark-Sweep）算法"></a>标记-清除（Mark-Sweep）算法</h2><p>算法分为“标记”和“清除”两个阶段：</p>
+<ul>
+<li>首先标记出所有需要回收的对象，在标记完成后，统一回收掉所有被标记的对象，</li>
+<li>也可以反过来，标记存活的对象，统一回收所有未被标记的对象。</li>
+<li>标记过程就是对象是否属于垃圾的判定过程，</li>
+<li>后续的收集算法大多都是以标记-清除算法为基础，对其缺点进行改进而得到的</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>第一个是执行效率不稳定，如果Java堆中包含大量对象，而且其中大部分是需要被回收的，这时必须进行大量标记和清除的动作，导致标记和清除两个过<br>程的执行效率都随对象数量增长而降低</li>
+<li>第二个是内存空间的碎片化问题，标记、清除之后会产生大量不连续的内存碎片，空间碎片太多可能会导致当以后在程序运行过程中需要分配较大对象时无法找到足够的连续内存而不得不提前触发另一次垃圾收集动作</li>
+</ul>
+<p><img src="/uploads/jvm/05-mark-sweep.png"></p>
+<h2 id="标记-复制（Mark-Copy）算法"><a href="#标记-复制（Mark-Copy）算法" class="headerlink" title="标记-复制（Mark-Copy）算法"></a>标记-复制（Mark-Copy）算法</h2><h3 id="半区复制-（Semispace-Copying）"><a href="#半区复制-（Semispace-Copying）" class="headerlink" title="半区复制 （Semispace Copying）"></a>半区复制 （Semispace Copying）</h3><ul>
+<li><p>将可用内存按容量分为大小相等的2块 ，每次只使用其中1块 。 </p>
+</li>
+<li><p>当这一块的内存用完了，就将还存活的对象复制到另一块上面 ，</p>
+</li>
+<li><p>然后就将还存活的对象复制到另一块上面，</p>
+</li>
+<li><p>然后再把已经使用过的内存空间一次清理掉。 </p>
+</li>
+</ul>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li><p>如果内存中多数对象都是存活的，这种算法会产生大量的内存间的复制 开销</p>
+</li>
+<li><p><strong><em>但是</em></strong>   在新生代这个 内存区域，98%的对象实例都熬不过第一轮收集，所以 不是算法有问题，是将算法 没有用到对的区域</p>
+</li>
+<li><p> 因为多数对象都是可回收的状态，所以算法复制的就是占少数的存活对象 </p>
+</li>
+<li><p>而且因为每次都是针对整个半区进行回收，分配内存时候也不用考虑 空间碎片整理的情况，只需要移动堆顶指针，按顺序分配即可，简单 高效</p>
+</li>
+</ul>
+<h3 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>复制回收算法的代价是 将内存缩小一半，空间浪费未免太多了一点</li>
+</ul>
+<p><img src="/uploads/jvm/06-mark_copy.png"></p>
+<h3 id="优化半区复制-（Appel式回收）"><a href="#优化半区复制-（Appel式回收）" class="headerlink" title="优化半区复制 （Appel式回收）"></a>优化半区复制 （Appel式回收）</h3><p>因为IBM 对 对象的朝生夕灭 特点做了调研，新生代中的对象 98% 熬不过第一轮收集，所以 提出了优化版的半区复制算法，即： </p>
+<p>Appel 式回收：</p>
+<h4 id="具体做法："><a href="#具体做法：" class="headerlink" title="具体做法："></a>具体做法：</h4><ul>
+<li>将新生代  分为一块较大的Eden区（80%）  + Survivor_1（10%）+Survivor_2（10%）</li>
+<li>每次分配内存时候，只使用 Eden（80%） 和 Survivor_1（10%），而 Survivor_2（10%）就暂时浪费掉</li>
+<li>当 发生 GC的时候，就将 Eden（80%） 和 Survivor_1（10%）中的存活对象 复制到 Survivor_2（10%） 中</li>
+<li>然后直接清理掉Eden（80%） 和 Survivor_1（10%）</li>
+</ul>
+<h4 id="逃生门”的安全设计（分配担保）："><a href="#逃生门”的安全设计（分配担保）：" class="headerlink" title="逃生门”的安全设计（分配担保）："></a>逃生门”的安全设计（分配担保）：</h4><p>98%的对象都熬不过第一轮GC 这个是 普通场景， 没有人能保证 每一次 GC后 ，继续存活的对象 不超过10% ，所以 Survivor_2（10%） 有可能装不下了。</p>
+<p>这个时候 Appel 有一个 “逃生门”的安全设计 ：</p>
+<ul>
+<li>当 Survivor_2（10%）容纳不了一次  Minor GC （新生代GC，Young GC）存活对象， </li>
+<li>就需要 依赖其他内存区域（实际上大多数是老年代） 进行分配担保，就将一部分 存活对象移入 老年代</li>
+</ul>
+<h4 id="分配担保-（Todo）"><a href="#分配担保-（Todo）" class="headerlink" title="分配担保 （Todo）"></a>分配担保 （Todo）</h4><ul>
+<li>内存的分配担保好比我们去银行借款，如果我们信誉很好，在98%的情况下都能按时偿还，于是银行可能会默认我们下一次也能按时按量地偿还贷款，只需要有一个担保人能保证如果我不能还款时，可以从他的账户扣钱，那银行就认为没有什么风险了。</li>
+<li>内存的分配担保也一样，如果另外一块Survivor空间没有足够空间存放上一次新生代收集下来的存活对象，这些对象便将通过分配担保机制直接进入老年代，这对虚拟机来说就是安全的</li>
+</ul>
+<h2 id="标记整理（Mark-Compact）算法"><a href="#标记整理（Mark-Compact）算法" class="headerlink" title="标记整理（Mark-Compact）算法"></a>标记整理（Mark-Compact）算法</h2><ul>
+<li><p>标记-复制算法在对象存活率较高时就要进行较多的复制操作，效率将会降低。更关键的是，如果不想浪费50%的空间，就需要有额外的空间进行分配担保，以应对被使用的内存中所有对象都100%存活的极端情况，所以在老年代一般不能直接选用这种标记-复制算法 .</p>
+</li>
+<li><p>针对老年代对象的存亡特征，提出了 有针对性的 “标记-整理”（Mark-Compact）算法</p>
+</li>
+</ul>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ul>
+<li>首先标记出所有需要回收的对象，</li>
+<li>让所有存活的对象都向内存空间一端移动，然后直接清理掉边界以外的内存，“标记-整理”算法的示意图如图3-4所示。</li>
+</ul>
+<p><img src="/uploads/jvm/07-mark-compact.png"></p>
+<h3 id="缺点："><a href="#缺点：" class="headerlink" title="缺点："></a>缺点：</h3><ul>
+<li><p>如果移动存活对象，尤其是在老年代 这种每次回收都有大量对象存活区域 ，移动存活对象并更新所有 引用这些对象的地方将会是一种极为负重的操作 ，</p>
+<p>而且这种对象移动操作必须全程暂停用户应用程序才能进行。 Stop The World</p>
+</li>
+<li><p>如果不考虑移动和整理存活对象的话，，存活对象倒置 的空间碎片化问题就 只能依赖更为复杂的内存分配器和内存访问器来解决。</p>
+</li>
+<li><p>内存的访问 是用户程序最频繁的操作，如果这个环节上增加了额外的负担，势必影响用户程序的吞吐量</p>
+</li>
+</ul>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ul>
+<li><p>基于以上两点，是否移动对象都存在弊端，移动则内存回收时会更复杂，不移动则内存分配时会更复杂。</p>
+</li>
+<li><p>从垃圾收集的停顿时间来看，不移动对象停顿时间会更短，甚至可以不需要停顿</p>
+</li>
+<li><p>但是从整个程序的吞吐量来看，移动对象会更划算。即使不移动对象会使得收集器的效率提升一些，但因内存分配和访问相比垃圾收集频率要高得多，这部分的耗时增加，总吞吐量仍然是下降的</p>
+</li>
+<li><p>HotSpot虚拟机里面关注吞吐量的ParallelScavenge收集器是基于标记-整理算法的，而关注延迟的CMS收集器则是基于标记-清除算法的</p>
+</li>
+<li><p>还有一种“和稀泥式”解决方案可以不在内存分配和访问上增加太大额外负担，做法是让虚拟机平时多数时间都采用标记-清除算法，暂时容忍内存碎片的存在，直到内存空间的碎片化程度已经大到影响对象分配时，再采用标记-整理算法收集一次，以获得规整的内存空间。前面提到的基于标记-清除算法的CMS收集器面临空间碎片过多时采用的就是这种处理办法。</p>
+</li>
+</ul>
+<h2 id="根节点枚举"><a href="#根节点枚举" class="headerlink" title="根节点枚举"></a>根节点枚举</h2><ul>
+<li><p>枚举根节点的时候，用户线程必须要停顿。</p>
+</li>
+<li><p>根节点枚举始终还是必须在一个能保障一致性的快照中才得以进行</p>
+</li>
+<li><p>这里“一致性”的意思是整个枚举期间执行子系统看起来就像被冻结在某个时间点上，不会出现分析过程中，根节点集合的对象引用关系还在不断变化的情况，若这点不能满足的话，分析结果准确性也就无法保证。这是导致垃圾收集过程必须停顿所有用户线程的其中一个重要原因</p>
+</li>
+</ul>
+<ul>
+<li>虚拟机应当是有办法直接得到哪些地方存放着对象引用的。</li>
+<li>在HotSpot的解决方案里，是使用一组称为OopMap的数据结构来达到这个目的。一旦类加载动作完成的时候，HotSpot就会把对象内什么偏移量上是什么类型的数据计算出来，</li>
+<li>在即时编译过程中，也会在特定的位置记录下栈里和寄存器里哪些位置是引用。这样收集器在扫描时就可以直接得知这些信息了，并不需要真正一个不漏地从方法区等GC Roots开始查找。</li>
+</ul>
+<h3 id="安全点（SafePoint）"><a href="#安全点（SafePoint）" class="headerlink" title="安全点（SafePoint）"></a>安全点（SafePoint）</h3><ul>
+<li>实际上HotSpot也的确没有为每条指令都生成OopMap,只是在“特定的位置”记录了这些信息，这些位置被称为安全点（Safepoint）</li>
+<li>安全点的设定，决定了用户程序执行时并非在代码指令流的任意位置都能够停顿下来开始垃圾收集，而是强制要求必须执行到达安全点后才能够暂停</li>
+<li>安全点的选定既不能太少以至于让收集器等待时间过长，也不能太过频繁以至于过分增大运行时的内存负荷。</li>
+</ul>
+<h4 id="抢先式中断（Preemptive-Suspension）："><a href="#抢先式中断（Preemptive-Suspension）：" class="headerlink" title="抢先式中断（Preemptive Suspension）："></a>抢先式中断（Preemptive Suspension）：</h4><p>抢先式中断不需要线程的执行代码主动去配合，在垃圾收集发生时，系统首先把所有用户线程全部中断，如果发现有用户线程中断的地方不在安全点上，就恢复这条线程执行，让它一会再重新中断，直到跑到安全点上。</p>
+<p>现在几乎没有虚拟机实现采用抢先式中断来暂停线程响应GC事件。</p>
+<h4 id="主动式中断（Voluntary-Suspension）"><a href="#主动式中断（Voluntary-Suspension）" class="headerlink" title="主动式中断（Voluntary Suspension）:"></a>主动式中断（Voluntary Suspension）:</h4><ul>
+<li>当垃圾收集需要中断线程的时候，不直接对线程操作，仅仅简单地设置一个标志位，各个线程执行过程时会不停地主动去轮询这个标志，一旦发现中断标志为真时就自己在最近的安全点上主动中断挂起。</li>
+<li>轮询标志的地方和安全点是重合的，</li>
+<li>另外还要加上所有创建对象和其他需要在Java堆上分配内存的地方，这是为了检查是否即将要发生垃圾收集，避免没有足够内存分配新对象。</li>
+</ul>
+<h3 id="安全区域（Safe-Region）："><a href="#安全区域（Safe-Region）：" class="headerlink" title="安全区域（Safe Region）："></a>安全区域（Safe Region）：</h3><ul>
+<li><p>用户线程处于Sleep状态或者Blocked状态，这时候线程无法响应虚拟机的中断请求，不能再走到安全的地方去中断挂起自己，虚拟机也显然不可能持续等待线程重新被激活分配处理器时间。</p>
+</li>
+<li><p>对于这种情况，就必须引入安全区域（Safe Region）来解决。</p>
+</li>
+<li><p>安全区域是指能够确保在某一段代码片段之中，引用关系不会发生变化，因此，在这个区域中任意地方开始垃圾收集都是安全的。</p>
+</li>
+<li><p>我们也可以把安全区域看作被扩展拉伸了的安全点 </p>
+</li>
+</ul>
+<p>当用户线程执行到安全区域里面的代码时，</p>
+<ul>
+<li>首先会标识自己已经进入了安全区域，那样当这段时间里虚拟机要发起垃圾收集时就不必去管这些已声明自己在安全区域内的线程了。</li>
+<li>当线程要离开安全区域时，它要检查虚拟机是否已经完成了根节点枚举（或者垃圾收集过程中其他需要暂停用户线程的阶段），</li>
+<li>如果完成了，那线程就当作没事发生过，继续执行；</li>
+<li>否则它就必须一直等待，直到收到可以离开安全区域的信号为止。</li>
+</ul>
+<h3 id="记忆集与卡表（Remembered-Set）："><a href="#记忆集与卡表（Remembered-Set）：" class="headerlink" title="记忆集与卡表（Remembered Set）："></a>记忆集与卡表（Remembered Set）：</h3><ul>
+<li><p>为解决对象跨代引用所带来的问题，垃圾收集器在新生代中建立了名为记忆集（Remembered Set）的数据结构，用以避免把整个老年代加进GC Roots扫描范围</p>
+</li>
+<li><p>记忆集是一种用于记录从非收集区域指向收集区域的指针集合的抽象数据结构</p>
+</li>
+<li><p>在垃圾收集的场景中，收集器只需要通过记忆集判断出某一块非收集区域是否存在有指向了收集区域的指针就可以了，并不需要了解这些跨代指针的全部细节</p>
+</li>
+</ul>
+<h4 id="卡精度："><a href="#卡精度：" class="headerlink" title="卡精度："></a>卡精度：</h4><p>  每个记录精确到一块内存区域，该区域内有对象含有跨代指针。</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/26/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-03-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/26/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-03-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8/" class="post-title-link" itemprop="url">深入理解jvm-03-垃圾收集器</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-26 23:59:09" itemprop="dateCreated datePublished" datetime="2020-12-26T23:59:09+08:00">2020-12-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/jvm/" itemprop="url" rel="index"><span itemprop="name">jvm</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h1><h2 id="垃圾收集需要完成的3件事情"><a href="#垃圾收集需要完成的3件事情" class="headerlink" title="垃圾收集需要完成的3件事情"></a>垃圾收集需要完成的3件事情</h2><ul>
+<li>哪些内存需要回收</li>
+<li>什么时候回收</li>
+<li>如果回收</li>
+</ul>
+<h2 id="为什么要了解gc-和内存分配："><a href="#为什么要了解gc-和内存分配：" class="headerlink" title="为什么要了解gc 和内存分配："></a>为什么要了解gc 和内存分配：</h2><p>当需要排查各种内存溢出、内存泄漏问题时，当垃圾收集成为系统达到更高并发量的瓶颈时，我们就必须对这些“自动化”的技术实施必要的监控和调节。</p>
+<h2 id="运行时数据区域："><a href="#运行时数据区域：" class="headerlink" title="运行时数据区域："></a>运行时数据区域：</h2><h3 id="线程隔离区域"><a href="#线程隔离区域" class="headerlink" title="线程隔离区域"></a>线程隔离区域</h3><ul>
+<li><p>程序计数器、虚拟机栈、本地方法栈3个区域随线程而生，随线程而灭，栈中的栈帧随着方法的进入和退出而有条不紊地执行着出栈和入栈操作。</p>
+</li>
+<li><p>每一个栈帧中分配多少内存基本上是在类结构确定下来时就已知的（尽管在运行期会由即时编译器进行一些优化，但在基于概念模型的讨论里，大体上可以认为是编译期可知的），因此这几个区域的内存分配和回收都具备确定性，在这几个区域内就不需要过多考虑如何回收的问题，</p>
+</li>
+<li><p>当方法结束或者线程结束时，内存自然就跟随着回收了。</p>
+</li>
+</ul>
+<h3 id="线程共享区域"><a href="#线程共享区域" class="headerlink" title="线程共享区域"></a>线程共享区域</h3><ul>
+<li><p>Java堆和方法区这两个区域则有着很显著的不确定性：一个接口的多个实现类需要的内存可能会不一样，一个方法所执行的不同条件分支所需要的内存也可能不一样，</p>
+</li>
+<li><p>只有处于运行期间，我们才能知道程序究竟会创建哪些对象，创建多少个对象，这部分内存的分配和回收是动态的</p>
+</li>
+<li><p>所以 GC 关注的就是这部分区域的内存管理 （分配和回收）</p>
+</li>
+</ul>
+<h2 id="判断对象“死亡”"><a href="#判断对象“死亡”" class="headerlink" title="判断对象“死亡”"></a>判断对象“死亡”</h2><p>在堆里面存放着Java世界中几乎所有的对象实例，垃圾收集器在对堆进行回收前，第一件事情就是要确定这些对象之中哪些还“存活”着，哪些已经“死去”（“死去”即不可能再被任何途径使用的对象）了。</p>
+<h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
+<li>在对象中添加一个**<em>引用计数器**</em>，</li>
+<li>每当有一个地方引用它时，计数器值就加一；</li>
+<li>当引用失效时，计数器值就减一；任何时刻计数器为零的对象就是不可能再被使用的</li>
+</ul>
+<p>主流的Java虚拟机里面都没有选用引用计数算法来管理内存，主要原因是，这个看似简单的算法有很多例外情况要考虑，必须要配合大量额外处理才能保证正确地工作，譬如单纯的引用计数就很难解决对象之间相互循环引用的问题。</p>
+<p>举个简单的例子，请看代码中的testGC()方法：对象objA和objB都有字段instance，赋值令objA.instance=objB及objB.instance=objA，除此之外，这两个对象再无任何引用，实际上这两个对象已经不可能再被访问，但是它们因为互相引用着对方，导致它们的引用计数都不为零，引用计数算法也就无法回收它们。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * testGC()方法执行后，objA和objB会不会被GC呢？</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> zzm</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReferenceCountingGC</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Object instance = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> _1MB = <span class="number">1024</span> * <span class="number">1024</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 这个成员属性的唯一意义就是占点内存，以便在能在GC日志中看清楚是否有回收过</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">byte</span>[] bigSize = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * _1MB];</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">testGC</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ReferenceCountingGC objA = <span class="keyword">new</span> ReferenceCountingGC();</span><br><span class="line">        ReferenceCountingGC objB = <span class="keyword">new</span> ReferenceCountingGC();</span><br><span class="line">        objA.instance = objB;</span><br><span class="line">        objB.instance = objA;</span><br><span class="line"></span><br><span class="line">        objA = <span class="keyword">null</span>;</span><br><span class="line">        objB = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 假设在这行发生GC，objA和objB是否能被回收？</span></span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        testGC();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">结果： </span><br><span class="line">[GC (System.gc()) [PSYoungGen: <span class="number">14622</span>K-&gt;<span class="number">1008</span>K(<span class="number">153088</span>K)] <span class="number">14622</span>K-&gt;<span class="number">1016</span>K(<span class="number">502784</span>K), <span class="number">0.0007592</span> secs] [Times: user=<span class="number">0.00</span> sys=<span class="number">0.00</span>, real=<span class="number">0.00</span> secs] </span><br><span class="line">Heap after GC invocations=<span class="number">1</span> (full <span class="number">0</span>):</span><br><span class="line"> PSYoungGen      total <span class="number">153088</span>K, used <span class="number">1008</span>K [<span class="number">0x0000000715980000</span>, <span class="number">0x0000000720400000</span>, <span class="number">0x00000007c0000000</span>)</span><br><span class="line">  eden space <span class="number">131584</span>K, <span class="number">0</span>% used [<span class="number">0x0000000715980000</span>,<span class="number">0x0000000715980000</span>,<span class="number">0x000000071da00000</span>)</span><br><span class="line">  from space <span class="number">21504</span>K, <span class="number">4</span>% used [<span class="number">0x000000071da00000</span>,<span class="number">0x000000071dafc040</span>,<span class="number">0x000000071ef00000</span>)</span><br><span class="line">  to   space <span class="number">21504</span>K, <span class="number">0</span>% used [<span class="number">0x000000071ef00000</span>,<span class="number">0x000000071ef00000</span>,<span class="number">0x0000000720400000</span>)</span><br><span class="line"> ParOldGen       total <span class="number">349696</span>K, used <span class="number">8</span>K [<span class="number">0x00000005c0c00000</span>, <span class="number">0x00000005d6180000</span>, <span class="number">0x0000000715980000</span>)</span><br><span class="line">  object space <span class="number">349696</span>K, <span class="number">0</span>% used [<span class="number">0x00000005c0c00000</span>,<span class="number">0x00000005c0c02000</span>,<span class="number">0x00000005d6180000</span>)</span><br><span class="line"> Metaspace       used <span class="number">3118</span>K, capacity <span class="number">4496</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 338<span class="title">K</span>, <span class="title">capacity</span> 388<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br><span class="line"><span class="class">&#125;</span></span><br><span class="line"><span class="class"></span></span><br></pre></td></tr></table></figure>
+
+<p>从运行结果中可以清楚看到内存回收日志，意味着虚拟机并没有因为这两个对象互相引用就放弃回收它们，这也从侧面说明了Java虚拟机并不是通过引用计数算法来判断对象是否存活的。</p>
+<h3 id="可达性分析算法"><a href="#可达性分析算法" class="headerlink" title="可达性分析算法"></a>可达性分析算法</h3><ul>
+<li><p>基本思路就是通过一系列称为“GC Roots”的根对象作为起始节点集，从这些节点开始，根据引用关系向下搜索，搜索过程所走过的路径称为<strong>“引用链”（Reference Chain）</strong></p>
+</li>
+<li><p><strong>如果某个对象到GC Roots间没有任何引用链相连</strong>，或者用图论的话来说就是从GC Roots到这个对象不可达时，则证明此对象是不可能再被使用的。</p>
+</li>
+</ul>
+<p><img src="/uploads/jvm/04-gcRoot.png"></p>
+<p>在Java技术体系里面，固定可作为**<em>GC Roots**</em>的对象包括以下几种：</p>
+<ul>
+<li>在虚拟机栈（栈帧中的本地变量表）中引用的对象，譬如各个线程被调用的方法堆栈中使用到的参数、局部变量、临时变量等。在方法区中类静态属性引用的对象，譬如Java类的引用类型静态变量。</li>
+<li>在方法区中常量引用的对象，譬如字符串常量池（String Table）里的引用。</li>
+<li>在本地方法栈中JNI（即通常所说的Native方法）引用的对象。</li>
+<li>Java虚拟机内部的引用，如基本数据类型对应的Class对象，一些常驻的异常对象（比如NullPointExcepiton、OutOfMemoryError）等，还有系统类加载器</li>
+<li>所有被同步锁（synchronized关键字）持有的对象。</li>
+<li>反映Java虚拟机内部情况的JMXBean、JVMTI中注册的回调、本地代码缓存等。</li>
+</ul>
+<p>ps:  当只针对 java堆中的某一块区域发起GC的时候，  使用局部回收 或者 分代回收 ，需要想到 各个区域并不是孤立封闭的，某个区域里 的对象很有可能被 堆中的其他区域对象引用，所以 这些关联区域的对象也要一起 加入到 GC Roots集合中 去，才能保证 可达性分析的正确性</p>
+<h2 id="引用-reference"><a href="#引用-reference" class="headerlink" title="引用 reference"></a>引用 reference</h2><ul>
+<li><p>无论是通过计数器法 判断对象的引用数量，还是通过可达性分析算法 判断对象是否引用链可达。 判断对象是否存活 都和 “引用” 离不开关系 。</p>
+</li>
+<li><p>如果reference类型的数据中存储的数值代表的是另外一块内存的起始地址，就称该reference数据是代表某块内存、某个对象的引用</p>
+</li>
+</ul>
+<h3 id="强引用（Strongly-Re-ference）"><a href="#强引用（Strongly-Re-ference）" class="headerlink" title="强引用（Strongly Re-ference）"></a>强引用（Strongly Re-ference）</h3><ul>
+<li><p>最传统的“引用”的定义，是指在程序代码之中普遍存在的引用赋值，即类似“Objectobj=new Object()”这种引用关系。</p>
+</li>
+<li><p>无论任何情况下，只要强引用关系还存在，垃圾收集器就永远不会回收掉被引用的对象。</p>
+</li>
+</ul>
+<h3 id="软引用（Soft-Reference）"><a href="#软引用（Soft-Reference）" class="headerlink" title="软引用（Soft Reference）"></a>软引用（Soft Reference）</h3><ul>
+<li><p>用来描述一些还有用，但非必须的对象。只被软引用关联着的对象，</p>
+</li>
+<li><p>在系统将要发生内存溢出异常前，会把这些对象列进回收范围之中进行第二次回收，</p>
+</li>
+<li><p>如果这次回收还没有足够的内存，才会抛出内存溢出异常</p>
+</li>
+</ul>
+<h3 id="弱引用（Weak-Reference）"><a href="#弱引用（Weak-Reference）" class="headerlink" title="弱引用（Weak Reference）"></a>弱引用（Weak Reference）</h3><ul>
+<li>用来描述那些非必须对象，但是它的强度比软引用更弱一些，</li>
+<li>被弱引用关联的对象只能生存到下一次垃圾收集发生为止。</li>
+<li>当垃圾收集器开始工作，无论当前内存是否足够，都会回收掉只被弱引用关联的对象</li>
+</ul>
+<h3 id="虚引用（Phantom-Reference）"><a href="#虚引用（Phantom-Reference）" class="headerlink" title="虚引用（Phantom Reference）"></a>虚引用（Phantom Reference）</h3><h2 id="生存还是死亡？"><a href="#生存还是死亡？" class="headerlink" title="生存还是死亡？"></a>生存还是死亡？</h2><p>即使在可达性分析算法中判定为不可达的对象，也不是“非死不可”的，这时候它们暂时还处于“缓刑”阶段，</p>
+<p>要真正宣告一个对象死亡，至少要经历两次标记过程：</p>
+<ul>
+<li><p>如果对象在进行可达性分析后发现没有与GC Roots相连接的引用链，那它将会被第一次标记，</p>
+</li>
+<li><p>随后进行一次筛选，筛选的条件是此对象是否有必要执行finalize()方法。</p>
+</li>
+<li><p>假如对象没有覆盖finalize()方法，或者finalize()方法已经被虚拟机调用过，那么虚拟机将这两种情况都视为“没有必要执行”。</p>
+</li>
+</ul>
+<p>如果这个对象被判定为确有必要执行finalize()方法，那么该对象将会被放置在一个名为F-Queue的队列之中，并在稍后由一条由虚拟机自动建立的、低调度优先级的Finalizer线程去执行它们的finalize()方法。这里所说的“执行”是指虚拟机会触发这个方法开始运行，但并不承诺一定会等待它运行结束。</p>
+<p>原因是，如果某个对象的finalize()方法执行缓慢，或者更极端地发生了死循环，将很可能导致F-Queue队列中的其他对象永久处于等待，甚至导致整个内存回收子系统的崩溃。finalize()方法是对象逃脱死亡命运的最后一次机会，稍后收集器将对F-Queue中的对象进行第二次小规模的标记，如果对象要在finalize()中成功拯救自己——只要重新与引用链上的任何一个对象建立关联即可，譬如把自己（this关键字）赋值给某个类变量或者对象的成员变量，那在第二次标记时它将被移出“即将回收”的集合；如果对象这时候还没有逃脱，那基本上它就真的要被回收了</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 此代码演示了两点：</span></span><br><span class="line"><span class="comment"> * 1.对象可以在被GC时自我拯救。</span></span><br><span class="line"><span class="comment"> * 2.这种自救的机会只有一次，因为一个对象的finalize()方法最多只会被系统自动调用一次</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> zzm</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalizeEscapeGC</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> FinalizeEscapeGC SAVE_HOOK = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">isAlive</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;yes, i am still alive :)&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">finalize</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.finalize();</span><br><span class="line">        System.out.println(<span class="string">&quot;finalize method executed!&quot;</span>);</span><br><span class="line">        FinalizeEscapeGC.SAVE_HOOK = <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        SAVE_HOOK = <span class="keyword">new</span> FinalizeEscapeGC();</span><br><span class="line"></span><br><span class="line">        <span class="comment">//对象第一次成功拯救自己</span></span><br><span class="line">        SAVE_HOOK = <span class="keyword">null</span>;</span><br><span class="line">        System.gc();</span><br><span class="line">        <span class="comment">// 因为Finalizer方法优先级很低，暂停0.5秒，以等待它</span></span><br><span class="line">        Thread.sleep(<span class="number">500</span>);</span><br><span class="line">        <span class="keyword">if</span> (SAVE_HOOK != <span class="keyword">null</span>) &#123;</span><br><span class="line">            SAVE_HOOK.isAlive();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;no, i am dead :(&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 下面这段代码与上面的完全相同，但是这次自救却失败了</span></span><br><span class="line">        SAVE_HOOK = <span class="keyword">null</span>;</span><br><span class="line">        System.gc();</span><br><span class="line">        <span class="comment">// 因为Finalizer方法优先级很低，暂停0.5秒，以等待它</span></span><br><span class="line">        Thread.sleep(<span class="number">500</span>);</span><br><span class="line">        <span class="keyword">if</span> (SAVE_HOOK != <span class="keyword">null</span>) &#123;</span><br><span class="line">            SAVE_HOOK.isAlive();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;no, i am dead :(&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">执行结果：</span><br><span class="line">    finalize method executed!</span><br><span class="line">yes, i am still alive :)</span><br><span class="line">no, i am dead :(</span><br></pre></td></tr></table></figure>
+
+<p>运行结果可以看到，</p>
+<ul>
+<li>SAVE_HOOK对象的finalize()方法确实被垃圾收集器触发过，并且在被收集前成功逃脱了。</li>
+<li>另外一个值得注意的地方就是，代码中有两段完全一样的代码片段，执行结果却是一次逃脱成功，一次失败了。</li>
+<li>这是因为任何一个对象的finalize()方法都只会被系统自动调用一次，如果对象面临下一次回收，它的finalize()方法不会被再次执行，因此第二段代码的自救行动失败了。</li>
+</ul>
+<h2 id="回收方法区"><a href="#回收方法区" class="headerlink" title="回收方法区"></a>回收方法区</h2><ul>
+<li>方法区垃圾收集的“性价比”通常也是比较低的：</li>
+</ul>
+<p>在Java堆中，尤其是在新生代中，对常规应用进行一次垃圾收集通常可以回收70%至99%的内存空间，相比之下，方法区回收囿于苛刻的判定条件，其区域垃圾收集的回收成果往往远低于此。</p>
+<ul>
+<li>方法区的垃圾收集主要回收两部分内容：<strong>废弃的常量</strong> 和<strong>不再使用的类型</strong></li>
+</ul>
+<p>关于是否要对类型进行回收，HotSpot虚拟机提供了-Xnoclassgc参数进行控制，还可以使用-verbose：class以及-XX：+TraceClass-Loading、</p>
+<p>-XX：+TraceClassUnLoading查看类加载和卸载信息，其中-verbose：class和-XX：+TraceClassLoading可以在Product版的虚拟机中使用，</p>
+<ul>
+<li>在大量使用反射、动态代理、CGLib等字节码框架，动态生成JSP以及OSGi这类频繁自定义类加载器的场景中，通常都需要Java虚拟机具备类型卸载的能力，以保证不会对方法区造成过大的内存压<br>力。</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1400,350 +2117,6 @@
 <h4 id="FactoryBean"><a href="#FactoryBean" class="headerlink" title="FactoryBean"></a>FactoryBean</h4><p>实现FactoryBean接口, 然后加上@Bean</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建一个Spring定义的FactoryBean</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ColorFactoryBean</span> <span class="keyword">implements</span> <span class="title">FactoryBean</span>&lt;<span class="title">Color</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//返回一个Color对象，这个对象会添加到容器中</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;ColorFactoryBean...getObject...&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Color();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> Class&lt;?&gt; getObjectType() &#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> Color.class;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//是单例？</span></span><br><span class="line">	<span class="comment">//true：这个bean是单实例，在容器中保存一份</span></span><br><span class="line">	<span class="comment">//false：多实例，每次获取都会创建一个新的bean；</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> ColorFactoryBean <span class="title">colorFactoryBean</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> ColorFactoryBean();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testImport</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        printBeans(applicationContext);</span><br><span class="line">		<span class="comment">// ==》》》》》 这个实际 获取的是color对象，虽然id是 colorFactoryBean</span></span><br><span class="line">        Object colorFactoryBean2 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        Object colorFactoryBean3 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;colorFactoryBean==&gt;&quot;</span>+colorFactoryBean2);</span><br><span class="line">        System.out.println(colorFactoryBean2==colorFactoryBean3);</span><br><span class="line">		<span class="comment">// ======》 如果想要获取factoryBean本身，需要在id前面加上  &amp; 符号</span></span><br><span class="line">        Object colorFactoryBean4 = applicationContext.getBean(<span class="string">&quot;&amp;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(colorFactoryBean4);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">result：</span><br><span class="line">colorFactoryBean</span><br><span class="line">===》colorFactoryBean==&gt;com.liming.bean.Color@<span class="number">159f</span>197</span><br><span class="line"><span class="keyword">true</span></span><br><span class="line">====》com.liming.condition.ColorFactoryBean@<span class="number">78</span>aab498</span><br></pre></td></tr></table></figure>
 
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/" class="post-title-link" itemprop="url">Spring源码解析-01-注解开发</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-12-23 21:21:41" itemprop="dateCreated datePublished" datetime="2020-12-23T21:21:41+08:00">2020-12-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
-        </span>
-    </span>
-
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>3.2k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>3 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="Spring注解解析"><a href="#Spring注解解析" class="headerlink" title="Spring注解解析"></a>Spring注解解析</h2><p>最近在准备面试，翻出之前记录的笔记，再次回顾温习一下，快忘得差不多了。额</p>
-<h3 id="Configuration"><a href="#Configuration" class="headerlink" title="@Configuration"></a>@Configuration</h3><ul>
-<li>@Configuration ==配置文件，告诉Spring框架，这是一个配置类 </li>
-<li>@interface Configuration 之上，加上了</li>
-</ul>
-<h3 id="ComponentScans"><a href="#ComponentScans" class="headerlink" title="@ComponentScans"></a>@ComponentScans</h3><p> @ComponentScan  value:指定要扫描的包</p>
-<p>excludeFilters = Filter[] ：指定扫描的时候按照什么规则排除那些组件<br>includeFilters = Filter[] ：指定扫描的时候只需要包含哪些组件<br>FilterType.ANNOTATION：按照注解<br>FilterType.ASSIGNABLE_TYPE：按照给定的类型；<br>FilterType.ASPECTJ：使用ASPECTJ表达式<br>FilterType.REGEX：使用正则指定<br>FilterType.CUSTOM：使用自定义规则</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span>  <span class="comment">//告诉Spring这是一个配置类</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@ComponentScans(</span></span><br><span class="line"><span class="meta">		value = &#123;</span></span><br><span class="line"><span class="meta">				@ComponentScan(value=&quot;com.atguigu&quot;,includeFilters = &#123;</span></span><br><span class="line"><span class="meta">/*						@Filter(type=FilterType.ANNOTATION,classes=&#123;Controller.class&#125;),</span></span><br><span class="line"><span class="meta">						@Filter(type=FilterType.ASSIGNABLE_TYPE,classes&#123;BookService.class&#125;),*/</span></span><br><span class="line"><span class="meta">						@Filter(type=FilterType.CUSTOM,classes=&#123;MyTypeFilter.class&#125;)</span></span><br><span class="line"><span class="meta">				&#125;,useDefaultFilters = false)	</span></span><br><span class="line"><span class="meta">		&#125;</span></span><br><span class="line"><span class="meta">		)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfig</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//给容器中注册一个Bean;类型为返回值的类型，id默认是用方法名作为id</span></span><br><span class="line">	<span class="meta">@Bean(&quot;person&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Person <span class="title">person01</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Person(<span class="string">&quot;lisi&quot;</span>, <span class="number">20</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTypeFilter</span> <span class="keyword">implements</span> <span class="title">TypeFilter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * metadataReader：读取到的当前正在扫描的类的信息</span></span><br><span class="line"><span class="comment">	 * metadataReaderFactory:可以获取到其他任何类信息的</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">match</span><span class="params">(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="comment">//获取当前类注解的信息</span></span><br><span class="line">		AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();</span><br><span class="line">		<span class="comment">//获取当前正在扫描的类的类信息</span></span><br><span class="line">		ClassMetadata classMetadata = metadataReader.getClassMetadata();</span><br><span class="line">		<span class="comment">//获取当前类资源（类的路径）</span></span><br><span class="line">		Resource resource = metadataReader.getResource();</span><br><span class="line">		</span><br><span class="line">		String className = classMetadata.getClassName();</span><br><span class="line">		System.out.println(<span class="string">&quot;---&gt;&quot;</span>+className);</span><br><span class="line">		<span class="keyword">if</span>(className.contains(<span class="string">&quot;er&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="Bean"><a href="#Bean" class="headerlink" title="@Bean"></a>@Bean</h3><ul>
-<li>给容器中注册一个Bean;类型为返回值的类型，id默认是用方法名作为id</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean(&quot;person&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Person <span class="title">person01</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Person(<span class="string">&quot;lisi&quot;</span>, <span class="number">20</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="Scope"><a href="#Scope" class="headerlink" title="@Scope"></a>@Scope</h3><p>@Scope(“prototype”)</p>
-<p>系统默认是singleton   单实例</p>
-<ul>
-<li><p> prototype 多实例 （IOC容器启动并不会去调用方法创建对象放在容器中，每次获取的时候才会去调用方法 创建对象）</p>
-</li>
-<li><p>singleton  单实例 （默认值） ioc容器启动就会调用方法创建对象 放在ioc容器中，以后每次获取都是直接从容器中（map.get()）中拿</p>
-</li>
-</ul>
-<h3 id="Lazy"><a href="#Lazy" class="headerlink" title="@Lazy"></a>@Lazy</h3><p>懒加载</p>
-<ul>
-<li>单实例bean：默认在容器启动的时候创建对象；</li>
-<li>懒加载：容器启动不创建对象。第一次使用(获取)Bean创建对象，并初始化；</li>
-</ul>
-<h3 id="Conditional"><a href="#Conditional" class="headerlink" title="@Conditional"></a>@Conditional</h3><p>@Conditional： 按照一定的条件 进行判断，满足条件给容器注册bean</p>
-<p>//需要实现 Condition接口</p>
-<ul>
-<li>使用方式</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//需要实现 Condition接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LinuxCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#125;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> context  判断条件能使用的上下文 （环境）</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> metadata 注释信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//1. 能获取到ioc 使用的beanFactory</span></span><br><span class="line">        ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();</span><br><span class="line">        <span class="comment">//2. 获取类加载器</span></span><br><span class="line">        ClassLoader classLoader = context.getClassLoader();</span><br><span class="line">        <span class="comment">// 3. 获取当前的环境信息</span></span><br><span class="line">        Environment environment = context.getEnvironment();</span><br><span class="line">        <span class="comment">// 4. 能获取到bean定义的注册类</span></span><br><span class="line">        BeanDefinitionRegistry registry = context.getRegistry();</span><br><span class="line"></span><br><span class="line">        String property = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (property.contains(<span class="string">&quot;linux&quot;</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//使用方式</span></span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Conditional(WindowCondition.class)</span></span><br><span class="line">    <span class="meta">@Bean(&quot;bill&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Person <span class="title">person01</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span>  <span class="keyword">new</span> Person(<span class="string">&quot;Bill Gates&quot;</span>,<span class="number">62</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Conditional(LinuxCondition.class)</span></span><br><span class="line">    <span class="meta">@Bean(&quot;linus&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Person <span class="title">person02</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span>  <span class="keyword">new</span> Person(<span class="string">&quot;linus&quot;</span>,<span class="number">48</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/22/%E7%AE%97%E6%B3%95%E5%9B%BE%E8%A7%A3-01-%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/12/22/%E7%AE%97%E6%B3%95%E5%9B%BE%E8%A7%A3-01-%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE/" class="post-title-link" itemprop="url">算法图解-01-二分查找</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-12-22 22:09:11" itemprop="dateCreated datePublished" datetime="2020-12-22T22:09:11+08:00">2020-12-22</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%AE%97%E6%B3%95%E5%9B%BE%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">算法图解</span></a>
-        </span>
-    </span>
-
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>479</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="二分查找"><a href="#二分查找" class="headerlink" title="二分查找"></a>二分查找</h2><ul>
-<li><p>二分查找最多需要log2 n 步</p>
-</li>
-<li><p>对数是幂运算的 逆运算</p>
-</li>
-<li><p>数组： 将一系列元素存储再一系列相邻的桶（bucket）。即 数组中。 这些桶从0开始编号</p>
-<h3 id="大O运行时间："><a href="#大O运行时间：" class="headerlink" title="大O运行时间："></a>大O运行时间：</h3></li>
-</ul>
-<p>大O表示法 指出了算法又多快， 让你能够比较操作数，他指出了算法运行时间的增速。</p>
-<p>大O表示的是最糟的情况 </p>
-<h3 id="一些常见的大O运行时间"><a href="#一些常见的大O运行时间" class="headerlink" title="一些常见的大O运行时间"></a>一些常见的大O运行时间</h3><ul>
-<li>O(log n) ，也叫对数时间 ，这样的算法包括二分查找</li>
-<li>O（n） 也叫线性时间 ，这样的算法包括简单查找。</li>
-<li>O(n* log n)快速排序</li>
-<li>O(n**2) 选择排序</li>
-<li>o(n !) 这样的算法包括接下来将介绍的旅行商问题的解决方案——一种非<br>常慢的算法。</li>
-</ul>
-<h3 id="启示"><a href="#启示" class="headerlink" title="启示"></a>启示</h3><ul>
-<li><p>算法的速度指的并非 时间，而是  操作数的增速</p>
-</li>
-<li><p>谈论算法的速度是，我们说的是 随着输入的增加，其运行时间将 以什么 样的速度增加</p>
-</li>
-<li><p>算法的运行时间 用 大O法表示</p>
-</li>
-<li><p>O (log n)比 O(n) 快，当需要搜索的元素越多时，前者比后者 快的多</p>
-</li>
-<li><p>旅行商 算法，多个城市的排序：O(n!) 阶乘时间</p>
-</li>
-</ul>
-<h3 id="小结："><a href="#小结：" class="headerlink" title="小结："></a>小结：</h3><ol>
-<li><p>二分查找比 简单查找 快的多</p>
-</li>
-<li><p>O（log n）比O(n) 快，需要搜索的元素越多，前者比后者越快的多</p>
-</li>
-<li><p>算法的运行时间并不是 以 秒为单位</p>
-</li>
-<li><p>算法的运行时间是从 它的增速的角度考虑的 </p>
-</li>
-<li><p>算法 的运行时间可以 用大O表示法 来表示</p>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/22/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-09-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/12/22/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-09-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计模式之禅-09-原型模式</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-12-22 21:44:45" itemprop="dateCreated datePublished" datetime="2020-12-22T21:44:45+08:00">2020-12-22</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-        </span>
-    </span>
-
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>138</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="原型模式"><a href="#原型模式" class="headerlink" title="原型模式"></a>原型模式</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>Specify the kinds of objects to create using a prototypical instance ,and create new object by copying this prototype( 用原型示例指定创建对象的种类，并且通过拷贝这些原型创建新的对象)</p>
-<p><img src="/uploads/design_patterns/09prototype/prototype01.png"></p>
 
       
     </div>

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="HCj467TtuvFkAzzdCvYvbniAeNiUy7TUwp2hG1qGWQE">
+  <meta name="baidu-site-verification" content="LppFIbSdZO">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
+  </script>
+
+  <meta name="description" content="Thread的构造函数详解 线程的命名再构造线程的时候，推荐给线程起一个 有特殊意义的名字，这样有助于 排查问题和线程追踪。  线程的默认命名   Thread（） Thread（Runnable target） Thread ( ThreadGroup group , Runnable target )  源码如下： 123456789101112131415161718192021&#x2F;** *">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java高并发详解-02-Thread构造函数">
+<meta property="og:url" content="https://limingzhang666.github.io/2021/02/17/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-02-Thread%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0/index.html">
+<meta property="og:site_name" content="Yinshi&#39;s Blog">
+<meta property="og:description" content="Thread的构造函数详解 线程的命名再构造线程的时候，推荐给线程起一个 有特殊意义的名字，这样有助于 排查问题和线程追踪。  线程的默认命名   Thread（） Thread（Runnable target） Thread ( ThreadGroup group , Runnable target )  源码如下： 123456789101112131415161718192021&#x2F;** *">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/thread-construct.png">
+<meta property="article:published_time" content="2021-02-17T15:04:23.000Z">
+<meta property="article:modified_time" content="2021-02-18T16:13:54.475Z">
+<meta property="article:author" content="Yinshi">
+<meta property="article:tag" content="Thread构造函数">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/thread-construct.png">
+
+
+<link rel="canonical" href="https://limingzhang666.github.io/2021/02/17/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-02-Thread%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>java高并发详解-02-Thread构造函数 | Yinshi's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Yinshi's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Thread%E7%9A%84%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">Thread的构造函数详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%91%BD%E5%90%8D"><span class="nav-number">1.1.</span> <span class="nav-text">线程的命名</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E9%BB%98%E8%AE%A4%E5%91%BD%E5%90%8D"><span class="nav-number">1.1.1.</span> <span class="nav-text">线程的默认命名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.1.2.</span> <span class="nav-text">命名线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%90%8D%E5%AD%97"><span class="nav-number">1.1.3.</span> <span class="nav-text">修改线程的名字</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%88%B6%E5%AD%90%E5%85%B3%E7%B3%BB"><span class="nav-number">1.2.</span> <span class="nav-text">线程的父子关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Thread-%E4%B8%8E-ThreadGroup"><span class="nav-number">1.3.</span> <span class="nav-text">Thread 与 ThreadGroup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Thread-%E4%B8%8E-Runnable"><span class="nav-number">1.4.</span> <span class="nav-text">Thread 与 Runnable</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Thread%E4%B8%8EJVM%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88"><span class="nav-number">1.5.</span> <span class="nav-text">Thread与JVM虚拟机栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%88%E6%8A%A4%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.6.</span> <span class="nav-text">守护线程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">1.7.</span> <span class="nav-text">总结：</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yinshi"
+      src="/images/yinshi01_avatar.jpg">
+  <p class="site-author-name" itemprop="name">Yinshi</p>
+  <div class="site-description" itemprop="description">拨开云雾见青天</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">51</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/limingzhang666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;limingzhang666" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:laimingcham@163.com" title="E-Mail → mailto:laimingcham@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/limingzhang666" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/02/17/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-02-Thread%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          java高并发详解-02-Thread构造函数
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-02-17 23:04:23" itemprop="dateCreated datePublished" datetime="2021-02-17T23:04:23+08:00">2021-02-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">高并发详解</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>7.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>7 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="Thread的构造函数详解"><a href="#Thread的构造函数详解" class="headerlink" title="Thread的构造函数详解"></a>Thread的构造函数详解</h1><p><img src="/uploads/java-concurrency-master/thread-construct.png"></p>
+<h2 id="线程的命名"><a href="#线程的命名" class="headerlink" title="线程的命名"></a>线程的命名</h2><p>再构造线程的时候，推荐给线程起一个 有特殊意义的名字，这样有助于 排查问题和线程追踪。</p>
+<ol>
+<li><h3 id="线程的默认命名"><a href="#线程的默认命名" class="headerlink" title="线程的默认命名"></a>线程的默认命名</h3></li>
+</ol>
+<ul>
+<li>Thread（）</li>
+<li>Thread（Runnable target）</li>
+<li>Thread ( ThreadGroup group , Runnable target )</li>
+</ul>
+<p>源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Allocates a new &#123;<span class="doctag">@code</span> Thread&#125; object. This constructor has the same</span></span><br><span class="line"><span class="comment"> * effect as &#123;<span class="doctag">@linkplain</span> #Thread(ThreadGroup,Runnable,String) Thread&#125;</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@code</span> (null, target, gname)&#125;, where &#123;<span class="doctag">@code</span> gname&#125; is a newly generated</span></span><br><span class="line"><span class="comment"> * name. Automatically generated names are of the form</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@code</span> &quot;Thread-&quot;+&#125;&lt;i&gt;n&lt;/i&gt;, where &lt;i&gt;n&lt;/i&gt; is an integer.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span>  target</span></span><br><span class="line"><span class="comment"> *         the object whose &#123;<span class="doctag">@code</span> run&#125; method is invoked when this thread</span></span><br><span class="line"><span class="comment"> *         is started. If &#123;<span class="doctag">@code</span> null&#125;, this classes &#123;<span class="doctag">@code</span> run&#125; method does</span></span><br><span class="line"><span class="comment"> *         nothing.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Thread</span><span class="params">(Runnable target)</span> </span>&#123;</span><br><span class="line">    init(<span class="keyword">null</span>, target, <span class="string">&quot;Thread-&quot;</span> + nextThreadNum(), <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* For autonumbering anonymous threads. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> threadInitNumber;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">int</span> <span class="title">nextThreadNum</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> threadInitNumber++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果没有为线程显示的指定一个名字，那么线程将会<strong>以“Thread-” 作为前缀与 一个自增数字进行组合</strong>，这个自增数字（threadInitNumber）在整个JVM进程中将会不断自增。</p>
+<ol start="2">
+<li><h3 id="命名线程"><a href="#命名线程" class="headerlink" title="命名线程"></a>命名线程</h3></li>
+</ol>
+<ul>
+<li>Thread(Runnable target,String name)</li>
+<li>Thread(String name)</li>
+<li>Thread(ThreadGroup group,Runnable target,String name)</li>
+<li>Thread(ThreadGroup group,Runnable target,String name，long stackSize)</li>
+<li>Thread(ThreadGroup group,String name)</li>
+</ul>
+<ol start="3">
+<li><h3 id="修改线程的名字"><a href="#修改线程的名字" class="headerlink" title="修改线程的名字"></a>修改线程的名字</h3></li>
+</ol>
+<p>不论使用的是默认的函数命名规则，还是指定了一个特殊的名字，在线程启动之前还有一个记会可以对其进行修改，一旦线程启动，名字将不再被修改。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Changes the name of this thread to be equal to the argument</span></span><br><span class="line"><span class="comment">    * &lt;code&gt;name&lt;/code&gt;.</span></span><br><span class="line"><span class="comment">    * &lt;p&gt;</span></span><br><span class="line"><span class="comment">    * First the &lt;code&gt;checkAccess&lt;/code&gt; method of this thread is called</span></span><br><span class="line"><span class="comment">    * with no arguments. This may result in throwing a</span></span><br><span class="line"><span class="comment">    * &lt;code&gt;SecurityException&lt;/code&gt;.</span></span><br><span class="line"><span class="comment">    *</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span>      name   the new name for this thread.</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@exception</span>  SecurityException  if the current thread cannot modify this</span></span><br><span class="line"><span class="comment">    *               thread.</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@see</span>        #getName</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@see</span>        #checkAccess()</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">       checkAccess();</span><br><span class="line">       <span class="keyword">this</span>.name = name.toCharArray();</span><br><span class="line">       <span class="comment">//线程不是NEW 状态，对其的修改将不会生效 </span></span><br><span class="line">       <span class="keyword">if</span> (threadStatus != <span class="number">0</span>) &#123; </span><br><span class="line">           setNativeName(name);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="线程的父子关系"><a href="#线程的父子关系" class="headerlink" title="线程的父子关系"></a>线程的父子关系</h2><p>Thread的所有构造函数，最终都会去调用一个静态方法init （）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(ThreadGroup g, Runnable target, String name,</span></span></span><br><span class="line"><span class="function"><span class="params">                     <span class="keyword">long</span> stackSize, AccessControlContext acc)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (name == <span class="keyword">null</span>) &#123;</span><br><span class="line">           <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(<span class="string">&quot;name cannot be null&quot;</span>);</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       <span class="keyword">this</span>.name = name.toCharArray();</span><br><span class="line">	<span class="comment">///////////////////////////////// 获取当前线程作为父线程</span></span><br><span class="line">       Thread parent = currentThread();</span><br><span class="line">       SecurityManager security = System.getSecurityManager();</span><br><span class="line">       <span class="keyword">if</span> (g == <span class="keyword">null</span>) &#123;</span><br><span class="line">           <span class="comment">/* Determine if it&#x27;s an applet or not */</span></span><br><span class="line">           <span class="comment">/* If there is a security manager, ask the security manager</span></span><br><span class="line"><span class="comment">              what to do. */</span></span><br><span class="line">           <span class="keyword">if</span> (security != <span class="keyword">null</span>) &#123;</span><br><span class="line">               g = security.getThreadGroup();</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="comment">/* If the security doesn&#x27;t have a strong opinion of the matter</span></span><br><span class="line"><span class="comment">              use the parent thread group. */</span></span><br><span class="line">           <span class="keyword">if</span> (g == <span class="keyword">null</span>) &#123;</span><br><span class="line">               g = parent.getThreadGroup();</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="comment">/* checkAccess regardless of whether or not threadgroup is</span></span><br><span class="line"><span class="comment">          explicitly passed in. */</span></span><br><span class="line">       g.checkAccess();</span><br><span class="line">       <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * Do we have the required permissions?</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">       <span class="keyword">if</span> (security != <span class="keyword">null</span>) &#123;</span><br><span class="line">           <span class="keyword">if</span> (isCCLOverridden(getClass())) &#123;</span><br><span class="line">               security.checkPermission(SUBCLASS_IMPLEMENTATION_PERMISSION);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       g.addUnstarted();</span><br><span class="line">       <span class="keyword">this</span>.group = g;</span><br><span class="line">       <span class="keyword">this</span>.daemon = parent.isDaemon();</span><br><span class="line">       <span class="keyword">this</span>.priority = parent.getPriority();</span><br><span class="line">       <span class="keyword">if</span> (security == <span class="keyword">null</span> || isCCLOverridden(parent.getClass()))</span><br><span class="line">           <span class="keyword">this</span>.contextClassLoader = parent.getContextClassLoader();</span><br><span class="line">       <span class="keyword">else</span></span><br><span class="line">           <span class="keyword">this</span>.contextClassLoader = parent.contextClassLoader;</span><br><span class="line">       <span class="keyword">this</span>.inheritedAccessControlContext =</span><br><span class="line">               acc != <span class="keyword">null</span> ? acc : AccessController.getContext();</span><br><span class="line">       <span class="keyword">this</span>.target = target;</span><br><span class="line">       setPriority(priority);</span><br><span class="line">       <span class="keyword">if</span> (parent.inheritableThreadLocals != <span class="keyword">null</span>)</span><br><span class="line">           <span class="keyword">this</span>.inheritableThreadLocals =</span><br><span class="line">               ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);</span><br><span class="line">       <span class="comment">/* Stash the specified stack size in case the VM cares */</span></span><br><span class="line">       <span class="keyword">this</span>.stackSize = stackSize;</span><br><span class="line">       <span class="comment">/* Set thread ID */</span></span><br><span class="line">       tid = nextThreadID();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>Thread parent = currentThread(); 获取当前线程作为创建的父线程 。</p>
+</li>
+<li><p>线程的最初的状态是 NEW ，没有执行start方法之前，只能算一个Thread实例，并不意味着一个新的线程被创建，因此 parent 代表的将会是创建它的那个线程</p>
+</li>
+<li><p>一个线程的创建肯定是由另一个线程完成的</p>
+</li>
+<li><p>被创建线程的父线程 是创建它的线程。</p>
+</li>
+<li><p>main函数 所在的线程是由 JVM创建的，也就是main线程。</p>
+</li>
+</ul>
+<h2 id="Thread-与-ThreadGroup"><a href="#Thread-与-ThreadGroup" class="headerlink" title="Thread 与 ThreadGroup"></a>Thread 与 ThreadGroup</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// init 方法 片段</span></span><br><span class="line"><span class="keyword">if</span> (g == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">/* Determine if it&#x27;s an applet or not */</span></span><br><span class="line">            <span class="comment">/* If there is a security manager, ask the security manager</span></span><br><span class="line"><span class="comment">               what to do. */</span></span><br><span class="line">            <span class="keyword">if</span> (security != <span class="keyword">null</span>) &#123;</span><br><span class="line">                g = security.getThreadGroup();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">/* If the security doesn&#x27;t have a strong opinion of the matter</span></span><br><span class="line"><span class="comment">               use the parent thread group. */</span></span><br><span class="line">            <span class="keyword">if</span> (g == <span class="keyword">null</span>) &#123;</span><br><span class="line">                g = parent.getThreadGroup();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* checkAccess regardless of whether or not threadgroup is</span></span><br><span class="line"><span class="comment">           explicitly passed in. */</span></span><br><span class="line">        g.checkAccess();</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Do we have the required permissions?</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (security != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (isCCLOverridden(getClass())) &#123;</span><br><span class="line">                security.checkPermission(SUBCLASS_IMPLEMENTATION_PERMISSION);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        g.addUnstarted();</span><br><span class="line">        <span class="keyword">this</span>.group = g;</span><br><span class="line">        <span class="keyword">this</span>.daemon = parent.isDaemon();</span><br><span class="line">        <span class="keyword">this</span>.priority = parent.getPriority();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>如果在构造Thread的时候没有显示指定一个ThreadGroup，那么子线程将会被加入到父线程所在的线程组。</li>
+<li>main线程所在的 ThreadGroup 称为 main</li>
+</ul>
+<h2 id="Thread-与-Runnable"><a href="#Thread-与-Runnable" class="headerlink" title="Thread 与 Runnable"></a>Thread 与 Runnable</h2><p>Thread 负责线程本身相关的职责和控制，而 Runnable 则负责逻辑执行单元的部分</p>
+<h2 id="Thread与JVM虚拟机栈"><a href="#Thread与JVM虚拟机栈" class="headerlink" title="Thread与JVM虚拟机栈"></a>Thread与JVM虚拟机栈</h2> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">   * The requested stack size for this thread, or 0 if the creator did</span></span><br><span class="line"><span class="comment">   * not specify a stack size.  It is up to the VM to do whatever it</span></span><br><span class="line"><span class="comment">   * likes with this number; some VMs will ignore it.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">long</span> stackSize;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Initializes a Thread.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> g the Thread group</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> target the object whose run() method gets called</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> name the name of the new Thread</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> stackSize the desired stack size for the new thread, or</span></span><br><span class="line"><span class="comment">   *        zero to indicate that this parameter is to be ignored.</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> acc the AccessControlContext to inherit, or</span></span><br><span class="line"><span class="comment">   *            AccessController.getContext() if null</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(ThreadGroup g, Runnable target, String name,</span></span></span><br><span class="line"><span class="function"><span class="params">                    <span class="keyword">long</span> stackSize, AccessControlContext acc)</span> </span>&#123;</span><br><span class="line">     ...</span><br><span class="line">         ...</span><br><span class="line">         		...</span><br><span class="line">      <span class="comment">/* Stash the specified stack size in case the VM cares */</span></span><br><span class="line">      <span class="keyword">this</span>.stackSize = stackSize;</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* Set thread ID */</span></span><br><span class="line">      tid = nextThreadID();</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>stackSize=0时，代表忽略该参数 </p>
+</li>
+<li><p>一般情况下，创建线程的时候不会手动指定栈内存的地址空间字节数组，同一通过xss 参数进行设置即可</p>
+</li>
+<li><p>stacksize越大，则代表着 正在线程内方法调用递归的深度越深</p>
+</li>
+<li><p>stacksize越小，代表者创建的线程数量越多。</p>
+</li>
+<li><p>栈内存划分的大小，将直接决定一个JVM进程中可以创建多少个线程（栈内存越大，可创建的线程数量越少，反比）</p>
+</li>
+<li><p>进程的内存大小为：  堆内存+ 线程数量*栈内存</p>
+</li>
+</ul>
+<h2 id="守护线程"><a href="#守护线程" class="headerlink" title="守护线程"></a>守护线程</h2><p>问题： JVM程序在正常情况下什么时候退出</p>
+<p>答案： The java virtual machine exits when the only threads running are all daemon threads</p>
+<p>在正常情况下，若JVM中没有一个非守护线程，则JVM的进程会退出。  </p>
+<p>异常情况就是使用System.exit()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Marks this thread as either a &#123;<span class="doctag">@linkplain</span> #isDaemon daemon&#125; thread</span></span><br><span class="line"><span class="comment">   * or a user thread. The Java Virtual Machine exits when the only</span></span><br><span class="line"><span class="comment">   * threads running are all daemon threads.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * &lt;p&gt; This method must be invoked before the thread is started.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span>  on</span></span><br><span class="line"><span class="comment">   *         if &#123;<span class="doctag">@code</span> true&#125;, marks this thread as a daemon thread</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span>  IllegalThreadStateException</span></span><br><span class="line"><span class="comment">   *          if this thread is &#123;<span class="doctag">@linkplain</span> #isAlive alive&#125;</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span>  SecurityException</span></span><br><span class="line"><span class="comment">   *          if &#123;<span class="doctag">@link</span> #checkAccess&#125; determines that the current</span></span><br><span class="line"><span class="comment">   *          thread cannot modify this thread</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">setDaemon</span><span class="params">(<span class="keyword">boolean</span> on)</span> </span>&#123;</span><br><span class="line">      checkAccess();</span><br><span class="line">      <span class="keyword">if</span> (isAlive()) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> IllegalThreadStateException();</span><br><span class="line">      &#125;</span><br><span class="line">      daemon = on;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Whether or not the thread is a daemon thread. */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span>     daemon = <span class="keyword">false</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>setDaemon 方法只在线程启动之前生效，</li>
+<li>如果线程已经死亡，那么再设置setDaemon则会抛非法线程状态异常</li>
+<li>守护线程经常用作与执行一些后台任务，因此也叫 后台线程 </li>
+<li>当希望关闭某些线程的时候或者退出JVM进程的时候，一些线程能自动关闭， 可以使用守护线程</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonThread</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="comment">// main 线程开始</span></span><br><span class="line">        Thread thread = <span class="keyword">new</span> Thread(() -&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">try</span></span><br><span class="line">                &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">1</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e)</span><br><span class="line">                &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        thread.setDaemon(<span class="keyword">true</span>);</span><br><span class="line">        thread.start();</span><br><span class="line">        Thread.sleep(<span class="number">2_000L</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;Main thread finished lifecycle.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//如果不设置 thread.setDaemon(true);，则 JVM 一直无法关闭</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><ul>
+<li>详细了解Thread的构造函数，挖掘里面的各类细节，如 threadStatus =0代表 new状态，构造函数调用init函数，尤其是 stacksize  对Thread的影响</li>
+<li>了解了线程的父子关系， 默认情况下子线程从父线程那里 继承了守护线程、优先级、ThreadGroup等特性</li>
+<li>守护线程的特性以及使用场景</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>Yinshi
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://limingzhang666.github.io/2021/02/17/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-02-Thread%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0/" title="java高并发详解-02-Thread构造函数">https://limingzhang666.github.io/2021/02/17/java高并发详解-02-Thread构造函数/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Thread%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0/" rel="tag"># Thread构造函数</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/09/hello-world/" rel="prev" title="Hello World">
+                  <i class="fa fa-chevron-left"></i> Hello World
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/18/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-03-ThreadAPI%E8%AF%A6%E8%A7%A3/" rel="next" title="java高并发详解-03-ThreadAPI详解">
+                  java高并发详解-03-ThreadAPI详解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yinshi</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8.8.2/dist/mermaid.min.js', () => {
+    mermaid.init({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    }, '.mermaid');
+  }, window.mermaid);
+}
+</script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

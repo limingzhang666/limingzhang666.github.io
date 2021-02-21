@@ -226,7 +226,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-count">46</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -239,7 +239,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">48</span>
+        <span class="site-state-item-count">51</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -285,6 +285,350 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/" class="post-title-link" itemprop="url">Spring源码解析-01-注解开发</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-23 21:21:41" itemprop="dateCreated datePublished" datetime="2020-12-23T21:21:41+08:00">2020-12-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="Spring注解解析"><a href="#Spring注解解析" class="headerlink" title="Spring注解解析"></a>Spring注解解析</h2><p>最近在准备面试，翻出之前记录的笔记，再次回顾温习一下，快忘得差不多了。额</p>
+<h3 id="Configuration"><a href="#Configuration" class="headerlink" title="@Configuration"></a>@Configuration</h3><ul>
+<li>@Configuration ==配置文件，告诉Spring框架，这是一个配置类 </li>
+<li>@interface Configuration 之上，加上了</li>
+</ul>
+<h3 id="ComponentScans"><a href="#ComponentScans" class="headerlink" title="@ComponentScans"></a>@ComponentScans</h3><p> @ComponentScan  value:指定要扫描的包</p>
+<p>excludeFilters = Filter[] ：指定扫描的时候按照什么规则排除那些组件<br>includeFilters = Filter[] ：指定扫描的时候只需要包含哪些组件<br>FilterType.ANNOTATION：按照注解<br>FilterType.ASSIGNABLE_TYPE：按照给定的类型；<br>FilterType.ASPECTJ：使用ASPECTJ表达式<br>FilterType.REGEX：使用正则指定<br>FilterType.CUSTOM：使用自定义规则</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span>  <span class="comment">//告诉Spring这是一个配置类</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@ComponentScans(</span></span><br><span class="line"><span class="meta">		value = &#123;</span></span><br><span class="line"><span class="meta">				@ComponentScan(value=&quot;com.atguigu&quot;,includeFilters = &#123;</span></span><br><span class="line"><span class="meta">/*						@Filter(type=FilterType.ANNOTATION,classes=&#123;Controller.class&#125;),</span></span><br><span class="line"><span class="meta">						@Filter(type=FilterType.ASSIGNABLE_TYPE,classes&#123;BookService.class&#125;),*/</span></span><br><span class="line"><span class="meta">						@Filter(type=FilterType.CUSTOM,classes=&#123;MyTypeFilter.class&#125;)</span></span><br><span class="line"><span class="meta">				&#125;,useDefaultFilters = false)	</span></span><br><span class="line"><span class="meta">		&#125;</span></span><br><span class="line"><span class="meta">		)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfig</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//给容器中注册一个Bean;类型为返回值的类型，id默认是用方法名作为id</span></span><br><span class="line">	<span class="meta">@Bean(&quot;person&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Person <span class="title">person01</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Person(<span class="string">&quot;lisi&quot;</span>, <span class="number">20</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTypeFilter</span> <span class="keyword">implements</span> <span class="title">TypeFilter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * metadataReader：读取到的当前正在扫描的类的信息</span></span><br><span class="line"><span class="comment">	 * metadataReaderFactory:可以获取到其他任何类信息的</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">match</span><span class="params">(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="comment">//获取当前类注解的信息</span></span><br><span class="line">		AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();</span><br><span class="line">		<span class="comment">//获取当前正在扫描的类的类信息</span></span><br><span class="line">		ClassMetadata classMetadata = metadataReader.getClassMetadata();</span><br><span class="line">		<span class="comment">//获取当前类资源（类的路径）</span></span><br><span class="line">		Resource resource = metadataReader.getResource();</span><br><span class="line">		</span><br><span class="line">		String className = classMetadata.getClassName();</span><br><span class="line">		System.out.println(<span class="string">&quot;---&gt;&quot;</span>+className);</span><br><span class="line">		<span class="keyword">if</span>(className.contains(<span class="string">&quot;er&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="Bean"><a href="#Bean" class="headerlink" title="@Bean"></a>@Bean</h3><ul>
+<li>给容器中注册一个Bean;类型为返回值的类型，id默认是用方法名作为id</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean(&quot;person&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Person <span class="title">person01</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Person(<span class="string">&quot;lisi&quot;</span>, <span class="number">20</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Scope"><a href="#Scope" class="headerlink" title="@Scope"></a>@Scope</h3><p>@Scope(“prototype”)</p>
+<p>系统默认是singleton   单实例</p>
+<ul>
+<li><p> prototype 多实例 （IOC容器启动并不会去调用方法创建对象放在容器中，每次获取的时候才会去调用方法 创建对象）</p>
+</li>
+<li><p>singleton  单实例 （默认值） ioc容器启动就会调用方法创建对象 放在ioc容器中，以后每次获取都是直接从容器中（map.get()）中拿</p>
+</li>
+</ul>
+<h3 id="Lazy"><a href="#Lazy" class="headerlink" title="@Lazy"></a>@Lazy</h3><p>懒加载</p>
+<ul>
+<li>单实例bean：默认在容器启动的时候创建对象；</li>
+<li>懒加载：容器启动不创建对象。第一次使用(获取)Bean创建对象，并初始化；</li>
+</ul>
+<h3 id="Conditional"><a href="#Conditional" class="headerlink" title="@Conditional"></a>@Conditional</h3><p>@Conditional： 按照一定的条件 进行判断，满足条件给容器注册bean</p>
+<p>//需要实现 Condition接口</p>
+<ul>
+<li>使用方式</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//需要实现 Condition接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LinuxCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#125;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> context  判断条件能使用的上下文 （环境）</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> metadata 注释信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//1. 能获取到ioc 使用的beanFactory</span></span><br><span class="line">        ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();</span><br><span class="line">        <span class="comment">//2. 获取类加载器</span></span><br><span class="line">        ClassLoader classLoader = context.getClassLoader();</span><br><span class="line">        <span class="comment">// 3. 获取当前的环境信息</span></span><br><span class="line">        Environment environment = context.getEnvironment();</span><br><span class="line">        <span class="comment">// 4. 能获取到bean定义的注册类</span></span><br><span class="line">        BeanDefinitionRegistry registry = context.getRegistry();</span><br><span class="line"></span><br><span class="line">        String property = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (property.contains(<span class="string">&quot;linux&quot;</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//使用方式</span></span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Conditional(WindowCondition.class)</span></span><br><span class="line">    <span class="meta">@Bean(&quot;bill&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Person <span class="title">person01</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span>  <span class="keyword">new</span> Person(<span class="string">&quot;Bill Gates&quot;</span>,<span class="number">62</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Conditional(LinuxCondition.class)</span></span><br><span class="line">    <span class="meta">@Bean(&quot;linus&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Person <span class="title">person02</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span>  <span class="keyword">new</span> Person(<span class="string">&quot;linus&quot;</span>,<span class="number">48</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/22/%E7%AE%97%E6%B3%95%E5%9B%BE%E8%A7%A3-01-%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/22/%E7%AE%97%E6%B3%95%E5%9B%BE%E8%A7%A3-01-%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE/" class="post-title-link" itemprop="url">算法图解-01-二分查找</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-22 22:09:11" itemprop="dateCreated datePublished" datetime="2020-12-22T22:09:11+08:00">2020-12-22</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%AE%97%E6%B3%95%E5%9B%BE%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">算法图解</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>479</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>1 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="二分查找"><a href="#二分查找" class="headerlink" title="二分查找"></a>二分查找</h2><ul>
+<li><p>二分查找最多需要log2 n 步</p>
+</li>
+<li><p>对数是幂运算的 逆运算</p>
+</li>
+<li><p>数组： 将一系列元素存储再一系列相邻的桶（bucket）。即 数组中。 这些桶从0开始编号</p>
+<h3 id="大O运行时间："><a href="#大O运行时间：" class="headerlink" title="大O运行时间："></a>大O运行时间：</h3></li>
+</ul>
+<p>大O表示法 指出了算法又多快， 让你能够比较操作数，他指出了算法运行时间的增速。</p>
+<p>大O表示的是最糟的情况 </p>
+<h3 id="一些常见的大O运行时间"><a href="#一些常见的大O运行时间" class="headerlink" title="一些常见的大O运行时间"></a>一些常见的大O运行时间</h3><ul>
+<li>O(log n) ，也叫对数时间 ，这样的算法包括二分查找</li>
+<li>O（n） 也叫线性时间 ，这样的算法包括简单查找。</li>
+<li>O(n* log n)快速排序</li>
+<li>O(n**2) 选择排序</li>
+<li>o(n !) 这样的算法包括接下来将介绍的旅行商问题的解决方案——一种非<br>常慢的算法。</li>
+</ul>
+<h3 id="启示"><a href="#启示" class="headerlink" title="启示"></a>启示</h3><ul>
+<li><p>算法的速度指的并非 时间，而是  操作数的增速</p>
+</li>
+<li><p>谈论算法的速度是，我们说的是 随着输入的增加，其运行时间将 以什么 样的速度增加</p>
+</li>
+<li><p>算法的运行时间 用 大O法表示</p>
+</li>
+<li><p>O (log n)比 O(n) 快，当需要搜索的元素越多时，前者比后者 快的多</p>
+</li>
+<li><p>旅行商 算法，多个城市的排序：O(n!) 阶乘时间</p>
+</li>
+</ul>
+<h3 id="小结："><a href="#小结：" class="headerlink" title="小结："></a>小结：</h3><ol>
+<li><p>二分查找比 简单查找 快的多</p>
+</li>
+<li><p>O（log n）比O(n) 快，需要搜索的元素越多，前者比后者越快的多</p>
+</li>
+<li><p>算法的运行时间并不是 以 秒为单位</p>
+</li>
+<li><p>算法的运行时间是从 它的增速的角度考虑的 </p>
+</li>
+<li><p>算法 的运行时间可以 用大O表示法 来表示</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/22/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-09-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/22/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-09-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计模式之禅-09-原型模式</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-22 21:44:45" itemprop="dateCreated datePublished" datetime="2020-12-22T21:44:45+08:00">2020-12-22</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>138</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>1 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="原型模式"><a href="#原型模式" class="headerlink" title="原型模式"></a>原型模式</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>Specify the kinds of objects to create using a prototypical instance ,and create new object by copying this prototype( 用原型示例指定创建对象的种类，并且通过拷贝这些原型创建新的对象)</p>
+<p><img src="/uploads/design_patterns/09prototype/prototype01.png"></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1290,521 +1634,6 @@ AbstractClass <|-- ConcreteClass2</pre>
 <li>如 枚举Enum 等</li>
 </ol>
 
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/11/14/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-02-%E5%85%AD%E5%A4%A7%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/14/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-02-%E5%85%AD%E5%A4%A7%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/" class="post-title-link" itemprop="url">设计模式之禅-02-六大设计原则</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-11-14 23:56:49" itemprop="dateCreated datePublished" datetime="2020-11-14T23:56:49+08:00">2020-11-14</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-        </span>
-    </span>
-
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>5.1k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>5 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="单一职责原则"><a href="#单一职责原则" class="headerlink" title="单一职责原则"></a>单一职责原则</h2><p> (SRP)Single Responsibility Principle:<br> There should never be more than one reason for a class to change.<br> 我觉得这个单一职责原则看起来很简单，就是说一个接口对应一个职责，一个接口只做一件事情。<br> 就比如 老外饭桌上吃饭餐具分刀和叉。刀用来切割食物，叉用来固定和移动食物，分工很明确。而我们的筷子就全部把这些事情做完了。<br> 再比如 厨房刀具分水果刀、切肉刀等等，屠夫杀猪也会准备很多刀，功能都不一，这就是单一职责。</p>
-<p>应用到项目开发， 可是职责的划分其实很不确定，这个因项目而异，因环境而异。</p>
-<ul>
-<li><p>对于接口，我们在设计的时候一定要做到单一职责，但是对于实现类我们就需要多考虑。生搬硬套单一职责，就会引起类的剧增，制造了系统的复杂性。</p>
-</li>
-<li><p>对于方法，单一职责也适用。一个方法做一件事情，方法名体现了方法的功能。这样既愉悦自己，也愉悦自己的同事，一眼就可以知道这个方法做了什么事情。</p>
-</li>
-<li><p>现实有现实的难处，我们要考虑很多因素，工期，成本，人员技术水平等，可能会很难实施</p>
-<p>But 建议就是接口尽量单一职责，方法一定要单一职责</p>
-</li>
-</ul>
-<h2 id="里氏替换原则"><a href="#里氏替换原则" class="headerlink" title="里氏替换原则"></a>里氏替换原则</h2><p>定义一：如果对每一个类型为S的对象o1 ，都有类型为T的对象o2，使得以T定义的所有程序P在所有对象o1 都代换成o2时，程序P的行为没有发生变化，那么类型S是类型T的子类型 。</p>
-<p>定义二：  所有引用基类的地方都必须能透明地 使用其子类的对象</p>
-<p>简单讲就是： 只要父类能出现的地方子类就可以出现，而且替换为子类也不会产生任何错误或者异常。使用者根本不需要知道是父类还是子类。</p>
-<p>举个例子，定义了一个通用的接口方法， 方法参数就设置为一个抽象方法，只有在具体实现使用的时候，才会传子类进去。</p>
-<p>里氏替换原则为良好的继承定义了一个规范，包含了4层含义</p>
-<ul>
-<li><p>子类必须完全 实现父类的方法</p>
-<p>（如果子类不能完整的实现父类的方法，或者父类的某些方法在子类中已经发生”畸变“，则建议断开父子继承关系，采用依赖、聚集、组合等关系代替继承）</p>
-</li>
-<li><p>子类可以有自己的特性</p>
-<p>(如果某个方法中显式的指出参数就是子类，那么传父类进来肯定就编译不通过了)</p>
-</li>
-<li><p>覆盖或实现父类的方法是，输入参数可以被放大</p>
-<p>todo: （应该从jvm字节码层面去思考为什么可以这么做）</p>
-<ul>
-<li>假如父类的方法参数是HashMap,子类的方法参数是Map，子类方法参数范围变大了，那么子类就是 重载（Overload）了这方法。<br>这个时候，子类的输入参数类型范围扩大了，子类代替父类传递到调用者中，子类的方法永远不会被执行。这个是正常的。如果是想要子类的方法被执行，那么请和子类参数一样，这是 覆写（Override）</li>
-<li>假如父类的方法入参是Map，子类的方法参数是HashMap，子类方法参数范围变小了。这样的话，子类在没有覆写 父类方法的前提下，却被执行了，这样会引起业务关系的紊乱，歪曲了父类的意图。</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><p>覆写或实现父类的方法时，输出结果可以被缩小 </p>
-<ul>
-<li>如果是覆写（Override），父类和子类同名方法的输入类型是相同的，子类方法的返回值S范围  小于等于 父类的返回值范围F</li>
-<li>如果是重载（OverLoad）,则方法的输入参数类型或者数量不相同</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><p>总结：</p>
-<p>尽量避免子类的‘’个性”，一旦子类有个性，子类和父类之间的关系就难调和，出现混乱了。尽量把子类当作父类来使用。</p>
-<p>把子类单独作为一个业务来使用，则会让代码的耦合扑朔迷离，却反类替换标准</p>
-</li>
-</ul>
-<h2 id="依赖倒置原则"><a href="#依赖倒置原则" class="headerlink" title="依赖倒置原则"></a>依赖倒置原则</h2><p>（Dependence Inversion Principle,DIP）</p>
-<p>​    High level modules should not depend upon low level modules,Both should depend upon abstractions. Abstractions should not depend upon details. Details should depend upon abstractions</p>
-<p>翻译过来包含3层含义：</p>
-<ul>
-<li>高层模块不应该依赖底层模块，两者都应该依赖其抽象</li>
-</ul>
-<p>不可分割的原子逻辑就是底层模块，原子逻辑的再次组装就是高层模块。</p>
-<ul>
-<li>抽象不应该依赖细节</li>
-<li>细节应该依赖抽象</li>
-</ul>
-<p>抽象指的是抽象类或者接口，细节指的是其实现类或者继承者，特点是可以被实例化。</p>
-<p>其实最精简的解释就是：面向接口编程。</p>
-<ul>
-<li>模块之间的依赖通过抽象发生，实现类之间不发生直接的依赖关系，其依赖关系是 通过接口或者抽象类产生的</li>
-<li>接口或抽象类不依赖实现类</li>
-<li>实现类依赖 接口或抽象类</li>
-</ul>
-<ul>
-<li><p>好处： </p>
-<ul>
-<li><p>依赖倒置有利于并行开发，2个类具有依赖关系，只要指定出2者之间的接口（或者抽象类）就可以独立开发了，而且项目之间的单元测试也可以独立进行了。</p>
-</li>
-<li><p>TDD（测试驱动开发）开发模式就是依赖倒置的最高级运用，丢给你一个接口，就可以自行Mock了 </p>
-</li>
-</ul>
-</li>
-</ul>
-<p><img src="/uploads/design_patterns/02SixPrinciple/DependenceInversionPrincipl.png"></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">classDiagram</span><br><span class="line">Driver ..&gt; IDriver : 实现</span><br><span class="line">IDriver --&gt; ICar : 依赖</span><br><span class="line">ICar&lt;.. BenzCar : 实现</span><br><span class="line">ICar ..&gt; BMWCar : 实现</span><br><span class="line">class IDriver&#123;</span><br><span class="line">    &lt;&lt;interface&gt;&gt;</span><br><span class="line">     +driver(ICar car)  void</span><br><span class="line">   </span><br><span class="line">&#125;</span><br><span class="line">class ICar&#123;</span><br><span class="line">  	&lt;&lt;interface&gt;&gt;</span><br><span class="line">     +run()  void</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-<ul>
-<li>依赖的3中写法<ul>
-<li>构造函数传递依赖对象</li>
-<li>Setter方法传递依赖对象</li>
-<li>接口声明依赖对象，接口注入</li>
-</ul>
-</li>
-</ul>
-<h2 id="接口隔离原则"><a href="#接口隔离原则" class="headerlink" title="接口隔离原则"></a>接口隔离原则</h2><p>简单概述就是2个重点：</p>
-<ul>
-<li><p>Cilents should not be forced to depend upon interfaces that they donot use (客户端不应依赖它不需要的接口)</p>
-</li>
-<li><p>The dependency of one class to another one should depend on the smallest possible interface(类间的依赖关系应该建立在最小的接口上)</p>
-<p>需要对接口进行细化，保证它的纯洁性</p>
-<p>要求接口 中的方法尽量少 </p>
-<p>如果多个模块依赖一个接口的功能，那我们应该给每个模块提供单独的接口，而不是建立一个庞大的臃肿的接口，容纳所有的客户端访问</p>
-<p><img src="/uploads/design_patterns/02SixPrinciple/InterfaceIsolation01.png"></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">classDiagram</span><br><span class="line">AbstractSearcher o--&gt; IPettyGirl : 聚合</span><br><span class="line">Searcher --|&gt; AbstractSearcher : 继承</span><br><span class="line">IPettyGirl &lt;.. PettyGirl :实现</span><br><span class="line"></span><br><span class="line">class IPettyGirl&#123;</span><br><span class="line">    &lt;&lt;interface&gt;&gt;</span><br><span class="line">     +goodLooking()  void</span><br><span class="line">     +niceFiggure()  void</span><br><span class="line">     +greatTemperment()  void</span><br><span class="line">   </span><br><span class="line">&#125;</span><br><span class="line">class AbstractSearcher&#123;</span><br><span class="line">	&lt;&lt;abstract&gt;&gt;</span><br><span class="line">	+AbstractSearcher(IPettyGirl _pettyGirl)</span><br><span class="line">	 show()* void</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>如上图： 这里 IPettyGirl 接口就 过于臃肿了，我们的审美观点都在改变，美女的定义也在变化。有些女生虽然长的不是很出众，但是气质好，也属于美女，大家也都喜欢，所以这里：</p>
-<p>可以把IPettyGirl  拆分成：外形美的美女IGoodBodyGirl、 气质美的美女IGreatTemperamentGirl  </p>
-<p><img src="/uploads/design_patterns/02SixPrinciple/InterfaceIsolation02.png"></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">classDiagram</span><br><span class="line">AbstractSearcher o--&gt; IGoodBodyGirl : 聚合</span><br><span class="line">AbstractSearcher o--&gt; IGreatTemperamentGirl  : 聚合</span><br><span class="line">Searcher --|&gt; AbstractSearcher : 继承</span><br><span class="line">IGreatTemperamentGirl   &lt;.. PettyGirl :实现</span><br><span class="line">IGoodBodyGirl   &lt;.. PettyGirl :实现</span><br><span class="line"></span><br><span class="line">class IGoodBodyGirl&#123;</span><br><span class="line">    &lt;&lt;interface&gt;&gt;</span><br><span class="line">     +goodLooking()  void</span><br><span class="line">     +niceFiggure()  void</span><br><span class="line">&#125;</span><br><span class="line">class IGreatTemperamentGirl  &#123;</span><br><span class="line">    &lt;&lt;interface&gt;&gt;</span><br><span class="line">     +greatTemperment()  void</span><br><span class="line">   </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class AbstractSearcher&#123;</span><br><span class="line">	&lt;&lt;abstract&gt;&gt;</span><br><span class="line">	+AbstractSearcher(IGoodBodyGirl _goodBodyGirl)</span><br><span class="line">	+AbstractSearcher(IGreatTemperamentGirl _greatTemperamentGirl)</span><br><span class="line">	 show()* void</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ul>
-<ul>
-<li><p>ps：</p>
-<p>以上把一个臃肿的接口 变更为两个独立的接口 就是 接口隔离原则的表现形式。 让 AbstractSearcher依赖2个装用的接口比依赖一个综合的接口要更灵活。</p>
-<p>接口是我们设计阶段对外提供的 契约，通过分散定义多个接口，可以预防未来变更的扩展，提供系统的灵活性和可维护性</p>
-</li>
-<li><p>总结</p>
-<ul>
-<li><p> 接口要尽量小 ，小是有粒度的，要符合  单一职责原则，不要过度拆分</p>
-</li>
-<li><p>接口要高内聚，就是接口中尽量少公布public方法，接口是对外的承诺，承诺越少，变更的风险就越少。</p>
-<p>就是不讲任何条件，立刻完成任务的行为就是高内聚的表现。</p>
-</li>
-<li><p>定制服务，假如 项目作为服务方 为各个接入方 提供了 各个接入方（互相隔离）专用的查询接口，本系统内部还有 不隔离的混合查询方式。该混合查询方式也能满足各个接入方的查询需求，但是就不能对外公布 。</p>
-</li>
-<li><p>接口设计是有粒度的 ，粒度越小系统越灵活，但是灵活的同时也带来了结构的复杂化，开发难度增加，可维护性降低。所以这个衡量度，需要根据 实践，经验，领悟 去判断 。</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="迪米特原则"><a href="#迪米特原则" class="headerlink" title="迪米特原则"></a>迪米特原则</h2><p>迪米特法则（Law of Demeter,LoD）也叫 最少知识原则（Least Knowledge Principle，LKP）</p>
-<p>:一个对象应该对其他对象有最少的了解，一个类应该对自己需要调用的类知道的最少，被调用的类内部如何复杂与我无关，我只关心你提供的public的方法，其他的一概不关心。</p>
-<p>换句话说，外部只需要一个获取结果的方法就行，不需要知道接口是具体如何实现的细节，我给你一个结果，你不必关注我的实现方式。细节的方法不需要提供出去</p>
-<ul>
-<li><p> 只和直接朋友交流 （only talk to your immediate friends ） ： 类与类之间的关系是建立在类间的，而不是方法间的，因此一个方法尽量不要引入一个类中不存在的对象</p>
-</li>
-<li><p>朋友间也是有距离的，一个类公开的public属性或者方法越多，修改时 涉及的面就越大，变更引起的风险扩散就越大。因此为了保持朋友类间的距离，需要尽量收敛，多用private 、package-private. protected等访问权限</p>
-</li>
-<li><p> 是自己的就是自己的 ： 如果一个方法放在本类中也可以，放在其他类中也可以。判断方法是：  如果一个方法放在本类中，既不增加类间关系，也不对本类产生负面影响，就放在本类中 。（当然前提一定也是 符合单一职责原则的，不要放一个不相干的方法进来)</p>
-</li>
-</ul>
-<p>核心观念就是类间解耦，弱耦合，只有弱耦合了以后，类的复用率才可以提高。其要求的结果就是产生了大量的中转或跳转类，导致系统的复杂性提高，同时也为维护带来了难度。读者在采用迪米特法则时需要反复权衡，既做到让结构清晰，又做到高内聚低耦合。</p>
-<h2 id="开闭原则"><a href="#开闭原则" class="headerlink" title="开闭原则"></a>开闭原则</h2><p>Software entities like classes,modules and  functions should be open for extension but closed for modifications .(一个软件实体如类、模块和函数应该对扩展开放，对修改关闭)</p>
-<p>尽量不修改原有的已经上线的代码， 通过扩展的方式 适应新的需求。</p>
-<h3 id="开闭原则的重要性："><a href="#开闭原则的重要性：" class="headerlink" title="开闭原则的重要性："></a>开闭原则的重要性：</h3><ul>
-<li><p>开发原则对测试的影响</p>
-<p>已经投产的代码都是有意义的，都是接受系统规则的约束，都是经过几轮测试的。 因此有变化提出的时候，就需要考虑原来的健壮代码是否可以不修改，仅仅通过扩展实现 。否则修改了原有代码就需要各种回归测试 ，提高了 成本</p>
-</li>
-<li><p>开闭原则提高了复用性</p>
-<p>面向对象的设计中，所有的逻辑都是从原子逻辑组合而来的 ，而不是在一个类中独立实现一个业务逻辑。只有这样代码才可以复用，粒度越细，被复用的可能性越大。  怎么提高复用率，缩小逻辑粒度，直到一个逻辑不可再拆分为止</p>
-</li>
-<li><p>开闭原则可以提高可维护性</p>
-<p>一款软件投产后，维护人员的工作不仅是对数据进行维护，还可能要对程序进行扩展。扩展一个类很简单，因为修改一个类，就得需要读懂原有的代码，牵扯的模块，怕的就是牵一发动全身。</p>
-</li>
-</ul>
-<h3 id="开闭原则的使用方式"><a href="#开闭原则的使用方式" class="headerlink" title="开闭原则的使用方式"></a>开闭原则的使用方式</h3><p>1.抽象约束</p>
-<ul>
-<li><p>接口抽象</p>
-</li>
-<li><p>参数类型及引用对象抽象、</p>
-</li>
-<li><p>抽象层保持稳定</p>
-</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/11/12/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-01-%E7%B1%BB%E5%9B%BE/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/12/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-01-%E7%B1%BB%E5%9B%BE/" class="post-title-link" itemprop="url">设计模式之禅-01-类图</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-11-12 18:06:41" itemprop="dateCreated datePublished" datetime="2020-11-12T18:06:41+08:00">2020-11-12</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-        </span>
-    </span>
-
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>1.2k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="设计模式之禅-类图"><a href="#设计模式之禅-类图" class="headerlink" title="设计模式之禅-类图"></a>设计模式之禅-类图</h1><p>最近一段时间，又看了一遍设计模式，发现和以前有了不一样的理解。<br>以前看设计模式感觉更像是死记硬背，没有掌握方法，只是觉得这个很重要，可是不是很理解。</p>
-<p>但是 其实学习设计模式，</p>
-<p><strong>前提</strong>一定是要先会看和画 <strong>类图</strong>，这也是一门语言，很直观的可以看出各个类之间的关系，然后再去想为什么这么设计</p>
-<p><img src="/uploads/design_patterns/01classDiagram/mermaid_relation.png" alt="mermaid_relation.png"></p>
-<p>ps: 使用  <a target="_blank" rel="noopener" href="https://mermaid-js.github.io/mermaid/#/classDiagram"> mermaid </a>  画类图</p>
-<h2 id="常见的类图关系："><a href="#常见的类图关系：" class="headerlink" title="常见的类图关系："></a>常见的类图关系：</h2><h3 id="泛化（Generalization）："><a href="#泛化（Generalization）：" class="headerlink" title="泛化（Generalization）："></a>泛化（Generalization）：</h3><p>泛化包含继承（Inheritance）和实现（Realization）</p>
-<h4 id="继承（Inheritance）："><a href="#继承（Inheritance）：" class="headerlink" title="继承（Inheritance）："></a>继承（Inheritance）：</h4><p>在UML类图中，继承通常使用 <strong>空心三角+实线</strong> 表示</p>
-<p><img src="https://img-blog.csdnimg.cn/20200224104704397.png" alt="在这里插入图片描述"></p>
-<pre class="mermaid">classDiagram
- classDog--|> classAnimal : 继承</pre>
-
-
-
-<h4 id="实现（Realization）："><a href="#实现（Realization）：" class="headerlink" title="实现（Realization）："></a>实现（Realization）：</h4><p>在UML类图中，实现通常使用<code>空心三角+虚线</code>表示</p>
-<p><img src="https://img-blog.csdnimg.cn/20200224105008943.png" alt="在这里插入图片描述"></p>
-<pre class="mermaid">classDiagram
-classA ..> InterfaceA : 实现</pre>
-
-<h3 id="依赖（Dependence）："><a href="#依赖（Dependence）：" class="headerlink" title="依赖（Dependence）："></a>依赖（Dependence）：</h3><ul>
-<li><p>简单理解就是一个类A 使用到类B，这种关系很弱，关系临时且偶然</p>
-</li>
-<li><p>依赖关系在Java语言中体现为<code>成员变量、局域变量、方法的形参、方法返回值</code>，或者对静态方法的调用。</p>
-</li>
-<li><p>在代码层面就是类B 作为参数在类A 的某个方法中使用</p>
-</li>
-<li><p>在UML类图中，依赖通常使用<code>虚线箭头</code>表示</p>
-<p><img src="https://img-blog.csdnimg.cn/2020022411080829.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM3OTg5OTgw,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<pre class="mermaid">  classDiagram
-classA ..> classB :依赖</pre>
-<h3 id="关联（Association）"><a href="#关联（Association）" class="headerlink" title="关联（Association）:"></a>关联（Association）:</h3></li>
-<li><p>强依赖关系，类似与朋友关系，是平等的</p>
-</li>
-<li><p>关联是单向或者双向的，可以是1：1，或者1：N</p>
-</li>
-<li><p>关联关系以实线箭头表示</p>
-</li>
-<li><p>表现在代码层面就是被关联对象B 以 类属性的形式 出现在类A 中， 或者List<B>出现在 类A中  </p>
-<p><img src="https://img-blog.csdnimg.cn/2020022411311616.png" alt="在这里插入图片描述"></p>
-<p><img src="https://img-blog.csdnimg.cn/20200224121447839.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM3OTg5OTgw,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-</li>
-</ul>
-  <pre class="mermaid">  classDiagram
-  classA --> classB : 关联</pre>
-
-
-
-<h3 id="聚合（Aggregation）："><a href="#聚合（Aggregation）：" class="headerlink" title="聚合（Aggregation）："></a>聚合（Aggregation）：</h3><p><img src="https://img-blog.csdnimg.cn/2020022412311785.png" alt="在这里插入图片描述"></p>
-<ul>
-<li><p>集体和个体的关系（雁群和大雁）</p>
-</li>
-<li><p>has a的关系，如List<A> 和A的关系</p>
-</li>
-<li><p>聚合关系表示整体和个体的关系，整体和个体可以相互独立存在，一定是有两个模块分别管理整体和个体。</p>
-</li>
-<li><p>在UML类图中，聚合通常使用<code>空心菱形+实线箭头</code>表示</p>
-</li>
-</ul>
-<p><img src="https://img-blog.csdnimg.cn/20200224123306820.png" alt="在这里插入图片描述"></p>
-<pre class="mermaid">classDiagram
-大雁群 o-- 大雁: 聚合</pre>
-
-<h3 id="组合（Composition）："><a href="#组合（Composition）：" class="headerlink" title="组合（Composition）："></a>组合（Composition）：</h3><ul>
-<li>组合关系是<code>关联关系的一种特例</code>，他体现的是一种<code>contains-a</code>(包含)的关系，这种关系比聚合更强，也称为强聚合。它要求普通的聚合关系中代表整体的对象负责代表部分对象的生命周期，组合关系是不能共享的 </li>
-<li>大雁和 翅膀的关系，汽车和 发动机的关系，拥有同一个生命周期</li>
-<li>整体和个体不能独立存在，一定是在一个模块中同时管理整体和个体，生命周期必须相同(级联)。</li>
-<li>在UML类图中，组合通常使用<code>实心菱形+实线箭头</code>表示</li>
-<li>体现在代码层面就是 B是A的构造函数 的参数</li>
-</ul>
-<p><img src="https://img-blog.csdnimg.cn/20200224123131234.png" alt="在这里插入图片描述"></p>
-<pre class="mermaid">classDiagram
-classCar *-- classEngine : 组合</pre>
-
-
-
-
-
-<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p>当我们了解了这些基础的关系后，后面参考类图看设计模式，心里就会有一个大的思路，这个时候就只需要去想 ，这么设计的好处是什么就可以了</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2019/05/20/hexo-performance-optimization/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/05/20/hexo-performance-optimization/" class="post-title-link" itemprop="url">Hexo+NexT(v7.0+) 搭建博客：性能优化</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2019-05-20 17:15:23" itemprop="dateCreated datePublished" datetime="2019-05-20T17:15:23+08:00">2019-05-20</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%8D%9A%E5%AE%A2/" itemprop="url" rel="index"><span itemprop="name">博客</span></a>
-        </span>
-    </span>
-
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>3.9k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>4 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在访问很多博客的时候，页面加载和响应速度往往都要上十秒，严重影响用户的体验。<br>本文将探究如何利用常用的方案来进行性能优化，主要包括:</p>
-<ul>
-<li>CDN加速</li>
-<li>Nginx压缩、缓存</li>
-<li>图床</li>
-</ul>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/05/20/hexo-performance-optimization/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
       
     </div>
 
