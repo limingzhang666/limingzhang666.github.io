@@ -85,7 +85,7 @@ menu:
   tags: /tags/ || fa fa-tags
   categories: /categories/ || fa fa-th
   archives: /archives/ || fa fa-archive  #档案
-#  guestbook: /guestbook || fa fa-heartbeat
+  guestbook: /guestbook || fa fa-book
 #  schedule: /schedule/ || fa fa-calendar
 #  sitemap: /sitemap.xml || fa fa-sitemap
   #commonweal: /404/ || fa fa-heartbeat
@@ -628,15 +628,16 @@ valine:
   appKey: fr4vMSPUjcHLtIrF2hmRF6UE
   serverURLs: https://4obiqgiw.lc-cn-n1-shared.com
   # serverURLs: # When the custom domain name is enabled, fill it in here
-  placeholder: 有什么问题，欢迎留言指正与交流... # Comment box placeholder
-  avatar: mm # Gravatar style
+  placeholder:  国王不动，手下怎么跟随? --反叛的鲁鲁修 # Comment box placeholder
+  #avatar: mm # Gravatar style
+  avatar: "" # Gravatar style
   meta: [nick, mail, link] # Custom comment header
   pageSize: 10 # Pagination size
   lang: # Language, available values: en, zh-cn
   visitor: false # Article reading statistic
   comment_count: true # If false, comment count will only be displayed in post page, not in home page
-  recordIP: false # Whether to record the commenter IP
-  enableQQ: false # Whether to enable the Nickname box to automatically get QQ Nickname and QQ Avatar
+  recordIP: true # Whether to record the commenter IP
+  enableQQ: true # Whether to enable the Nickname box to automatically get QQ Nickname and QQ Avatar
   requiredFields: [] # Set required fields: [nick] | [nick, mail]
   cdh: https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js
 
