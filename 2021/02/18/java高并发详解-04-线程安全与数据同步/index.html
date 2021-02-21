@@ -23,7 +23,7 @@
 
 <script class="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
+    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
   </script>
 
   <meta name="description" content="从字节码指令维度掌握 synchronized 关键字的原理,以及互斥同步的 流程 还有一点很重要的是,通过画时序图 分析数据不一致的场景 和原因  4.1数据同步(Todo)共享资源:多个线程同时对同一份资源进行访问(读写操作),被多个线程访问的资源,就称为共享资源 数据同步如何保证多个线程访问到的数据是一致的,则被称为数据同步或者资源同步 4.1.1 数据不一致问题的引入1234567891">
@@ -33,11 +33,18 @@
 <meta property="og:site_name" content="Yinshi&#39;s Blog">
 <meta property="og:description" content="从字节码指令维度掌握 synchronized 关键字的原理,以及互斥同步的 流程 还有一点很重要的是,通过画时序图 分析数据不一致的场景 和原因  4.1数据同步(Todo)共享资源:多个线程同时对同一份资源进行访问(读写操作),被多个线程访问的资源,就称为共享资源 数据同步如何保证多个线程访问到的数据是一致的,则被称为数据同步或者资源同步 4.1.1 数据不一致问题的引入1234567891">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/thread-thisMonitor.png">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/thread-thisMonitor2.png">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/thread-classMonitor.png">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/thread-classMonitor2.png">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/deadLock_read.png">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/deadLock_write.png">
 <meta property="article:published_time" content="2021-02-18T15:56:02.000Z">
-<meta property="article:modified_time" content="2021-02-20T07:07:09.943Z">
+<meta property="article:modified_time" content="2021-02-21T16:30:38.158Z">
 <meta property="article:author" content="Yinshi">
 <meta property="article:tag" content="线程安全与数据同步">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://limingzhang666.github.io/uploads/java-concurrency-master/thread-thisMonitor.png">
 
 
 <link rel="canonical" href="https://limingzhang666.github.io/2021/02/18/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-04-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5/">
@@ -157,6 +164,11 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
 
   </li>
+        <li class="menu-item menu-item-guestbook">
+
+    <a href="/guestbook" rel="section"><i class="fa fa-book fa-fw"></i>留言</a>
+
+  </li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -214,7 +226,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <section class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#4-1%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5-Todo"><span class="nav-number">1.</span> <span class="nav-text">4.1数据同步(Todo)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B1%E4%BA%AB%E8%B5%84%E6%BA%90"><span class="nav-number">1.0.1.</span> <span class="nav-text">共享资源:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5"><span class="nav-number">1.0.2.</span> <span class="nav-text">数据同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-%E6%95%B0%E6%8D%AE%E4%B8%8D%E4%B8%80%E8%87%B4%E9%97%AE%E9%A2%98%E7%9A%84%E5%BC%95%E5%85%A5"><span class="nav-number">1.0.3.</span> <span class="nav-text">4.1.1 数据不一致问题的引入</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.0.3.1.</span> <span class="nav-text">问题现象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90"><span class="nav-number">1.0.3.2.</span> <span class="nav-text">问题分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E5%8F%B7%E7%A0%81%E8%A2%AB%E6%8E%A0%E8%BF%87"><span class="nav-number">1.0.3.2.1.</span> <span class="nav-text">1. 号码被掠过</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E5%8F%B7%E7%A0%81%E9%87%8D%E5%A4%8D%E5%87%BA%E7%8E%B0"><span class="nav-number">1.0.3.2.2.</span> <span class="nav-text">2. 号码重复出现</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E5%8F%B7%E7%A0%81%E8%B6%85%E8%BF%87%E4%BA%86%E6%9C%80%E5%A4%A7%E5%80%BC"><span class="nav-number">1.0.3.2.3.</span> <span class="nav-text">3. 号码超过了最大值</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-2-%E5%88%9D%E5%A7%8Bsynchronized%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">2.</span> <span class="nav-text">4.2 初始synchronized关键字</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-1-%E4%BB%80%E4%B9%88%E6%98%AFsynchronized"><span class="nav-number">2.1.</span> <span class="nav-text">4.2.1 什么是synchronized</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-2-synchronized-%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E7%94%A8%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">4.2.2 synchronized 关键字的用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">1. 同步方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="nav-number">2.2.2.</span> <span class="nav-text">2. 同步代码块</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3synchronized%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">2.3.</span> <span class="nav-text">4.3 深入理解synchronized关键字</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Monitor-enter"><span class="nav-number">2.3.1.</span> <span class="nav-text">Monitor enter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Monitor-exit"><span class="nav-number">2.3.2.</span> <span class="nav-text">Monitor exit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-synchronized%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.3.3.</span> <span class="nav-text">使用 synchronized需要注意的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#This-Monitor%E5%92%8CClass-Monitor"><span class="nav-number">2.3.4.</span> <span class="nav-text">This Monitor和Class Monitor</span></a></li></ol></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#4-1%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5-Todo"><span class="nav-number">1.</span> <span class="nav-text">4.1数据同步(Todo)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B1%E4%BA%AB%E8%B5%84%E6%BA%90"><span class="nav-number">1.0.1.</span> <span class="nav-text">共享资源:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5"><span class="nav-number">1.0.2.</span> <span class="nav-text">数据同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-%E6%95%B0%E6%8D%AE%E4%B8%8D%E4%B8%80%E8%87%B4%E9%97%AE%E9%A2%98%E7%9A%84%E5%BC%95%E5%85%A5"><span class="nav-number">1.0.3.</span> <span class="nav-text">4.1.1 数据不一致问题的引入</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.0.3.1.</span> <span class="nav-text">问题现象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90"><span class="nav-number">1.0.3.2.</span> <span class="nav-text">问题分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E5%8F%B7%E7%A0%81%E8%A2%AB%E6%8E%A0%E8%BF%87"><span class="nav-number">1.0.3.2.1.</span> <span class="nav-text">1. 号码被掠过</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E5%8F%B7%E7%A0%81%E9%87%8D%E5%A4%8D%E5%87%BA%E7%8E%B0"><span class="nav-number">1.0.3.2.2.</span> <span class="nav-text">2. 号码重复出现</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E5%8F%B7%E7%A0%81%E8%B6%85%E8%BF%87%E4%BA%86%E6%9C%80%E5%A4%A7%E5%80%BC"><span class="nav-number">1.0.3.2.3.</span> <span class="nav-text">3. 号码超过了最大值</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-2-%E5%88%9D%E5%A7%8Bsynchronized%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">2.</span> <span class="nav-text">4.2 初始synchronized关键字</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-1-%E4%BB%80%E4%B9%88%E6%98%AFsynchronized"><span class="nav-number">2.1.</span> <span class="nav-text">4.2.1 什么是synchronized</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-2-synchronized-%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E7%94%A8%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">4.2.2 synchronized 关键字的用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">1. 同步方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="nav-number">2.2.2.</span> <span class="nav-text">2. 同步代码块</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3synchronized%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">2.3.</span> <span class="nav-text">4.3 深入理解synchronized关键字</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Monitor-enter"><span class="nav-number">2.3.1.</span> <span class="nav-text">Monitor enter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Monitor-exit"><span class="nav-number">2.3.2.</span> <span class="nav-text">Monitor exit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-synchronized%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.3.3.</span> <span class="nav-text">使用 synchronized需要注意的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-This-Monitor%E5%92%8CClass-Monitor"><span class="nav-number">2.3.4.</span> <span class="nav-text">4.4 This Monitor和Class Monitor</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#This-Monitor"><span class="nav-number">2.3.4.1.</span> <span class="nav-text">This Monitor:</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">2.3.4.1.1.</span> <span class="nav-text">问题：</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA%EF%BC%9A"><span class="nav-number">2.3.4.2.</span> <span class="nav-text">结论：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Class-Monitor"><span class="nav-number">2.3.4.3.</span> <span class="nav-text">Class Monitor:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-%E7%A8%8B%E5%BA%8F%E6%AD%BB%E9%94%81%E7%9A%84%E5%8E%9F%E5%9B%A0%E4%BB%A5%E5%8F%8A%E5%A6%82%E4%BD%95%E8%AF%8A%E6%96%AD"><span class="nav-number">2.3.5.</span> <span class="nav-text">4.5 程序死锁的原因以及如何诊断</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%BB%E9%94%81%E8%AF%8A%E6%96%AD"><span class="nav-number">2.3.5.1.</span> <span class="nav-text">死锁诊断</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">2.4.</span> <span class="nav-text">总结：</span></a></li></ol></li></ol></div>
         </section>
         <!--/noindex-->
 
@@ -230,7 +242,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -243,7 +255,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">51</span>
+        <span class="site-state-item-count">52</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -342,6 +354,20 @@
       <span class="post-meta-item-text">阅读次数：</span>
       <span id="busuanzi_value_page_pv"></span>
     </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/02/18/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-04-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/02/18/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-04-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
       </div>
       <div class="post-meta">
     <span class="post-meta-item" title="本文字数">
@@ -349,14 +375,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>4.9k</span>
+      <span>8k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>4 分钟</span>
+      <span>7 分钟</span>
     </span>
 </div>
 
@@ -480,11 +506,72 @@ Thread2 ->> Thread2 : 问题点-print 501</pre>
 <ul>
 <li>多个锁的交叉导致死锁</li>
 </ul>
-<h3 id="This-Monitor和Class-Monitor"><a href="#This-Monitor和Class-Monitor" class="headerlink" title="This Monitor和Class Monitor"></a>This Monitor和Class Monitor</h3><p>TODO： </p>
-<p>This Monitor:</p>
+<h3 id="4-4-This-Monitor和Class-Monitor"><a href="#4-4-This-Monitor和Class-Monitor" class="headerlink" title="4.4 This Monitor和Class Monitor"></a>4.4 This Monitor和Class Monitor</h3><h4 id="This-Monitor"><a href="#This-Monitor" class="headerlink" title="This Monitor:"></a>This Monitor:</h4><h5 id="问题："><a href="#问题：" class="headerlink" title="问题："></a>问题：</h5><p>synchronized 关键字修饰了同一个实例对象的两个不同方法，那么与之对应的monitor 是什么？ 两个 monitor是否一致呢。</p>
 <p>实例锁</p>
-<p>Class Monitor:</p>
-<p>对象锁，static修饰</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThisMonitor</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">method1</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        System.out.println(currentThread().getName() + <span class="string">&quot; enter to method1&quot;</span>);</span><br><span class="line">        <span class="keyword">try</span></span><br><span class="line">        &#123;</span><br><span class="line">            TimeUnit.MINUTES.sleep(<span class="number">10</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e)</span><br><span class="line">        &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method2</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(currentThread().getName() + <span class="string">&quot; enter to method2&quot;</span>);</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                TimeUnit.MINUTES.sleep(<span class="number">10</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e)</span><br><span class="line">            &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        ThisMonitor thisMonitor = <span class="keyword">new</span> ThisMonitor();</span><br><span class="line">        <span class="keyword">new</span> Thread(thisMonitor::method1, <span class="string">&quot;T1&quot;</span>).start();</span><br><span class="line">        <span class="keyword">new</span> Thread(thisMonitor::method2, <span class="string">&quot;T2&quot;</span>).start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/uploads/java-concurrency-master/thread-thisMonitor.png"></p>
+<p><img src="/uploads/java-concurrency-master/thread-thisMonitor2.png"></p>
+<h4 id="结论："><a href="#结论：" class="headerlink" title="结论："></a>结论：</h4><ul>
+<li>由上图可以看出 T1获取了 monitor lock  并处于休眠状态，而 T2 线程企图获取 monitor 的lock时陷入了 BLOCKED 状态，可见 使用synchronized 关键字同步类的不同实例方法，争抢的时 同一个monitor的lock ，而 与之关联的引用则是 ThisMonitor 的实例引用</li>
+<li>其中 method1 保持方法同步的方式，method2 则采用了同步代码块 的方式，并且使用的是 this的monitor</li>
+</ul>
+<p>when a thread invokes a synchronized method, it automatically acquires the intrinsic lock  for that method’s object and releases it when the method returns .  The lock release occurs even if the return was caused by an uncaught exception .</p>
+<h4 id="Class-Monitor"><a href="#Class-Monitor" class="headerlink" title="Class Monitor:"></a>Class Monitor:</h4><p>对象锁，static修饰 ,有两个类方法（静态方法）分别使用 synchronized对其进行同步</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassMonitor</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">method1</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        System.out.println(currentThread().getName() + <span class="string">&quot; enter to method1&quot;</span>);</span><br><span class="line">        <span class="keyword">try</span></span><br><span class="line">        &#123;</span><br><span class="line">            TimeUnit.MINUTES.sleep(<span class="number">10</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e)</span><br><span class="line">        &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">method2</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (ClassMonitor.class)</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(currentThread().getName() + <span class="string">&quot; enter to method2&quot;</span>);</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                TimeUnit.MINUTES.sleep(<span class="number">10</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e)</span><br><span class="line">            &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">new</span> Thread(ClassMonitor::method1, <span class="string">&quot;T1&quot;</span>).start();</span><br><span class="line">        <span class="keyword">new</span> Thread(ClassMonitor::method2, <span class="string">&quot;T2&quot;</span>).start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/uploads/java-concurrency-master/thread-classMonitor.png"></p>
+<p><img src="/uploads/java-concurrency-master/thread-classMonitor2.png"></p>
+<ul>
+<li> 从上图可以看出 用synchronized 同步某个类的不同静态方法争抢的也是 同一个 monitor的lock ，</li>
+<li>与 This monitor 信息不一样的地方在于 （a java.lang.Class for ……..）</li>
+<li>由此推断与 该 monitor关联的引用是 ClassMonitor.class  实例</li>
+</ul>
+<p>since  a static method is associated with a class, not an object  . In this case, the thread acquires the intrinstic lock for the Class  object associated with the class . Thus access to class’s static fields is controlled by a lock that’s distinct from the lock for any instance of the class .</p>
+<h3 id="4-5-程序死锁的原因以及如何诊断"><a href="#4-5-程序死锁的原因以及如何诊断" class="headerlink" title="4.5 程序死锁的原因以及如何诊断"></a>4.5 程序死锁的原因以及如何诊断</h3><ol>
+<li><p>交叉锁可导致程序出现死锁</p>
+<p>典型的哲学家吃面问题，</p>
+</li>
+<li><p>内存不足</p>
+<p>当并发请求系统可用内存时，如果此时系统内存不足，则可能会出现死锁的情况，举个例子，两个线程 T1 和 T2，执行某个任务，其中T1 已经获取了10MB内存， T2 获取了20MB内存，如果每个线程都需要30MB的内存，但是剩余可用内存刚好为20MB，那么两个线程 有可能都在等待彼此能够释放内存资源。</p>
+</li>
+<li><p>一问一答式的数据交换</p>
+</li>
+<li><p>数据库锁</p>
+<p>无论是数据库表级别的锁，还是行级别的锁， 比如 某个线程执行 for update语句退出了事务，其他线程访问该数据库时 都将陷入死锁。</p>
+</li>
+<li><p>文件锁</p>
+<p>某线程获得了文件锁意外退出，其他读取该文件的线程也将会 进入死锁知道系统释放文件句柄资源</p>
+</li>
+<li><p>死循环引起的死锁</p>
+</li>
+</ol>
+<h4 id="死锁诊断"><a href="#死锁诊断" class="headerlink" title="死锁诊断"></a>死锁诊断</h4><ol>
+<li>交叉锁引起的死锁</li>
+</ol>
+<ul>
+<li>打开jstack 工具或者 jconsole工具，一般交叉锁引起的死锁线程都会进入 BLOCKED状态，CPU资源占用不高，很容易借助工具来发现</li>
+</ul>
+<p><img src="/uploads/java-concurrency-master/deadLock_read.png"></p>
+<p><img src="/uploads/java-concurrency-master/deadLock_write.png"></p>
+<ol start="2">
+<li>死循环引起的死锁（假死）</li>
+</ol>
+<ul>
+<li>工作的线程并未BLOCKED ,而是始终处于 RUNNABLE状态，CPU使用率高居不下，</li>
+</ul>
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><ul>
+<li><p>synchronized 关键字在Java 中提供了同步语义，它可以保证在同一时间 只允许一个线程访问 共享数据资源。</p>
+</li>
+<li><p>本章介绍了synchronized的详细用法，修饰 方法，或者修饰代码块，</p>
+<ul>
+<li>如果修饰的是  static 方法或者static 方法快，那么 使用的就是 CLASS monitor，是 class 实例的monitor</li>
+<li>如果修饰的不带static ，那就是 this monitor，使用的是某个对象的 monitor</li>
+</ul>
+</li>
+<li><p>介绍死锁场景，以及定位死锁问题</p>
+</li>
+</ul>
 
     </div>
 
@@ -525,6 +612,9 @@ Thread2 ->> Thread2 : 问题点-print 501</pre>
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2021/02/21/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-05-%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/" rel="next" title="java高并发详解-05-线程间通信">
+                  java高并发详解-05-线程间通信 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
@@ -537,6 +627,7 @@ Thread2 ->> Thread2 : 问题点-print 501</pre>
 
 
       
+    <div class="comments" id="valine-comments"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -662,6 +753,19 @@ if (document.querySelectorAll('.mermaid').length) {
   
 
   
+
+<script>
+NexT.utils.loadComments('#valine-comments', () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    new Valine(Object.assign({"enable":true,"appId":"4oBiQGiWDHdACABLWjT7ouaV-gzGzoHsz","appKey":"fr4vMSPUjcHLtIrF2hmRF6UE","serverURLs":"https://4obiqgiw.lc-cn-n1-shared.com","placeholder":"国王不动，手下怎么跟随? --反叛的鲁鲁修","avatar":"","meta":["nick","mail","link"],"pageSize":10,"lang":null,"visitor":false,"comment_count":true,"recordIP":true,"enableQQ":true,"requiredFields":[],"cdh":"https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"}, {
+      el: '#valine-comments',
+      path: "/2021/02/18/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-04-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5/",
+      serverURLs: "https://4obiqgiw.lc-cn-n1-shared.com"
+    }));
+  }, window.Valine);
+});
+</script>
+
 
 </body>
 </html>
