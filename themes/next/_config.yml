@@ -85,6 +85,7 @@ menu:
   tags: /tags/ || fa fa-tags
   categories: /categories/ || fa fa-th
   archives: /archives/ || fa fa-archive  #档案
+#  guestbook: /guestbook || fa fa-heartbeat
 #  schedule: /schedule/ || fa fa-calendar
 #  sitemap: /sitemap.xml || fa fa-sitemap
   #commonweal: /404/ || fa fa-heartbeat
@@ -580,7 +581,7 @@ comments:
   style: tabs
   # Choose a comment system to be displayed by default.
   # Available values: changyan | disqus | disqusjs | gitalk | livere | valine
-  active:
+  active: valine
   # Setting `true` means remembering the comment system selected by the visitor.
   storage: true
   # Lazyload all comment systems.
@@ -622,11 +623,12 @@ changyan:
 # Valine
 # For more information: https://valine.js.org, https://github.com/xCss/Valine
 valine:
-  enable: false
-  appId: # Your leancloud application appid
-  appKey: # Your leancloud application appkey
-  serverURLs: # When the custom domain name is enabled, fill it in here
-  placeholder: Just go go # Comment box placeholder
+  enable: true
+  appId: 4oBiQGiWDHdACABLWjT7ouaV-gzGzoHsz
+  appKey: fr4vMSPUjcHLtIrF2hmRF6UE
+  serverURLs: https://4obiqgiw.lc-cn-n1-shared.com
+  # serverURLs: # When the custom domain name is enabled, fill it in here
+  placeholder: 有什么问题，欢迎留言指正与交流... # Comment box placeholder
   avatar: mm # Gravatar style
   meta: [nick, mail, link] # Custom comment header
   pageSize: 10 # Pagination size
@@ -636,6 +638,7 @@ valine:
   recordIP: false # Whether to record the commenter IP
   enableQQ: false # Whether to enable the Nickname box to automatically get QQ Nickname and QQ Avatar
   requiredFields: [] # Set required fields: [nick] | [nick, mail]
+  cdh: https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js
 
 # LiveRe comments system
 # You can get your uid from https://livere.com/insight/myCode (General web site)
@@ -701,8 +704,8 @@ cnzz_siteid:
 # Warning: Do not enable both `valine.visitor` and `leancloud_visitors`.
 leancloud_visitors:
   enable: false
-  app_id: # <your app id>
-  app_key: # <your app key>
+  app_id:
+  app_key:
   # Required for apps from CN region
   server_url: # <your server url>
   # Dependencies: https://github.com/theme-next/hexo-leancloud-counter-security
@@ -821,8 +824,9 @@ mermaid:
   enable: true
   # Available themes: default | dark | forest | neutral
   theme: forest
-#  version: 8.4.6
-#  cdn: //cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js
+  version: 8.9.1
+  # cdn: //cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js
+  #cdn: https://cdn.jsdelivr.net/npm/mermaid@8.9.1/dist/mermaid.core.min.js
 
 
 # ---------------------------------------------------------------
@@ -925,7 +929,7 @@ vendors:
   disqusjs_css:
 
   # Valine
-  valine:
+  valine: https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js
 
   # Gitalk
   gitalk_js:
@@ -952,6 +956,10 @@ vendors:
 
   # Canvas ribbon
   canvas_ribbon:
+
+
+
+
 
 # Assets
 # Accelerate delivery of static files using a CDN
