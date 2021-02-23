@@ -269,7 +269,36 @@ public static class Task implements Runnable{
 
 ### 4.4 This Monitor和Class Monitor 
 
-#### This Monitor:
+synchronized 的用法可以从两个维度上面分类：
+
+### 1.根据修饰对象分类
+
+synchronized 可以修饰方法和代码块
+
+- 修饰代码块
+  - synchronized(this|object) {}
+  - synchronized(类.class) {}
+- 修饰方法
+  - 修饰非静态方法
+  - 修饰静态方法
+
+## 2. 根据获取的锁分类
+
+- 获取对象锁
+
+  - synchronized(this|object) {}
+  - 修饰非静态方法
+
+- 获取类锁
+
+  - synchronized(类.class) {}
+  - 修饰静态方法，非静态方法
+
+  
+
+#### This Monitor（ 对象锁）:
+
+- 在 Java 中，每个对象都会有一个 monitor 对象，这个对象其实就是 Java 对象的锁，**通常会被称为“内置锁”或“对象锁”**。**类的对象可以有多个，所以每个对象有其独立的对象锁，互不干扰。**
 
 ##### 问题：
 
@@ -331,7 +360,9 @@ when a thread invokes a synchronized method, it automatically acquires the intri
 
 
 
-#### Class Monitor:
+#### Class Monitor（类锁）:
+
+- 在 Java 中，针对每个类也有一个锁，可以称为“类锁”，类锁实际上是通过对象锁实现的，即类的 Class 对象锁。每个类只有一个 Class 对象，所以每个类只有一个类锁。
 
 对象锁，static修饰 ,有两个类方法（静态方法）分别使用 synchronized对其进行同步
 
@@ -382,6 +413,17 @@ public class ClassMonitor
 
 
 since  a static method is associated with a class, not an object  . In this case, the thread acquires the intrinstic lock for the Class  object associated with the class . Thus access to class's static fields is controlled by a lock that's distinct from the lock for any instance of the class .
+
+
+
+### 总结一下：
+
+- **对于非静态方法，同一个实例的线程访问会被拦截，非同一实例可以同时访问。 即此时是默认对象锁（this）。**
+- **静态方法默认类锁。**
+- **对于静态方法，由于此时对象还未生成，所以只能采用类锁；**
+- **只要采用类锁，就会拦截所有线程，只能让一个线程访问。**
+- **对于对象锁（this），如果是同一个实例，就会按顺序访问，但是如果是不同实例，就可以同时访问。**
+- **如果对象锁跟访问的对象没有关系，那么就会都同时访问。**
 
 
 
