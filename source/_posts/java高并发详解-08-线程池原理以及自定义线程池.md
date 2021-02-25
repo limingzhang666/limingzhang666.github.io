@@ -5,7 +5,7 @@ comments: true
 related_posts: true
 date: 2021-02-24 20:33:31
 tags: 线程池
-categories: 高并发
+categories: 高并发详解
 ---
 
 - 线程池主要是为了重复利用线程，提高效率
