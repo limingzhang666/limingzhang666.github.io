@@ -340,18 +340,207 @@ public class LinkedPrepate{
 
 ### 3.解析（TODO）
 
+在连接阶段中经历了验证、准备之后，就可以顺利进入到解析过程了，当然在解析的过程中照样会交叉一些验证的过程，
+
+- 比如符号引用的验证，
+
+所谓解析就是在常量池中寻找类、接口、字段和方法的符号引用，并且将这些符号引用替换为直接引用的过程：
+
+```java
+
+
+public class ClassResolve{
+    static Simple simple=new Simple();
+    pulbic static void main(String[] args){
+        System.out.println(simple);
+    }
+}
+```
+
+虚拟机规范规定了，在anewarray，checkcast、getfield、getstatic，instanceof，invokeinterface，invokespecial、invokevirtual，multianewarray、new、putfiled、putstatic 这13个 操作符号引用的字节码指令之前，必须要对所有的符号提前进行解析 。
 
 
 
+解析过程主要是 针对类接口、字段、类方法和接口方法这4类进行的，分别对应到常量池中的CONSTANT_Class_info、 Constant_Filldref_info、Constant_Methodref_info 和 Constant_InterfaceMethodref_info 这4中类型常量 。
+
+#### 类接口解析
+
+- 假设前文代码中的Simple ，不是一个数组类型，则在加载的过程中，需要先完成对SImple 类的加载，同样需要经历所有的类加载阶段
+- 如果SImple是一个数组类型，则虚拟机不需要完成对 SImple 的加载，只需要在虚拟机中生成一个能够代表该类型的数组对象，并且在堆内存中开辟一片连续的地址空间即可
+- 在类接口的解析完成之后，还需要进行符号引用的验证
+
+#### 字段的解析
+
+所谓字段的解析，就是解析你所访问类或者接口中的字段，在解析类或者变量的时候，如果该字段不存在，或者出现错误，则会抛出异常，不再进行下面的解析。
+
+- 如果Simple类本身就包含某个字段，则直接返回这个字段的引用，当然也要对该字段所属的类提前进行类加载
+- 如果Simple 类中不存在该字段，则会根据继承关系自下而上，查找父类或者接口的字段，找到即可返回，同样需要提前对找到的字段进行类的加载过程 。
+- 如果SImple类中没有字段，一直找到了最上层的java.lang.Object 还是没有，则表示 查找失败，也就不再进行任何解析，直接抛出了NoSuchFieldError 异常
+
+#### 类方法的解析
+
+类方法和接口方法有所不同，类方法可以直接使用该类进行调用，而接口方法必须要有相应的实现类继承才能够进行调用 。
+
+- 若在类方法表中发现class_index 中索引的Simple 是一个接口而不是一个类，则 直接返回错误
+- 在SImple类中查找是否有方法描述和目标方法完全一致的方法，如果有，则直接返回这个方法的引用，否则直接继续向上查找。
+- 如果父类中仍然没有找到，则意味着查找失败，程序会抛出NoSuchMethodError 异常
+- 如果在当前类或者父类中找到了和目标方法一致的方法，但是它是一个抽象类，则会抛出AbstractMethodError 这个异常
+
+#### 接口方法的解析
+
+接口不仅可以定义方法，还可以继承其他接口
+
+- 在接口方法表中发现 class_index 中索引的Simple是一个类而不是一个接口，则会直接 返回错误，因为方法接口表 和类接口表 所容纳的类型应该是 不一样的，所以常量池 中有 Constant_Methodref_info 和 Constant_InterfaceMethodref_info 两个不同的类型 
+- 接下来的查找 和类方法的解析就比较类似了，自下而上的查找，直到找到为止，或者没找到 抛出NoSuchMethodError 异常 。
+
+ 
+
+### 类的初始化阶段 
+
+类的初始化阶段是整个类加载过程的最后一个阶段
+
+- 在初始化阶段做的最主要的一件事情就是执行 <clinit> () 方法中所有的类变量都会被 赋予正确的值，也就是在程序编写的时候指定的值 
+-  <clinit> () 方法 实在编译阶段生成的，也就是说它 已经包含在 class文件中了，<clinit>中包含了所有类变量的赋值动作和静态语句块的执行代码 ，
+- 编译器收集的顺序是 由执行语句在源文件中的出现顺序所决定的 （<clinit> 是能够保证顺序性）
+- 静态 语句块只能对后面的静态变量进行赋值，但是 不能对其进行访问。
+
+```java
+public class ClassInit{
+    
+     static{
+         // 静态代码块 只能对后面的静态变量进行赋值，但是不能对其访问 
+        System.out.println(x);// 报错，Illegal forward reference 
+        //  
+        x=100;
+    }
+    private static int x=10;
+    
+}
+```
+
+- 另外<clinit> 方法与类的构造函数有所不同，它不需要显示的调用父类的 构造器，虚拟机会保证父类的 <clinit>方法最先执行，因此父类的静态变量总是能够得到优先赋值
+
+```java
+public class ClassInit{
+    static class Parent {
+        static int value = 10;
+
+        static {
+            value = 20;
+        }
+    }
+
+    // 子类使用父类的静态变量为自己的静态变量赋值
+    static class Child extends Parent {
+        static int i = value;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Child.i);
+    }
+}
+
+输出的是： 20 
+```
+
+- 虚拟机会保证父类的 <clinit>方法最先执行，因此父类的静态变量总是 能够得到优先赋值  
+- <clinit>() 方法虽然是真实存在的，但是它 只能被虚拟机执行，在主动使用触发了类的初始化之后就会调用这个方法  
+
+```java
+public class ClassInit{
+    
+    static {
+        try {
+            System.out.println("The ClassInit static code block will be invoke.");
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        IntStream.range(0, 5)
+                .forEach(i -> new Thread(ClassInit::new));
+    }
+}
+```
+
+- 在同一时间，只能有一个线程执行到静态代码块中的内容，并且静态代码块仅仅只会被执行一次，JVM保证了 <clinit> 方法在多线程的执行环境下的同步语义，因此在单例设计模式下，采用 Holder的方式是一种最佳的设计方法 
 
 
 
+# 本章总结
+
+- 类的加载过程 还是会围绕 二进制文件的加载，二进制数据的连接以及类的初始化这样的过程区进行 
+
+```java
+public class Singleton{
+   //1. 
+    public static int x=0;
+    private static int y;
+    private static Singleton instance=new Singleton(); // 2.
+    private Singleton(){
+        x++;
+        y+;
+    }
+    public static Singleton getInstance(){
+        return instance;
+    }
+    
+    public static void main(String[] args){
+        Singleton singleton=Singleton.getInstance();
+        System.out.println(singleton.x);
+        System.out.println(singleton.y);
+    }
+    
+}
+
+运行结果：
+    com.wangwenjun.concurrent.chapter09.Singleton@4554617c
+0
+1
+```
+
+1. 首先在连接阶段的准备过程中，每一个类变量都被赋予了相应的初始值  x=0，y=0， instance=null
+
+2. 类的初始化阶段，初始化阶段会为每一个类变量赋予正确的值，也就是执行 <clinit> 方法的过程 
+
+   x=0, y=0, instance =new Singleton()
+
+3.  然后在 new SIngleton 的时候，会执行类的构造函数，而在构造函数中 分别对 x和y 进行自增，结果为：
+
+   x=1，  y=1
 
 
-## 类的初始化阶段
 
-（Todo）
+再看调换 
 
+```java
+public class Singleton {
 
+    private static int x = 0;
+    private static int y;
+    private static Singleton instance = new Singleton(); // 调换Singleton顺序之后， 
+    private Singleton() {
+        x++;
+        y++;
+    }
 
-好累，脑子一团浆糊了，主要是下雨了，睡觉太舒服了...
+    public static Singleton getInstance() {
+        return instance;
+    }
+
+    public static void main(String[] args) {
+        Singleton singleton = Singleton.getInstance();
+        System.out.println(singleton);
+        System.out.println(singleton.x);
+        System.out.println(singleton.y);
+    }
+}
+运行结果：
+    
+    com.wangwenjun.concurrent.chapter09.Singleton@4554617c
+0
+1
+```
+
