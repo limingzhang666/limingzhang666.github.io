@@ -244,4 +244,41 @@ public class MyClassLoader extends ClassLoader {
     }
 ```
 
-- 
+上面的代码片段是 java.lang.ClassLoader 的loadClass（name）和 loadClass（name，resolve）方法，由于loadClass （name）调用的是 loadClass（name，false），因此我们重点解释  loadClass（name，false）即可
+
+- 从当前类加载器的已加载类缓存中根据类的全路径名查询是否存在该类， 如果存在则直接返回 
+- 如果当前类存在父类加载器，则 调用父类加载器的loadClass （name,false） 方法对其 进行加载
+- 如果当前类加载不存在父类加载器，则直接调用根类加载器 对该类进行加载
+- 如果 当前类的所有父类加载器都没有成功加载class ，则尝试 调用当前类加载器的 findClass 方法对其进行加载，该方法就是我们自定义加载器需要重写的方法
+- 最后如果类被成功加载，则做一些性能数据的统计 
+- 由于loadClass 指定了revolve 为false，所以不会 进行连接阶段的继续执行 ，这也就解释了  为什么通过类加载器 加载类并不会导致类的初始化
+
+
+
+### 问题
+
+如何在不删除HelloWorld.class 文件的情况下 使用MyClassLoader 而不是系统类加载器进行HelloWorld 的加载，有如下两种方法可以做到。
+
+1. 第一种方式 是绕过系统类加载器，直接将扩展类加载器 作为MyClassLoader 的父加载器，示例 代码如下： 
+
+```java
+ClassLoader extClassloader = MyClassLoaderTest.class.getClassLoader().getParent();
+MyClassLoader classLoader = new MyClassLoader("G:\\classLoader1",extClassloader);
+Class<?> aclass=classLoader.loadClass("com.wangwenjun.concurrent.chapter10.HelloWorld");
+System.out.println(aClass);
+System.out.println(aClass.getClassLoader());
+
+```
+
+- 首先我们通过MyClassLoaderTest.class 获取系统类加载器，然后再获取系统类加载器的父类加载器 扩展类加载器，使其成为MyClassLoader的父类加载器，这样一来，根加载器和扩展类加载器都无法对 G:\\ classloader 类文件进行加载，自然而然就交给了MyClassLoader 对 HelloWorld 进行加载了，这种方式充分利用了类加载器 父类委托机制的特性
+
+2.  第二种方式实在构造 MyClassLoader 的时候指定其父类加载器为null 
+
+
+
+
+
+
+
+
+
