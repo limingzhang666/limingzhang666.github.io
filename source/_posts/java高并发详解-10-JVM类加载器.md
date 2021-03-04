@@ -272,13 +272,188 @@ System.out.println(aClass.getClassLoader());
 
 - 首先我们通过MyClassLoaderTest.class 获取系统类加载器，然后再获取系统类加载器的父类加载器 扩展类加载器，使其成为MyClassLoader的父类加载器，这样一来，根加载器和扩展类加载器都无法对 G:\\ classloader 类文件进行加载，自然而然就交给了MyClassLoader 对 HelloWorld 进行加载了，这种方式充分利用了类加载器 父类委托机制的特性
 
-2.  第二种方式实在构造 MyClassLoader 的时候指定其父类加载器为null 
+2.  第二种方式实在构造 MyClassLoader 的时候指定其父类加载器为null ，示例代码如下：
+
+```java
+MyClassLoader classLoader=new MyClassLoader("G:\\classloader1",null);
+Class<?> aclass=classLoader.loadClass("com.wangwenjun.concurrent.chapter10.HelloWorld");
+System.out.println(aClass);
+System.out.println(aClass.getClassLoader());
+
+根据对 loadClass方法的源码分析，当前类在没有父类加载器的情况下，会直接使用根加载器对该类进行加载 ，很显然，HelloWorld 在根加载器的加载路径下 是无法找到的，那么它 自然而然地就交给当前类加载器进行加载了
+
+```
 
 
 
+## 破坏双亲委托机制
 
 
 
+- 我们发现类加载器的父委托机制的逻辑 主要是由loadClass来控制的，有些时候我们需要打破这种双亲委托的机制，比如 HelloWorld 这个类就是不希望通过系统类加载器对其进行加载。
+- JDk 提供的双亲委托机制并非一个强制性的模型，程序开发人员是可以对其进行 灵活发挥破坏这种委托机制的 
+
+比如： 如果我们想要在程序运行时进行某个模块功能的升级，甚至是 在不停止服务的前提下增加新的功能，这就是我们常说的热部署。
+
+- 热部署首先要卸载掉加载该模块所有Class的类加载器，卸载类加载器会导致所有类的卸载，
+- 很显然我们无法对JVM 三大内置加载器进行卸载，我们只有通过控制 自定义类加载器才能做到这一点 
+
+我们可以通过破坏父委托机制的方式 来实现对HelloWorld类的加载，而不需要在工程中删除该文件
+
+```java
+public class BrokerDelegateClassLoader extends ClassLoader {
+
+    private final static Path DEFAULT_CLASS_DIR = Paths.get("G:", "classloader1");
+
+    private final Path classDir;
+
+    public BrokerDelegateClassLoader() {
+        super();
+        this.classDir = DEFAULT_CLASS_DIR;
+    }
+
+    public BrokerDelegateClassLoader(String classDir) {
+        super();
+        this.classDir = Paths.get(classDir);
+    }
+
+    public BrokerDelegateClassLoader(String classDir, ClassLoader parent) {
+        super(parent);
+        this.classDir = Paths.get(classDir);
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        byte[] classBytes = this.readClassBytes(name);
+        if (null == classBytes || classBytes.length == 0) {
+            throw new ClassNotFoundException("Can not load the class " + name);
+        }
+
+        return this.defineClass(name, classBytes, 0, classBytes.length);
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        // 1. 根据类的全路径名称进行加锁，确保每一个类在多线程 的情况下制备加载一次 
+        synchronized (getClassLoadingLock(name)) {
+            //2. 到已加载类的缓存中查看该类是否已经被加载，如果已加载则直接返回
+            Class<?> klass = findLoadedClass(name);
+            //3.
+            if (klass == null) {
+                //4. 假如缓存中没有被加载的类，则需要对其进行首次加载，如果类的全路径以java和javax开头，则直接委托给 系统类加载器对其进行加载 
+                if (name.startsWith("java.") || name.startsWith("javax")) {
+                    try {
+                        klass = getSystemClassLoader().loadClass(name);
+                    } catch (Exception e) {
+                        //ignore
+                    }
+                } else {
+                    // 5. 如果类不是以java 和javax 开头，则尝试用我们自定义的类加载进行加载 
+                    try {
+                        klass = this.findClass(name);
+                    } catch (ClassNotFoundException e) {
+                        //ignore
+                    }
+                    // 6. 如果 自定义类加载仍旧 没有完成对类的加载，则委托 给其父类加载器进行加载或者系统类加载器进行加载 
+                    if (klass == null) {
+                        if (getParent() != null) {
+                            klass = getParent().loadClass(name);
+                        } else {
+                            klass = getSystemClassLoader().loadClass(name);
+                        }
+                    }
+                }
+            }
+            // 7. 经过诺干次的尝试后，如果还是无法对类进行加载，则抛出无法找到类的异常 
+            if (null == klass) {
+                throw new ClassNotFoundException("The class " + name + " not found.");
+            }
+            if (resolve) {
+                resolveClass(klass);
+            }
+            return klass;
+        }
+    }
+
+    private byte[] readClassBytes(String name) throws ClassNotFoundException {
+        String classPath = name.replace(".", "/");
+        Path classFullPath = classDir.resolve(Paths.get(classPath + ".class"));
+        if (!classFullPath.toFile().exists())
+            throw new ClassNotFoundException("The class " + name + " not found.");
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Files.copy(classFullPath, baos);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new ClassNotFoundException("load the class " + name + " occur error.", e);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Broker Delegate ClassLoader";
+    }
+}
+```
 
 
 
+## 类加载器命名空间、运行时包、类的卸载等
+
+### 1.类的命名空间
+
+每一个类加载器都有各自的命名空间，命名空间时由该加载器及其所有父加载器所构成的，因此在每一个类加载器中同一个class 都是独一无二的，
+
+```java
+ public static void main(String[] args) throws ClassNotFoundException {
+        MyClassLoader classLoader1 = new MyClassLoader("G:\\classloader1", null);
+        MyClassLoader classLoader2 = new MyClassLoader("G:\\classloader1", null);
+        Class<?> aClass = classLoader1.loadClass("com.wangwenjun.concurrent.chapter10.Test");
+        Class<?> bClass = classLoader2.loadClass("com.wangwenjun.concurrent.chapter10.Test");
+        System.out.println(aClass.getClassLoader());
+        System.out.println(bClass.getClassLoader());
+        System.out.println(aClass.hashCode());
+        System.out.println(bClass.hashCode());
+        System.out.println(aClass == bClass);
+    }
+```
+
+运行上面的代码，不论load多少次Test，都会发现他们始终时同一份class对象，这也完全符合我们在本书9.1节中的描述。 类被加载后的内存情况如图所示：
+
+![](/uploads/java-concurrency-master/classAfterLoader.png)
+
+- 但是，使用不同的类加载器，或者同一个类加载器的不同示例，去加载同一个class，则会在堆内存和方法区产生多个class对象 
+
+（1） 不同类加载器加载同一个class，输出的结果显示aclass 和 bclass不是同一个class示例 
+
+（2）相同类加载器加载同一个class,输出的结果显示aclass 和 bclass不是同一个class示例 
+
+
+
+分析JDK 中关于ClassLoader 的相关源代码，具体如下：
+
+```java
+protected Class<?> loadClass(String name, boolean resolve)
+        throws ClassNotFoundException
+    {
+        synchronized (getClassLoadingLock(name)) {
+            // First, check if the class has already been loaded
+            Class<?> c = findLoadedClass(name);
+            。。。
+                
+  protected final Class<?> findLoadedClass(String name) {
+        if (!checkName(name))
+            return null;
+        return findLoadedClass0(name);
+    }
+
+    private native final Class<?> findLoadedClass0(String name);
+
+```
+
+在类加载器进行类加载的时候，首先会到  加载记录表也就是缓存中，查看该类是否已经被加载过了，如果已经被加载过了，就不会重复加载，否则就会认为其是 首次加载， 下图就是同一个class 被不同类加载器加载之后的内存i情况 。
+
+![](/uploads/java-concurrency-master/differentClassLoaderLoadClass.png)
+
+同一个class示例在同一个类加载器命名空间之下是唯一的。
+
+### 2. 运行时包(TODO)
