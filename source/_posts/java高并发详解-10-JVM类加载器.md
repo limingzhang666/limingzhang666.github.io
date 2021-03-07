@@ -328,7 +328,6 @@ public class BrokerDelegateClassLoader extends ClassLoader {
         if (null == classBytes || classBytes.length == 0) {
             throw new ClassNotFoundException("Can not load the class " + name);
         }
-
         return this.defineClass(name, classBytes, 0, classBytes.length);
     }
 
@@ -456,4 +455,42 @@ protected Class<?> loadClass(String name, boolean resolve)
 
 同一个class示例在同一个类加载器命名空间之下是唯一的。
 
-### 2. 运行时包(TODO)
+### 2. 运行时包
+
+- 我们在编写代码的时候，通常会给一个类指定一个包名，包的作用是为了组织类，防止不同包下同样名称的class 引起冲突，还能起到封装的作用，包名和类名构成了类的全限定名称。
+- 在JVM运行时，class会由一个运行时包，**运行时的包是类加载器的命名空间和类的全限定名称共同组成的**。 例如:BootstrapClassLoader.ExtClassLoader.AppClassLoader.MyClassLoader.com.wangwenjun.concurrent.chapter10.Test
+- 这样做的好处同样是 处于安全和封装的考虑，在java.lang.String中存在仅包可见的方法 void getChars（char[] var1,int var2），java.lang包以外的class 是无法直接对其访问的。  假设用户想自己定义一个类 java.lang.HackString。并且由自定义的类加载器进行加载，尝试访问getChars方法，由于 java.lang.HackString 和 java.lang.String是由不同的类加载器进行加载的，它们拥有各自不同的运行时包，因此 HackString 是无法访问java.lang.String 的包可见方法以及成员变量的 
+
+### 3.初始化类加载器
+
+由于运行时包的存在，JVM 规定了不同的运行时包下的类 彼此之间是不可以进行访问的。那么问题来了，为什么我们在开发的程序中可以访问java.lang包下的类呢。 我们直到java.lang包 是由根加载器进行加载的，而我们开发的程序或者第三方类库一般是 由系统类加载器进行加载的。
+
+
+
+#### 分析：
+
+每一个类在经过ClassLoader 的加载之后，在虚拟机中都会 有对应的Class 实例，如果某个类C 被类加载器CL 加载，那么CL 就被成为C的初始类加载器。 
+
+JVM 为每一个类加载器维护了一个列表，该列表中记录了 将该类加载器作为初始类加载器的所有class ，在加载一个类时，JVM 使用这些列表来判断该类是否已经被加载过了，是否需要首次加载 。
+
+- 根据JVM规范的规定，在类的加载过程中，所有 参与的类加载器，即使没有亲自记载过该类，也会被标识为该类的初始类加载器，比如 java.lang.String首先经过了 BrokerDelegateClassLoader类加载器，一次又经过了 系统类加载器、扩展类加载器、根类加载器，这些类加载器都是java.lang.String 的初始类加载器，JVM会在每一个类加载器维护的列表中添加该 class 类型，如下图所示。
+
+![](/uploads/java-concurrency-master/InitClassLoaderWithClassList.png)
+
+虽然SimpleClass 和 java.lang.String 由不同的类加载器加载，但是 在BrokerDelegate-Class Loader的class列表中维护了 SimpleClass.class  和String.class ，因此在SimpleClass中 是可以正常访问 rt.jar 中的class 的
+
+### 4.类的卸载
+
+- 在jvm启动的过程中，jvm会加载很多的类，在运行期间同样会加载很多的类，比如用自定义的类加载器进行类的加载，或者像Apache Drools框架一样会在每一个DSL 文件解析成功之后生成相应的类文件。
+- 关于JVM在运行期间到底加载了多少class，可以在启动JVM时 指定 -verbose：class 参数观察到，我们直到某个对象在堆内存中如果没有其他地方引用则会在垃圾回收器 线程进程GC的时候被回收掉，那么该对象在堆内存中的Class 对象以及Class 在方法区中的数据结构何时被回收呢?
+- JVM规定一个Class只有在满足下面三个条件的时候才会被GC回收，也就是类被卸载
+  1. 该类所有的实例都已经被GC ，比如SImple.class 的所有Simple实例都被回收掉
+  2. 加载该类的ClassLoader实例被回收
+  3. 该类的class实例 没有在其他地方被引用
+
+# 总结
+
+- 唉，为情所困，脑子都要炸了，这篇记录拖得太久了，
+  1. 介绍了JVM 内置的3大类加载器（根类加载器，扩展类加载器，系统类加载器）
+  2. 通过继承ClassLoader重写findClass方法自定义了MyClassLoader，
+  3. 通过堆loadClass方法的源码剖析详细分析了双亲委托机制的原理，双亲委托机制时一种包含关系，而并非继承关系。
