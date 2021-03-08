@@ -494,3 +494,5 @@ JVM 为每一个类加载器维护了一个列表，该列表中记录了 将该
   1. 介绍了JVM 内置的3大类加载器（根类加载器，扩展类加载器，系统类加载器）
   2. 通过继承ClassLoader重写findClass方法自定义了MyClassLoader，
   3. 通过堆loadClass方法的源码剖析详细分析了双亲委托机制的原理，双亲委托机制时一种包含关系，而并非继承关系。
+  4.  自定义一个与java.lang.String 同名的String类 ，但是JVM不允许这样做，会在JVM 的defineClass的时候做安全性检查。
+
