@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="HCj467TtuvFkAzzdCvYvbniAeNiUy7TUwp2hG1qGWQE">
+  <meta name="baidu-site-verification" content="LppFIbSdZO">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
+  </script>
+
+  <meta name="description" content="基础概念传统的ACID关系型数据库遵循ACID规则事务在英文中是transaction，和现实世界中的交易很类似，它有如下四个特性： 1、A (Atomicity) 原子性原子性很容易理解，也就是说事务里的所有操作要么全部做完，要么都不做，事务成功的条件是事务里的所有操作都成功，只要有一个操作失败，整个事务就失败，需要回滚。比如银行转账，从A账户转100元至B账户，分为两个步骤：1）从A账户取10">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis入门-01">
+<meta property="og:url" content="https://limingzhang666.github.io/2021/03/11/redis%E5%85%A5%E9%97%A8-01/index.html">
+<meta property="og:site_name" content="Yinshi&#39;s Blog">
+<meta property="og:description" content="基础概念传统的ACID关系型数据库遵循ACID规则事务在英文中是transaction，和现实世界中的交易很类似，它有如下四个特性： 1、A (Atomicity) 原子性原子性很容易理解，也就是说事务里的所有操作要么全部做完，要么都不做，事务成功的条件是事务里的所有操作都成功，只要有一个操作失败，整个事务就失败，需要回滚。比如银行转账，从A账户转100元至B账户，分为两个步骤：1）从A账户取10">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/Image.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis_key.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-string01.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-string02.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-list01.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-list02.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-set.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-hash.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-zset01.bmp">
+<meta property="og:image" content="https://limingzhang666.github.io/uploads/redis/redis-zset02.bmp">
+<meta property="article:published_time" content="2021-03-11T13:20:44.000Z">
+<meta property="article:modified_time" content="2021-03-12T09:07:01.086Z">
+<meta property="article:author" content="Yinshi">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://limingzhang666.github.io/uploads/redis/Image.bmp">
+
+
+<link rel="canonical" href="https://limingzhang666.github.io/2021/03/11/redis%E5%85%A5%E9%97%A8-01/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>redis入门-01 | Yinshi's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Yinshi's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-guestbook">
+
+    <a href="/guestbook" rel="section"><i class="fa fa-book fa-fw"></i>留言</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">基础概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9F%E7%9A%84ACID"><span class="nav-number">1.1.</span> <span class="nav-text">传统的ACID</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CAP"><span class="nav-number">1.2.</span> <span class="nav-text">CAP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CAP%E7%9A%84%E4%B8%89%E8%BF%9B%E4%BA%8C"><span class="nav-number">1.2.1.</span> <span class="nav-text">CAP的三进二</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7%E4%B8%8E%E5%8F%AF%E7%94%A8%E6%80%A7%E7%9A%84%E5%86%B3%E6%8B%A9"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">一致性与可用性的决择</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1%E4%B8%80%E8%87%B4%E6%80%A7%E9%9C%80%E6%B1%82"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">数据库事务一致性需求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%86%99%E5%AE%9E%E6%97%B6%E6%80%A7%E5%92%8C%E8%AF%BB%E5%AE%9E%E6%97%B6%E6%80%A7%E9%9C%80%E6%B1%82"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">数据库的写实时性和读实时性需求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E5%A4%8D%E6%9D%82%E7%9A%84SQL%E6%9F%A5%E8%AF%A2%EF%BC%8C%E7%89%B9%E5%88%AB%E6%98%AF%E5%A4%9A%E8%A1%A8%E5%85%B3%E8%81%94%E6%9F%A5%E8%AF%A2%E7%9A%84%E9%9C%80%E6%B1%82"><span class="nav-number">1.2.1.4.</span> <span class="nav-text">对复杂的SQL查询，特别是多表关联查询的需求</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%8F%E5%85%B8CAP%E5%9B%BE"><span class="nav-number">1.2.2.</span> <span class="nav-text">经典CAP图</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BASE"><span class="nav-number">1.3.</span> <span class="nav-text">BASE</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#REDIS-%E5%85%A5%E9%97%A8"><span class="nav-number">2.</span> <span class="nav-text">REDIS 入门</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">功能：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E8%AE%B2%E8%A7%A3"><span class="nav-number">2.2.</span> <span class="nav-text">基础知识讲解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.3.</span> <span class="nav-text">数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#String%EF%BC%88%E5%AD%97%E7%AC%A6%E4%B8%B2%EF%BC%89"><span class="nav-number">2.3.1.</span> <span class="nav-text">String（字符串）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hash%EF%BC%88%E5%93%88%E5%B8%8C%EF%BC%8C%E7%B1%BB%E4%BC%BCjava%E9%87%8C%E7%9A%84Map%EF%BC%89"><span class="nav-number">2.3.2.</span> <span class="nav-text">Hash（哈希，类似java里的Map）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#List%EF%BC%88%E5%88%97%E8%A1%A8%EF%BC%89"><span class="nav-number">2.3.3.</span> <span class="nav-text">List（列表）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Set%EF%BC%88%E9%9B%86%E5%90%88%EF%BC%89"><span class="nav-number">2.3.4.</span> <span class="nav-text">Set（集合）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Zset-sorted-set%EF%BC%9A%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88"><span class="nav-number">2.3.5.</span> <span class="nav-text">Zset(sorted set：有序集合)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%EF%BC%9A"><span class="nav-number">2.4.</span> <span class="nav-text">常用命令：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis-%E9%94%AE-key"><span class="nav-number">2.4.1.</span> <span class="nav-text">Redis 键(key)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis%E5%AD%97%E7%AC%A6%E4%B8%B2-String"><span class="nav-number">2.4.2.</span> <span class="nav-text">Redis字符串(String)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis%E5%88%97%E8%A1%A8-List"><span class="nav-number">2.4.3.</span> <span class="nav-text">Redis列表(List)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis%E9%9B%86%E5%90%88-Set"><span class="nav-number">2.4.4.</span> <span class="nav-text">Redis集合(Set)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis%E5%93%88%E5%B8%8C-Hash"><span class="nav-number">2.4.5.</span> <span class="nav-text">Redis哈希(Hash)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88Zset-sorted-set"><span class="nav-number">2.4.6.</span> <span class="nav-text">Redis有序集合Zset(sorted set)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6redis-conf"><span class="nav-number">2.5.</span> <span class="nav-text">解析配置文件redis.conf</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yinshi"
+      src="/images/yinshi01_avatar.jpg">
+  <p class="site-author-name" itemprop="name">Yinshi</p>
+  <div class="site-description" itemprop="description">拨开云雾见青天</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">64</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/limingzhang666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;limingzhang666" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:laimingcham@163.com" title="E-Mail → mailto:laimingcham@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/limingzhang666" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/11/redis%E5%85%A5%E9%97%A8-01/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          redis入门-01
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-03-11 21:20:44" itemprop="dateCreated datePublished" datetime="2021-03-11T21:20:44+08:00">2021-03-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/03/11/redis%E5%85%A5%E9%97%A8-01/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/11/redis%E5%85%A5%E9%97%A8-01/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.9k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h1><h2 id="传统的ACID"><a href="#传统的ACID" class="headerlink" title="传统的ACID"></a>传统的ACID</h2><p>关系型数据库遵循ACID规则<br>事务在英文中是transaction，和现实世界中的交易很类似，它有如下四个特性：</p>
+<p>1、A (Atomicity) 原子性<br>原子性很容易理解，也就是说事务里的所有操作要么全部做完，要么都不做，事务成功的条件是事务里的所有操作都成功，只要有一个操作失败，整个事务就失败，需要回滚。比如银行转账，从A账户转100元至B账户，分为两个步骤：1）从A账户取100元；2）存入100元至B账户。这两步要么一起完成，要么一起不完成，如果只完成第一步，第二步失败，钱会莫名其妙少了100元。</p>
+<p>2、C (Consistency) 一致性<br>一致性也比较容易理解，也就是说数据库要一直处于一致的状态，事务的运行不会改变数据库原本的一致性约束。</p>
+<p>3、I (Isolation) 独立性<br>所谓的独立性是指并发的事务之间不会互相影响，如果一个事务要访问的数据正在被另外一个事务修改，只要另外一个事务未提交，它所访问的数据就不受未提交事务的影响。比如现有有个交易是从A账户转100元至B账户，在这个交易还未完成的情况下，如果此时B查询自己的账户，是看不到新增加的100元的</p>
+<p>4、D (Durability) 持久性<br>持久性是指一旦事务提交后，它所做的修改将会永久的保存在数据库上，即使出现宕机也不会丢失。</p>
+<h2 id="CAP"><a href="#CAP" class="headerlink" title="CAP"></a>CAP</h2><p>C:Consistency（强一致性）</p>
+<p>A:Availability（可用性）</p>
+<p>P:Partition tolerance（分区容错性）</p>
+<h3 id="CAP的三进二"><a href="#CAP的三进二" class="headerlink" title="CAP的三进二"></a>CAP的三进二</h3><p>CAP理论就是说在分布式存储系统中，最多只能实现上面的两点。<br>而由于当前的网络硬件肯定会出现延迟丢包等问题，所以</p>
+<p><strong>分区容忍性是我们必须需要实现的。</strong></p>
+<p><strong>所以我们只能在一致性和可用性之间进行权衡，没有NoSQL系统能同时保证这三点</strong>。</p>
+<p><strong>C:强一致性 A：高可用性 P：分布式容忍性</strong></p>
+<ul>
+<li><p>CA 传统Oracle数据库 </p>
+</li>
+<li><p>AP 大多数网站架构的选择</p>
+</li>
+<li><p>CP Redis、Mongodb</p>
+<p>注意：分布式架构的时候必须做出取舍。<br>一致性和可用性之间取一个平衡。多余大多数web应用，其实并不需要强一致性。因此牺牲C换取P，这是目前分布式数据库产品的方向</p>
+</li>
+</ul>
+<h4 id="一致性与可用性的决择"><a href="#一致性与可用性的决择" class="headerlink" title="一致性与可用性的决择"></a>一致性与可用性的决择</h4><p>​    对于web2.0网站来说，关系数据库的很多主要特性却往往无用武之地</p>
+<h4 id="数据库事务一致性需求"><a href="#数据库事务一致性需求" class="headerlink" title="数据库事务一致性需求"></a>数据库事务一致性需求</h4><p>​    很多web实时系统并不要求严格的数据库事务，对读一致性的要求很低， 有些场合对写一致性要求并不高。允许实现最终一致性。</p>
+<h4 id="数据库的写实时性和读实时性需求"><a href="#数据库的写实时性和读实时性需求" class="headerlink" title="数据库的写实时性和读实时性需求"></a>数据库的写实时性和读实时性需求</h4><p>​    对关系数据库来说，插入一条数据之后立刻查询，是肯定可以读出来这条数据的，但是对于很多web应用来说，并不要求这么高的实时性，比方说发一条消息之 后，过几秒乃至十几秒之后，我的订阅者才看到这条动态是完全可以接受的。</p>
+<h4 id="对复杂的SQL查询，特别是多表关联查询的需求"><a href="#对复杂的SQL查询，特别是多表关联查询的需求" class="headerlink" title="对复杂的SQL查询，特别是多表关联查询的需求"></a>对复杂的SQL查询，特别是多表关联查询的需求</h4><p>　　任何大数据量的web系统，都非常忌讳多个大表的关联查询，以及复杂的数据分析类型的报表查询，特别是SNS类型的网站，从需求以及产品设计角 度，就避免了这种情况的产生。往往更多的只是单表的主键查询，以及单表的简单条件分页查询，SQL的功能被极大的弱化了。</p>
+<h3 id="经典CAP图"><a href="#经典CAP图" class="headerlink" title="经典CAP图"></a>经典CAP图</h3><p> CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，<br>最多只能同时较好的满足两个。<br>因此，根据 CAP 原理将 NoSQL 数据库分成了满足 CA 原则、满足 CP 原则和满足 AP 原则三 大类：<br>CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。<br>CP - 满足一致性，分区容忍必的系统，通常性能不是特别高。<br>AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。</p>
+<p><img src="/uploads/redis/Image.bmp"></p>
+<h2 id="BASE"><a href="#BASE" class="headerlink" title="BASE"></a>BASE</h2><p>BASE就是为了解决关系数据库强一致性引起的问题而引起的可用性降低而提出的解决方案。</p>
+<p>BASE其实是下面三个术语的缩写：<br>    基本可用（Basically Available）<br>    软状态（Soft state）<br>    最终一致（Eventually consistent）</p>
+<p>它的思想是通过让系统放松对某一时刻数据一致性的要求来换取系统整体伸缩性和性能上改观。为什么这么说呢，缘由就在于大型系统往往由于地域分布和极高性能的要求，不可能采用分布式事务来完成这些指标，要想获得这些指标，我们必须采用另外一种方式来完成，这里BASE就是解决这个问题的办法</p>
+<h1 id="REDIS-入门"><a href="#REDIS-入门" class="headerlink" title="REDIS 入门"></a>REDIS 入门</h1><h2 id="功能："><a href="#功能：" class="headerlink" title="功能："></a>功能：</h2><ul>
+<li>内存存储和持久化：redis支持异步将内存中的数据写到硬盘上，同时不影响继续服务</li>
+<li>取最新N个数据的操作，如：可以将最新的10条评论的ID放在Redis的List集合里面</li>
+<li>模拟类似于HttpSession这种需要设定过期时间的功能</li>
+<li>发布、订阅消息系统</li>
+<li>定时器、计数器</li>
+</ul>
+<h2 id="基础知识讲解"><a href="#基础知识讲解" class="headerlink" title="基础知识讲解"></a>基础知识讲解</h2><ul>
+<li><p>单进程模型来处理客户端的请求。对读写等事件的响应是通过对epoll函数的包装来做到的。Redis的实际处理速度完全依靠主进程的执行效率</p>
+</li>
+<li><p>Epoll是Linux内核为处理大批量文件描述符而作了改进的epoll，是Linux下多路复用IO接口select/poll的增强版本，它能显著提高程序在大量并发连接中只有少量活跃的情况下的系统CPU利用率。</p>
+</li>
+<li><p>默认16个数据库，类似数组下表从零开始，初始默认使用零号库</p>
+</li>
+<li><p>Select命令切换数据库</p>
+</li>
+<li><p>Dbsize查看当前数据库的key的数量</p>
+</li>
+<li><p>Flushdb：清空当前库</p>
+</li>
+<li><p>Flushall；通杀全部库</p>
+</li>
+<li><p>统一密码管理，16个库都是同样密码，要么都OK要么一个也连接不上</p>
+</li>
+<li><p>Redis索引都是从零开始</p>
+</li>
+<li><p>为什么默认端口是6379</p>
+</li>
+</ul>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><h3 id="String（字符串）"><a href="#String（字符串）" class="headerlink" title="String（字符串）"></a>String（字符串）</h3><p>string是redis最基本的类型，你可以理解成与Memcached一模一样的类型，一个key对应一个value。</p>
+<p>string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象 。</p>
+<p>string类型是Redis最基本的数据类型，一个redis中字符串value最多可以是512M</p>
+<h3 id="Hash（哈希，类似java里的Map）"><a href="#Hash（哈希，类似java里的Map）" class="headerlink" title="Hash（哈希，类似java里的Map）"></a>Hash（哈希，类似java里的Map）</h3><p>Hash（哈希）<br>Redis hash 是一个键值对集合。<br>Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象</p>
+<h3 id="List（列表）"><a href="#List（列表）" class="headerlink" title="List（列表）"></a>List（列表）</h3><p>Redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素导列表的头部（左边）或者尾部（右边）。<br>它的底层实际是个链表</p>
+<h3 id="Set（集合）"><a href="#Set（集合）" class="headerlink" title="Set（集合）"></a>Set（集合）</h3><p>Redis的Set是string类型的无序集合。它是通过HashTable实现实现的，</p>
+<h3 id="Zset-sorted-set：有序集合"><a href="#Zset-sorted-set：有序集合" class="headerlink" title="Zset(sorted set：有序集合)"></a>Zset(sorted set：有序集合)</h3><p>zset(sorted set：有序集合)<br>Redis zset 和 set 一样也是string类型元素的集合,且不允许重复的成员。<br>不同的是每个元素都会关联一个double类型的分数。<br>redis正是通过分数来为集合中的成员进行从小到大的排序。zset的成员是唯一的,但分数(score)却可以重复。</p>
+<h2 id="常用命令："><a href="#常用命令：" class="headerlink" title="常用命令："></a>常用命令：</h2><p><a target="_blank" rel="noopener" href="http://redisdoc.com/">http://redisdoc.com/</a></p>
+<h3 id="Redis-键-key"><a href="#Redis-键-key" class="headerlink" title="Redis 键(key)"></a>Redis 键(key)</h3><p><img src="/uploads/redis/redis_key.bmp"></p>
+<ul>
+<li> keys *</li>
+<li> exists key的名字，判断某个key是否存在</li>
+<li> move key db   —&gt;当前库就没有了，被移除了</li>
+<li> expire key 秒钟：为给定的key设置过期时间</li>
+<li> ttl key 查看还有多少秒过期，-1表示永不过期，-2表示已过期</li>
+<li> type key 查看你的key是什么类型</li>
+</ul>
+<h3 id="Redis字符串-String"><a href="#Redis字符串-String" class="headerlink" title="Redis字符串(String)"></a>Redis字符串(String)</h3><p><img src="/uploads/redis/redis-string01.bmp"></p>
+<p><img src="/uploads/redis/redis-string02.bmp"></p>
+<ul>
+<li><p>set/get/del/append/strlen</p>
+</li>
+<li><p>Incr/decr/incrby/decrby,一定要是数字才能进行加减</p>
+</li>
+<li><p>getrange/setrange</p>
+</li>
+<li><p> setex(set with expire)键秒值/setnx(set if not exist)</p>
+</li>
+<li><p>mset/mget/msetnx</p>
+</li>
+<li><p>getset(先get再set)</p>
+</li>
+</ul>
+<h3 id="Redis列表-List"><a href="#Redis列表-List" class="headerlink" title="Redis列表(List)"></a>Redis列表(List)</h3><p><img src="/uploads/redis/redis-list01.bmp"></p>
+<p><img src="/uploads/redis/redis-list02.bmp"></p>
+<ul>
+<li>lpush/rpush/lrange</li>
+<li> lpop/rpop</li>
+<li> lindex，按照索引下标获得元素(从上到下)</li>
+<li>llen</li>
+<li> lrem key 删N个value</li>
+<li> ltrim key 开始index 结束index，截取指定范围的值后再赋值给key</li>
+<li> rpoplpush 源列表 目的列表</li>
+<li> lset key index value</li>
+<li> linsert key  before/after 值1 值2</li>
+<li>它是一个字符串链表，left、right都可以插入添加；<br>如果键不存在，创建新的链表；<br>如果键已存在，新增内容；<br>如果值全移除，对应的键也就消失了。<br>链表的操作无论是头和尾效率都极高，但假如是对中间元素进行操作，效率就很惨淡了。</li>
+</ul>
+<h3 id="Redis集合-Set"><a href="#Redis集合-Set" class="headerlink" title="Redis集合(Set)"></a>Redis集合(Set)</h3><p><img src="/uploads/redis/redis-set.bmp"></p>
+<ul>
+<li>sadd/smembers/sismember</li>
+<li> scard，获取集合里面的元素个数</li>
+<li> srem key value 删除集合中元素</li>
+<li> srandmember key 某个整数(随机出几个数)</li>
+<li> spop key 随机出栈</li>
+<li> smove key1 key2 在key1里某个值      作用是将key1里的某个值赋给key2</li>
+<li>数学集合类<ul>
+<li>差集：sdiff</li>
+<li>交集：sinter</li>
+<li>并集：sunion</li>
+</ul>
+</li>
+</ul>
+<h3 id="Redis哈希-Hash"><a href="#Redis哈希-Hash" class="headerlink" title="Redis哈希(Hash)"></a>Redis哈希(Hash)</h3><p><img src="/uploads/redis/redis-hash.bmp"></p>
+<ul>
+<li>hset/hget/hmset/hmget/hgetall/hdel</li>
+<li>hlen</li>
+<li> hexists key 在key里面的某个值的key</li>
+<li>hkeys/hvals</li>
+<li> hincrby/hincrbyfloat</li>
+<li> hsetnx</li>
+</ul>
+<h3 id="Redis有序集合Zset-sorted-set"><a href="#Redis有序集合Zset-sorted-set" class="headerlink" title="Redis有序集合Zset(sorted set)"></a>Redis有序集合Zset(sorted set)</h3><p><img src="/uploads/redis/redis-zset01.bmp"></p>
+<p><img src="/uploads/redis/redis-zset02.bmp"></p>
+<ul>
+<li>zadd/zrange</li>
+<li> zrangebyscore key 开始score 结束score</li>
+<li> zrem key 某score下对应的value值，作用是删除元素</li>
+<li> zcard/zcount key score区间/zrank key values值，作用是获得下标值/zscore key 对应值,获得分数</li>
+<li> zrevrank key values值，作用是逆序获得下标值</li>
+<li> zrevrange</li>
+<li> zrevrangebyscore  key 结束score 开始score</li>
+</ul>
+<h2 id="解析配置文件redis-conf"><a href="#解析配置文件redis-conf" class="headerlink" title="解析配置文件redis.conf"></a>解析配置文件redis.conf</h2><p>TODO</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>Yinshi
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://limingzhang666.github.io/2021/03/11/redis%E5%85%A5%E9%97%A8-01/" title="redis入门-01">https://limingzhang666.github.io/2021/03/11/redis入门-01/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-15-%E7%9B%91%E6%8E%A7%E4%BB%BB%E5%8A%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" rel="prev" title="java高并发详解-15-监控任务的生命周期">
+                  <i class="fa fa-chevron-left"></i> java高并发详解-15-监控任务的生命周期
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/" rel="next" title="Sprig源码解析-002-bean的加载">
+                  Sprig源码解析-002-bean的加载 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yinshi</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8.8.2/dist/mermaid.min.js', () => {
+    mermaid.init({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    }, '.mermaid');
+  }, window.mermaid);
+}
+</script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments('#valine-comments', () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    new Valine(Object.assign({"enable":true,"appId":"4oBiQGiWDHdACABLWjT7ouaV-gzGzoHsz","appKey":"fr4vMSPUjcHLtIrF2hmRF6UE","serverURLs":"https://4obiqgiw.lc-cn-n1-shared.com","placeholder":"国王不动，手下怎么跟随? --反叛的鲁鲁修","avatar":"","meta":["nick","mail","link"],"pageSize":10,"lang":null,"visitor":false,"comment_count":true,"recordIP":true,"enableQQ":true,"requiredFields":[],"cdh":"https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"}, {
+      el: '#valine-comments',
+      path: "/2021/03/11/redis%E5%85%A5%E9%97%A8-01/",
+      serverURLs: "https://4obiqgiw.lc-cn-n1-shared.com"
+    }));
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

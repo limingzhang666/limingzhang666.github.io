@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="HCj467TtuvFkAzzdCvYvbniAeNiUy7TUwp2hG1qGWQE">
+  <meta name="baidu-site-verification" content="LppFIbSdZO">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
+  </script>
+
+  <meta name="description" content="创建线程的时候如果没有显示得指定ThreadGroup，那么新的线程会被加入到父线程相同的ThreadGroup中 其实这里主要就是看ThreadGroup的源码，以及Thread的源码，就可以知道关于Thread的一些规则，比如 Thread的优先级 的范围，以及不能超过ThreadGroup的MAX  ThreadGroup 与Thread创建ThreadGroup1234567891011">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java高并发详解-06-ThreadGroup详解">
+<meta property="og:url" content="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="Yinshi&#39;s Blog">
+<meta property="og:description" content="创建线程的时候如果没有显示得指定ThreadGroup，那么新的线程会被加入到父线程相同的ThreadGroup中 其实这里主要就是看ThreadGroup的源码，以及Thread的源码，就可以知道关于Thread的一些规则，比如 Thread的优先级 的范围，以及不能超过ThreadGroup的MAX  ThreadGroup 与Thread创建ThreadGroup1234567891011">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-02-22T16:08:17.000Z">
+<meta property="article:modified_time" content="2021-03-10T06:34:05.192Z">
+<meta property="article:author" content="Yinshi">
+<meta property="article:tag" content="ThreadGroup">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>java高并发详解-06-ThreadGroup详解 | Yinshi's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Yinshi's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-guestbook">
+
+    <a href="/guestbook" rel="section"><i class="fa fa-book fa-fw"></i>留言</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ThreadGroup-%E4%B8%8EThread"><span class="nav-number">1.</span> <span class="nav-text">ThreadGroup 与Thread</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAThreadGroup"><span class="nav-number">1.1.</span> <span class="nav-text">创建ThreadGroup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6Thread%E6%95%B0%E7%BB%84%E5%92%8CThreadGroup%E6%95%B0%E7%BB%84"><span class="nav-number">1.2.</span> <span class="nav-text">复制Thread数组和ThreadGroup数组</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6Thread%E6%95%B0%E7%BB%84"><span class="nav-number">1.2.1.</span> <span class="nav-text">复制Thread数组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6ThreadGroup%E6%95%B0%E7%BB%84"><span class="nav-number">1.2.2.</span> <span class="nav-text">复制ThreadGroup数组</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ThreadGroup%E6%93%8D%E4%BD%9C"><span class="nav-number">1.3.</span> <span class="nav-text">ThreadGroup操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ThreadGroup%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C"><span class="nav-number">1.3.1.</span> <span class="nav-text">ThreadGroup基本操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ThreadGroup%E7%9A%84destory"><span class="nav-number">1.3.2.</span> <span class="nav-text">ThreadGroup的destory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%88%E6%8A%A4ThreadGroup"><span class="nav-number">1.3.3.</span> <span class="nav-text">守护ThreadGroup</span></a></li></ol></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yinshi"
+      src="/images/yinshi01_avatar.jpg">
+  <p class="site-author-name" itemprop="name">Yinshi</p>
+  <div class="site-description" itemprop="description">拨开云雾见青天</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">64</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/limingzhang666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;limingzhang666" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:laimingcham@163.com" title="E-Mail → mailto:laimingcham@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/limingzhang666" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          java高并发详解-06-ThreadGroup详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-02-23 00:08:17" itemprop="dateCreated datePublished" datetime="2021-02-23T00:08:17+08:00">2021-02-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">高并发详解</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6.8k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <ul>
+<li>创建线程的时候如果没有显示得指定ThreadGroup，那么新的线程会被加入到父线程相同的ThreadGroup中</li>
+<li>其实这里主要就是看ThreadGroup的源码，以及Thread的源码，就可以知道关于Thread的一些规则，比如 Thread的优先级 的范围，以及不能超过ThreadGroup的MAX</li>
+</ul>
+<h1 id="ThreadGroup-与Thread"><a href="#ThreadGroup-与Thread" class="headerlink" title="ThreadGroup 与Thread"></a>ThreadGroup 与Thread</h1><h2 id="创建ThreadGroup"><a href="#创建ThreadGroup" class="headerlink" title="创建ThreadGroup"></a>创建ThreadGroup</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1.    </span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadGroup</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(Thread.currentThread().getThreadGroup(), name);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//2.</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadGroup</span><span class="params">(ThreadGroup parent, String name)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">this</span>(checkParentAccess(parent), parent, name);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//这个是private ，不对外暴露</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">ThreadGroup</span><span class="params">(Void unused, ThreadGroup parent, String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">        <span class="keyword">this</span>.maxPriority = parent.maxPriority;</span><br><span class="line">        <span class="keyword">this</span>.daemon = parent.daemon;</span><br><span class="line">        <span class="keyword">this</span>.vmAllowSuspension = parent.vmAllowSuspension;</span><br><span class="line">        <span class="keyword">this</span>.parent = parent;</span><br><span class="line">        parent.add(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第一个构造函数为 ThreadGroup赋予了名字，它的默认父 ThreadGroup是创建它的线程所在的ThreadGroup</li>
+<li>第二构造函数赋予group名字的同时，显示指定了父ThreadGroup</li>
+</ul>
+<h2 id="复制Thread数组和ThreadGroup数组"><a href="#复制Thread数组和ThreadGroup数组" class="headerlink" title="复制Thread数组和ThreadGroup数组"></a>复制Thread数组和ThreadGroup数组</h2><h3 id="复制Thread数组"><a href="#复制Thread数组" class="headerlink" title="复制Thread数组"></a>复制Thread数组</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Copies into the specified array every active thread in this</span></span><br><span class="line"><span class="comment">     * thread group and its subgroups.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * &lt;p&gt; An invocation of this method behaves in exactly the same</span></span><br><span class="line"><span class="comment">     * way as the invocation</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * &lt;blockquote&gt;</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@linkplain</span> #enumerate(Thread[], boolean) enumerate&#125;&#123;<span class="doctag">@code</span> (list, true)&#125;</span></span><br><span class="line"><span class="comment">     * &lt;/blockquote&gt;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>  list</span></span><br><span class="line"><span class="comment">     *         an array into which to put the list of threads</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span>  the number of threads put into the array</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span>  SecurityException</span></span><br><span class="line"><span class="comment">     *          if &#123;<span class="doctag">@linkplain</span> #checkAccess checkAccess&#125; determines that</span></span><br><span class="line"><span class="comment">     *          the current thread cannot access this thread group</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@since</span>   JDK1.0</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">enumerate</span><span class="params">(Thread list[])</span> </span>&#123;</span><br><span class="line">        checkAccess();</span><br><span class="line">        <span class="keyword">return</span> enumerate(list, <span class="number">0</span>, <span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Copies into the specified array every active thread in this</span></span><br><span class="line"><span class="comment">     * thread group. If &#123;<span class="doctag">@code</span> recurse&#125; is &#123;<span class="doctag">@code</span> true&#125;,</span></span><br><span class="line"><span class="comment">     * this method recursively enumerates all subgroups of this</span></span><br><span class="line"><span class="comment">     * thread group and references to every active thread in these</span></span><br><span class="line"><span class="comment">     * subgroups are also included. If the array is too short to</span></span><br><span class="line"><span class="comment">     * hold all the threads, the extra threads are silently ignored.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * &lt;p&gt; An application might use the &#123;<span class="doctag">@linkplain</span> #activeCount activeCount&#125;</span></span><br><span class="line"><span class="comment">     * method to get an estimate of how big the array should be, however</span></span><br><span class="line"><span class="comment">     * &lt;i&gt;if the array is too short to hold all the threads, the extra threads</span></span><br><span class="line"><span class="comment">     * are silently ignored.&lt;/i&gt;  If it is critical to obtain every active</span></span><br><span class="line"><span class="comment">     * thread in this thread group, the caller should verify that the returned</span></span><br><span class="line"><span class="comment">     * int value is strictly less than the length of &#123;<span class="doctag">@code</span> list&#125;.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * &lt;p&gt; Due to the inherent race condition in this method, it is recommended</span></span><br><span class="line"><span class="comment">     * that the method only be used for debugging and monitoring purposes.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@since</span>   JDK1.0</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">enumerate</span><span class="params">(Thread list[], <span class="keyword">boolean</span> recurse)</span> </span>&#123;</span><br><span class="line">        checkAccess();</span><br><span class="line">        <span class="keyword">return</span> enumerate(list, <span class="number">0</span>, recurse);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 底层私有逻辑</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">enumerate</span><span class="params">(Thread list[], <span class="keyword">int</span> n, <span class="keyword">boolean</span> recurse)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> ngroupsSnapshot = <span class="number">0</span>;</span><br><span class="line">        ThreadGroup[] groupsSnapshot = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (destroyed) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">int</span> nt = nthreads;</span><br><span class="line">            <span class="keyword">if</span> (nt &gt; list.length - n) &#123;</span><br><span class="line">                nt = list.length - n;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nt; i++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (threads[i].isAlive()) &#123;</span><br><span class="line">                    list[n++] = threads[i];</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (recurse) &#123;</span><br><span class="line">                ngroupsSnapshot = ngroups;</span><br><span class="line">                <span class="keyword">if</span> (groups != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    groupsSnapshot = Arrays.copyOf(groups, ngroupsSnapshot);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    groupsSnapshot = <span class="keyword">null</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (recurse) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span> ; i &lt; ngroupsSnapshot ; i++) &#123;</span><br><span class="line">                n = groupsSnapshot[i].enumerate(list, n, <span class="keyword">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> n;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>上面的public 的2个方法，会将ThreadGroup 中active线程全部复制到Thread数组中，</li>
+<li>其中recurse参数如果为True，则方法会将所有子 group的active线程全部递归到Thread数组中，</li>
+<li>enumerate（list ）实际上等价于 enumerate（list，true）</li>
+</ul>
+<h3 id="复制ThreadGroup数组"><a href="#复制ThreadGroup数组" class="headerlink" title="复制ThreadGroup数组"></a>复制ThreadGroup数组</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">enumerate</span><span class="params">(ThreadGroup list[])</span> </span>&#123;</span><br><span class="line">       checkAccess();</span><br><span class="line">       <span class="keyword">return</span> enumerate(list, <span class="number">0</span>, <span class="keyword">true</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">enumerate</span><span class="params">(ThreadGroup list[], <span class="keyword">boolean</span> recurse)</span> </span>&#123;</span><br><span class="line">       checkAccess();</span><br><span class="line">       <span class="keyword">return</span> enumerate(list, <span class="number">0</span>, recurse);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>和复制Thread数组类似，上面方法用于复制当前ThreadGroup的子 Group，同样recurse会决定是否以递归的方式复制</li>
+</ul>
+<h2 id="ThreadGroup操作"><a href="#ThreadGroup操作" class="headerlink" title="ThreadGroup操作"></a>ThreadGroup操作</h2><p>Threadgroup 并不能提供对线程的管理，主要功能是对线程提供组织</p>
+<h3 id="ThreadGroup基本操作"><a href="#ThreadGroup基本操作" class="headerlink" title="ThreadGroup基本操作"></a>ThreadGroup基本操作</h3><ul>
+<li>activeCount（）： 用于获取group中活跃的线程，只是一个估计值，该方法会递归获取其他子group中的活跃线程</li>
+<li>activeGroupCount（）： 用于获取group中活跃的子group，只是一个估计值，该方法也会递归获取所有的子 group</li>
+<li>getMaxPriority() 用于获取group的优先级，默认情况下，Group的优先级为10，在该group中，所有线程的优先级不能大于group的优先级</li>
+<li>getName() 用于获取group的名字</li>
+<li>getParent（）用于获取group的父 group，如果父group不存在，则会返回null ，比如system group的父group就是 null</li>
+<li>list（）该方法没有返回值，执行该方法会将group中所有的活跃线程信息全部输出到控制台，也就是 System.out</li>
+<li>parentOf（ThreadGroup g）会判断当前group是不是给定的group的父group ，另外如果给定的group就是本身，那么也返回true</li>
+<li>setMaxPriority(int pri)会指定group的最大优先级 ，最大优先级不能超过父 group的最大优先级。执行该方法不仅仅会改变当前group的最大优先级，还会改变所有子goup的最大优先级</li>
+</ul>
+<p>ThreadGroup的interrupt</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Interrupts all threads in this thread group.</span></span><br><span class="line"><span class="comment">   * &lt;p&gt;</span></span><br><span class="line"><span class="comment">   * First, the &lt;code&gt;checkAccess&lt;/code&gt; method of this thread group is</span></span><br><span class="line"><span class="comment">   * called with no arguments; this may result in a security exception.</span></span><br><span class="line"><span class="comment">   * &lt;p&gt;</span></span><br><span class="line"><span class="comment">   * This method then calls the &lt;code&gt;interrupt&lt;/code&gt; method on all the</span></span><br><span class="line"><span class="comment">   * threads in this thread group and in all of its subgroups.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@exception</span>  SecurityException  if the current thread is not allowed</span></span><br><span class="line"><span class="comment">   *               to access this thread group or any of the threads in</span></span><br><span class="line"><span class="comment">   *               the thread group.</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@see</span>        java.lang.Thread#interrupt()</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@see</span>        java.lang.SecurityException</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@see</span>        java.lang.ThreadGroup#checkAccess()</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@since</span>      1.2</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">interrupt</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">int</span> ngroupsSnapshot;</span><br><span class="line">      ThreadGroup[] groupsSnapshot;</span><br><span class="line">      <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">          checkAccess();</span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span> ; i &lt; nthreads ; i++) &#123;</span><br><span class="line">              threads[i].interrupt();</span><br><span class="line">          &#125;</span><br><span class="line">          ngroupsSnapshot = ngroups;</span><br><span class="line">          <span class="keyword">if</span> (groups != <span class="keyword">null</span>) &#123;</span><br><span class="line">              groupsSnapshot = Arrays.copyOf(groups, ngroupsSnapshot);</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              groupsSnapshot = <span class="keyword">null</span>;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span> ; i &lt; ngroupsSnapshot ; i++) &#123;</span><br><span class="line">          groupsSnapshot[i].interrupt();</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>interrupt一个thread group会导致 该group中所有的active 线程都被interrupt ，</li>
+<li>也就说该 group中的每一个interrupt 标识都被设置了 </li>
+<li>通过源码分析，可以看出interrupt内部会执行所有thread 的interrupt方法，并且会递归获取子 group，然后执行他们各自的interrupt方法</li>
+</ul>
+<h3 id="ThreadGroup的destory"><a href="#ThreadGroup的destory" class="headerlink" title="ThreadGroup的destory"></a>ThreadGroup的destory</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Destroys this thread group and all of its subgroups. This thread</span></span><br><span class="line"><span class="comment"> * group must be empty, indicating that all threads that had been in</span></span><br><span class="line"><span class="comment"> * this thread group have since stopped.</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;</span></span><br><span class="line"><span class="comment"> * First, the &lt;code&gt;checkAccess&lt;/code&gt; method of this thread group is</span></span><br><span class="line"><span class="comment"> * called with no arguments; this may result in a security exception.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@exception</span>  IllegalThreadStateException  if the thread group is not</span></span><br><span class="line"><span class="comment"> *               empty or if the thread group has already been destroyed.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@exception</span>  SecurityException  if the current thread cannot modify this</span></span><br><span class="line"><span class="comment"> *               thread group.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span>        java.lang.ThreadGroup#checkAccess()</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span>      JDK1.0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ngroupsSnapshot;</span><br><span class="line">    ThreadGroup[] groupsSnapshot;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        checkAccess();</span><br><span class="line">        <span class="keyword">if</span> (destroyed || (nthreads &gt; <span class="number">0</span>)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalThreadStateException();</span><br><span class="line">        &#125;</span><br><span class="line">        ngroupsSnapshot = ngroups;</span><br><span class="line">        <span class="keyword">if</span> (groups != <span class="keyword">null</span>) &#123;</span><br><span class="line">            groupsSnapshot = Arrays.copyOf(groups, ngroupsSnapshot);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            groupsSnapshot = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (parent != <span class="keyword">null</span>) &#123;</span><br><span class="line">            destroyed = <span class="keyword">true</span>;</span><br><span class="line">            ngroups = <span class="number">0</span>;</span><br><span class="line">            groups = <span class="keyword">null</span>;</span><br><span class="line">            nthreads = <span class="number">0</span>;</span><br><span class="line">            threads = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span> ; i &lt; ngroupsSnapshot ; i += <span class="number">1</span>) &#123;</span><br><span class="line">        groupsSnapshot[i].destroy();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parent != <span class="keyword">null</span>) &#123;</span><br><span class="line">        parent.remove(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>destory 用于销毁 ThreadGroup ，该方法只是针对一个没有任何active线程的group 进行一个 destory标记，调用该方法的结果是在父 group中将自己移除</li>
+</ul>
+<h3 id="守护ThreadGroup"><a href="#守护ThreadGroup" class="headerlink" title="守护ThreadGroup"></a>守护ThreadGroup</h3><ul>
+<li>线程可以设置为守护线程，ThreadGroup也可以设置为 守护ThreadGroup，</li>
+<li>但是将一个THreadGroup 设置为 daemon ，也并不会影响线程的daemon属性</li>
+<li>如果一个 ThreadGroup 的daemon被设置为  true，那么在group中没有任何active线程的时候，该group将自动destory </li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>Yinshi
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/" title="java高并发详解-06-ThreadGroup详解">https://limingzhang666.github.io/2021/02/23/java高并发详解-06-ThreadGroup详解/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/ThreadGroup/" rel="tag"># ThreadGroup</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/21/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-05-%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/" rel="prev" title="java高并发详解-05-线程间通信">
+                  <i class="fa fa-chevron-left"></i> java高并发详解-05-线程间通信
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/" rel="next" title="java高并发详解-07-Hook线程以及捕获线程执行异常">
+                  java高并发详解-07-Hook线程以及捕获线程执行异常 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yinshi</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8.8.2/dist/mermaid.min.js', () => {
+    mermaid.init({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    }, '.mermaid');
+  }, window.mermaid);
+}
+</script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments('#valine-comments', () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    new Valine(Object.assign({"enable":true,"appId":"4oBiQGiWDHdACABLWjT7ouaV-gzGzoHsz","appKey":"fr4vMSPUjcHLtIrF2hmRF6UE","serverURLs":"https://4obiqgiw.lc-cn-n1-shared.com","placeholder":"国王不动，手下怎么跟随? --反叛的鲁鲁修","avatar":"","meta":["nick","mail","link"],"pageSize":10,"lang":null,"visitor":false,"comment_count":true,"recordIP":true,"enableQQ":true,"requiredFields":[],"cdh":"https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"}, {
+      el: '#valine-comments',
+      path: "/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/",
+      serverURLs: "https://4obiqgiw.lc-cn-n1-shared.com"
+    }));
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

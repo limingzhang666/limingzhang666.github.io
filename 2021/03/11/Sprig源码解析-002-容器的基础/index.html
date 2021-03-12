@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="HCj467TtuvFkAzzdCvYvbniAeNiUy7TUwp2hG1qGWQE">
+  <meta name="baidu-site-verification" content="LppFIbSdZO">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
+  </script>
+
+  <meta name="description" content="容器的基础（Bean的解析）XmlBeanFactory：  配置文件的封装： 文件资源统一抽象为： InputStreamSource 资源, Resource 继承 InputStreamSource，  然后 通过Resource资源，可以 拿到InputStream，   xmlBeanFactory的构造函数： 1234567891011121314151617181920212223">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sprig源码解析-001-容器的基础">
+<meta property="og:url" content="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Yinshi&#39;s Blog">
+<meta property="og:description" content="容器的基础（Bean的解析）XmlBeanFactory：  配置文件的封装： 文件资源统一抽象为： InputStreamSource 资源, Resource 继承 InputStreamSource，  然后 通过Resource资源，可以 拿到InputStream，   xmlBeanFactory的构造函数： 1234567891011121314151617181920212223">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-03-11T15:23:29.000Z">
+<meta property="article:modified_time" content="2021-03-12T09:07:21.714Z">
+<meta property="article:author" content="Yinshi">
+<meta property="article:tag" content="容器的基础">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Sprig源码解析-001-容器的基础 | Yinshi's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Yinshi's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-guestbook">
+
+    <a href="/guestbook" rel="section"><i class="fa fa-book fa-fw"></i>留言</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80%EF%BC%88Bean%E7%9A%84%E8%A7%A3%E6%9E%90%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">容器的基础（Bean的解析）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%9A%84%E5%B0%81%E8%A3%85%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">配置文件的封装：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E8%BD%BDxmlBeanDefinitions"><span class="nav-number">1.2.</span> <span class="nav-text">加载xmlBeanDefinitions</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#loadBeanDefinitions"><span class="nav-number">1.2.1.</span> <span class="nav-text">loadBeanDefinitions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96Document"><span class="nav-number">1.2.2.</span> <span class="nav-text">获取Document</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90%E5%B9%B6%E6%B3%A8%E5%86%8CBeanDefinitions"><span class="nav-number">1.2.3.</span> <span class="nav-text">解析并注册BeanDefinitions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%96%B9%E6%B3%95-registerBeanDefinitions"><span class="nav-number">1.2.4.</span> <span class="nav-text">核心方法 registerBeanDefinitions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#parseBeanDefinitions-root-this-delegate"><span class="nav-number">1.2.5.</span> <span class="nav-text">parseBeanDefinitions(root, this.delegate)</span></a></li></ol></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yinshi"
+      src="/images/yinshi01_avatar.jpg">
+  <p class="site-author-name" itemprop="name">Yinshi</p>
+  <div class="site-description" itemprop="description">拨开云雾见青天</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">64</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/limingzhang666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;limingzhang666" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:laimingcham@163.com" title="E-Mail → mailto:laimingcham@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/limingzhang666" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Sprig源码解析-001-容器的基础
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-03-11 23:23:29" itemprop="dateCreated datePublished" datetime="2021-03-11T23:23:29+08:00">2021-03-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">Sprig源码解析</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="容器的基础（Bean的解析）"><a href="#容器的基础（Bean的解析）" class="headerlink" title="容器的基础（Bean的解析）"></a>容器的基础（Bean的解析）</h1><p>XmlBeanFactory： </p>
+<h2 id="配置文件的封装："><a href="#配置文件的封装：" class="headerlink" title="配置文件的封装："></a>配置文件的封装：</h2><ul>
+<li><p>文件资源统一抽象为： InputStreamSource 资源, Resource 继承 InputStreamSource，</p>
+</li>
+<li><p>然后 通过Resource资源，可以 拿到InputStream，</p>
+</li>
+</ul>
+<p>xmlBeanFactory的构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a new XmlBeanFactory with the given resource,</span></span><br><span class="line"><span class="comment">	 * 创建一个xml</span></span><br><span class="line"><span class="comment">	 * which must be parsable using DOM.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> resource the XML resource to load bean definitions from</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> BeansException in case of loading or parsing errors</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">XmlBeanFactory</span><span class="params">(Resource resource)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>(resource, <span class="keyword">null</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a new XmlBeanFactory with the given input stream,</span></span><br><span class="line"><span class="comment">	 * which must be parsable using DOM.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> resource the XML resource to load bean definitions from</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> parentBeanFactory parent bean factory</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> BeansException in case of loading or parsing errors</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">XmlBeanFactory</span><span class="params">(Resource resource, BeanFactory parentBeanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">super</span>(parentBeanFactory);</span><br><span class="line">        <span class="comment">// 资源加载的真正实现</span></span><br><span class="line">		<span class="keyword">this</span>.reader.loadBeanDefinitions(resource);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="加载xmlBeanDefinitions"><a href="#加载xmlBeanDefinitions" class="headerlink" title="加载xmlBeanDefinitions"></a>加载xmlBeanDefinitions</h2><ul>
+<li><p>在 XmlBeanFactory中 调用了 super(parentBeanFactory); 一直往上追可以看到 ,这段代码作用是：</p>
+<ul>
+<li>忽略给定接口的自动装配功能</li>
+</ul>
+</li>
+<li><p>这样的目的是为什么呢，效果如何：</p>
+<ul>
+<li><p>举例子来说：当A中有属性B，那么当Spring在获取A的Bean的时候，如果其属性B还没有初始化，那么Spring会自动初始化B，这也是Sprnig  提供的一种特性，</p>
+</li>
+<li><p>但是某些情况下，B不会被初始化，其中的一种情况就是 B实现了BeanNameAware 接口。</p>
+</li>
+<li><p>spring是这么介绍的： 自动装配时 忽略给定的依赖接口，典型应用就是 通过其他方式解析 Application 上下文注册依赖，类似于 BeanFactory 通过BeanFactoryAware 进行注入 或者ApplicationContext通过ApplicationContextAware 进行注入</p>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create a new AbstractAutowireCapableBeanFactory.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">AbstractAutowireCapableBeanFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="keyword">super</span>();</span><br><span class="line">	ignoreDependencyInterface(BeanNameAware.class);</span><br><span class="line">	ignoreDependencyInterface(BeanFactoryAware.class);</span><br><span class="line">	ignoreDependencyInterface(BeanClassLoaderAware.class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="loadBeanDefinitions"><a href="#loadBeanDefinitions" class="headerlink" title="loadBeanDefinitions"></a>loadBeanDefinitions</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Load bean definitions from the specified XML file.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> encodedResource the resource descriptor for the XML file,</span></span><br><span class="line"><span class="comment">	 * allowing to specify an encoding to use for parsing the file</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the number of bean definitions found</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> BeanDefinitionStoreException in case of loading or parsing errors</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">loadBeanDefinitions</span><span class="params">(EncodedResource encodedResource)</span> <span class="keyword">throws</span> BeanDefinitionStoreException </span>&#123;</span><br><span class="line">		Assert.notNull(encodedResource, <span class="string">&quot;EncodedResource must not be null&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">			logger.trace(<span class="string">&quot;Loading XML bean definitions from &quot;</span> + encodedResource);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 1.封装资源文件 ，首先 对参数Resource 使用 EncodedResource</span></span><br><span class="line">		Set&lt;EncodedResource&gt; currentResources = <span class="keyword">this</span>.resourcesCurrentlyBeingLoaded.get();</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!currentResources.add(encodedResource)) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(</span><br><span class="line">					<span class="string">&quot;Detected cyclic loading of &quot;</span> + encodedResource + <span class="string">&quot; - check your import definitions!&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 2. 获得输入流</span></span><br><span class="line">		<span class="keyword">try</span> (InputStream inputStream = encodedResource.getResource().getInputStream()) &#123;</span><br><span class="line">			InputSource inputSource = <span class="keyword">new</span> InputSource(inputStream);</span><br><span class="line">			<span class="keyword">if</span> (encodedResource.getEncoding() != <span class="keyword">null</span>) &#123;</span><br><span class="line">				inputSource.setEncoding(encodedResource.getEncoding());</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 3.重点方法</span></span><br><span class="line">			<span class="keyword">return</span> doLoadBeanDefinitions(inputSource, encodedResource.getResource());</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(</span><br><span class="line">					<span class="string">&quot;IOException parsing XML document from &quot;</span> + encodedResource.getResource(), ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			currentResources.remove(encodedResource);</span><br><span class="line">			<span class="keyword">if</span> (currentResources.isEmpty()) &#123;</span><br><span class="line">				<span class="keyword">this</span>.resourcesCurrentlyBeingLoaded.remove();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="获取Document"><a href="#获取Document" class="headerlink" title="获取Document"></a>获取Document</h3><ul>
+<li>xmlBeanFactoryReader 类对于文档并没有亲力亲为，而是委托 给了 DocumentLoader 去执行，这力的 DocumentLoader是个接口，而真正的调用的是 ： DefaultDocumentLoader </li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">int</span> <span class="title">doLoadBeanDefinitions</span><span class="params">(InputSource inputSource, Resource resource)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> BeanDefinitionStoreException </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			Document doc = doLoadDocument(inputSource, resource);</span><br><span class="line">			<span class="keyword">int</span> count = registerBeanDefinitions(doc, resource);</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">&quot;Loaded &quot;</span> + count + <span class="string">&quot; bean definitions from &quot;</span> + resource);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> count;</span><br><span class="line">		&#125;<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(resource.getDescription(),</span><br><span class="line">					<span class="string">&quot;Unexpected exception parsing XML document from &quot;</span> + resource, ex);</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="解析并注册BeanDefinitions"><a href="#解析并注册BeanDefinitions" class="headerlink" title="解析并注册BeanDefinitions"></a>解析并注册BeanDefinitions</h3><ul>
+<li>当把文件转换为Document之后，接下来的提取以及注册 bean。</li>
+<li>这个方法很好的应用了 面向对象中单一职责的原则，将逻辑处理委托给单一的类 进行处理，而这个逻辑处理类就是 BeanDefinitionDocumentReader</li>
+<li>BeanDefinitionDocumentReader 是一个接口，而实例化的工作是在 createBeanDefinitionDocumentReader（）中完成的，BeanDefinitionDocumentReader的最终类型是 DefaultBeanDefinitionDocumentReader</li>
+<li>DefaultBeanDefinitionDocumentReader::doRegisterBeanDefinitions() 提取root，以便将root作为参数继续 BeanDefinition 的注册</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">registerBeanDefinitions</span><span class="params">(Document doc, Resource resource)</span> <span class="keyword">throws</span> BeanDefinitionStoreException </span>&#123;</span><br><span class="line">	<span class="comment">//使用 DefaultBeanDefinitionDocumentReader 实例化 BeanDefinitionDocumentReader</span></span><br><span class="line">	BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();</span><br><span class="line">	<span class="comment">// 将环境变量设置其中</span></span><br><span class="line">	<span class="comment">// 记录统计前BeanDefinition 的加载个数</span></span><br><span class="line">	<span class="keyword">int</span> countBefore = getRegistry().getBeanDefinitionCount();</span><br><span class="line">	<span class="comment">// 加载以及注册 bean</span></span><br><span class="line">	documentReader.registerBeanDefinitions(doc, createReaderContext(resource));</span><br><span class="line">	<span class="comment">// 记录本次加载 的BeanDefinition 的个数</span></span><br><span class="line">	<span class="keyword">return</span> getRegistry().getBeanDefinitionCount() - countBefore;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="核心方法-registerBeanDefinitions"><a href="#核心方法-registerBeanDefinitions" class="headerlink" title="核心方法 registerBeanDefinitions"></a>核心方法 registerBeanDefinitions</h3><ul>
+<li>对profile 处理，然后开始解析 </li>
+<li>跟进  preProcessXml(),postProcessXml(root);发现代码是空的，为啥是空的呢</li>
+</ul>
+<p><strong>面向对象常说的一句话： 一个类要么是面向继承的设计，要么就用final 修饰。因为 DefaultBeanDefinitionDocumentReader 不是final类，所以他是面向继承设计。</strong> </p>
+<p><strong>这2个方法是为子类设计的 ，这个模板方法模式，如果继承自 DefaultBeanDefinitionDocumentReader 的子类需要在Bean解析前后 做一些处理的话，那么只需要 重写这2个方法。</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doRegisterBeanDefinitions</span><span class="params">(Element root)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 专门处理解析</span></span><br><span class="line">		BeanDefinitionParserDelegate parent = <span class="keyword">this</span>.delegate;</span><br><span class="line">		<span class="keyword">this</span>.delegate = createDelegate(getReaderContext(), root, parent);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.delegate.isDefaultNamespace(root)) &#123;</span><br><span class="line">			<span class="comment">//. 处理 profile 属性</span></span><br><span class="line">			String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);</span><br><span class="line">			<span class="keyword">if</span> (StringUtils.hasText(profileSpec)) &#123;</span><br><span class="line">				String[] specifiedProfiles = StringUtils.tokenizeToStringArray(</span><br><span class="line">						profileSpec, BeanDefinitionParserDelegate.MULTI_VALUE_ATTRIBUTE_DELIMITERS);</span><br><span class="line">				<span class="comment">// We cannot use Profiles.of(...) since profile expressions are not supported</span></span><br><span class="line">				<span class="comment">// in XML config. See SPR-12458 for details.</span></span><br><span class="line">				<span class="keyword">if</span> (!getReaderContext().getEnvironment().acceptsProfiles(specifiedProfiles)) &#123;</span><br><span class="line">					<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">						logger.debug(<span class="string">&quot;Skipped XML bean definition file due to specified profiles [&quot;</span> + profileSpec +</span><br><span class="line">								<span class="string">&quot;] not matching: &quot;</span> + getReaderContext().getResource());</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 3. 解析前处理，留给子类实现</span></span><br><span class="line">		preProcessXml(root);</span><br><span class="line">		parseBeanDefinitions(root, <span class="keyword">this</span>.delegate);</span><br><span class="line">		<span class="comment">// 4. 解析后处理，留给子类实现</span></span><br><span class="line">		postProcessXml(root);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">this</span>.delegate = parent;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="parseBeanDefinitions-root-this-delegate"><a href="#parseBeanDefinitions-root-this-delegate" class="headerlink" title="parseBeanDefinitions(root, this.delegate)"></a>parseBeanDefinitions(root, this.delegate)</h3><ul>
+<li>如何解析XML 的元素就跳过了，包含自定义标签之类的 。感觉也用不到，毕竟现在大部分都是注解开发 ，就先不看了,太繁琐了</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>Yinshi
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/" title="Sprig源码解析-001-容器的基础">https://limingzhang666.github.io/2021/03/11/Sprig源码解析-002-容器的基础/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/" rel="tag"># 容器的基础</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/" rel="prev" title="Sprig源码解析-002-bean的加载">
+                  <i class="fa fa-chevron-left"></i> Sprig源码解析-002-bean的加载
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yinshi</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8.8.2/dist/mermaid.min.js', () => {
+    mermaid.init({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    }, '.mermaid');
+  }, window.mermaid);
+}
+</script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments('#valine-comments', () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    new Valine(Object.assign({"enable":true,"appId":"4oBiQGiWDHdACABLWjT7ouaV-gzGzoHsz","appKey":"fr4vMSPUjcHLtIrF2hmRF6UE","serverURLs":"https://4obiqgiw.lc-cn-n1-shared.com","placeholder":"国王不动，手下怎么跟随? --反叛的鲁鲁修","avatar":"","meta":["nick","mail","link"],"pageSize":10,"lang":null,"visitor":false,"comment_count":true,"recordIP":true,"enableQQ":true,"requiredFields":[],"cdh":"https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"}, {
+      el: '#valine-comments',
+      path: "/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/",
+      serverURLs: "https://4obiqgiw.lc-cn-n1-shared.com"
+    }));
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

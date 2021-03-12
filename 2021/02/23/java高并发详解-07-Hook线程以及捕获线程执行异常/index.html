@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="HCj467TtuvFkAzzdCvYvbniAeNiUy7TUwp2hG1qGWQE">
+  <meta name="baidu-site-verification" content="LppFIbSdZO">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"limingzhang666.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.0.2","exturl":false,"sidebar":{"position":"left","width":320,"display":"always","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}};
+  </script>
+
+  <meta name="description" content="学习如何获取线程在运行时期的异常信息 学习如何向Java程序注入 Hook线程  获取线程运行时异常在Thread类中，关于处理运行时异常的API总共有4个，如下所示： 12345678910111213141516171819202122232425&#x2F;&#x2F; 1.  为某个特定线程 指定 UncaughtExceptionHandlerpublic static void setDefaultUn">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java高并发详解-07-Hook线程以及捕获线程执行异常">
+<meta property="og:url" content="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/index.html">
+<meta property="og:site_name" content="Yinshi&#39;s Blog">
+<meta property="og:description" content="学习如何获取线程在运行时期的异常信息 学习如何向Java程序注入 Hook线程  获取线程运行时异常在Thread类中，关于处理运行时异常的API总共有4个，如下所示： 12345678910111213141516171819202122232425&#x2F;&#x2F; 1.  为某个特定线程 指定 UncaughtExceptionHandlerpublic static void setDefaultUn">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-02-23T13:30:24.000Z">
+<meta property="article:modified_time" content="2021-03-10T06:34:05.192Z">
+<meta property="article:author" content="Yinshi">
+<meta property="article:tag" content="Hook线程">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>java高并发详解-07-Hook线程以及捕获线程执行异常 | Yinshi's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Yinshi's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-guestbook">
+
+    <a href="/guestbook" rel="section"><i class="fa fa-book fa-fw"></i>留言</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E7%BA%BF%E7%A8%8B%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BC%82%E5%B8%B8"><span class="nav-number">1.</span> <span class="nav-text">获取线程运行时异常</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#UncaughtExceptionHandler%E7%9A%84%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">UncaughtExceptionHandler的介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UncaughtExceptionHandler-%E5%AE%9E%E4%BE%8B"><span class="nav-number">1.2.</span> <span class="nav-text">UncaughtExceptionHandler 实例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UncaughtExceptionHandler-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">1.3.</span> <span class="nav-text">UncaughtExceptionHandler 源码分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%A8%E5%85%A5%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">注入钩子函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hook%E7%BA%BF%E7%A8%8B%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.1.</span> <span class="nav-text">Hook线程介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hook%E7%BA%BF%E7%A8%8B%E5%AE%9E%E6%88%98"><span class="nav-number">2.2.</span> <span class="nav-text">Hook线程实战</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hook%E7%BA%BF%E7%A8%8B%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%E4%BB%A5%E5%8F%8A%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">2.3.</span> <span class="nav-text">Hook线程应用场景以及注意事项</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">本章总结</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yinshi"
+      src="/images/yinshi01_avatar.jpg">
+  <p class="site-author-name" itemprop="name">Yinshi</p>
+  <div class="site-description" itemprop="description">拨开云雾见青天</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">64</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/limingzhang666" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;limingzhang666" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:laimingcham@163.com" title="E-Mail → mailto:laimingcham@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/limingzhang666" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          java高并发详解-07-Hook线程以及捕获线程执行异常
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-02-23 21:30:24" itemprop="dateCreated datePublished" datetime="2021-02-23T21:30:24+08:00">2021-02-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">高并发详解</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>10k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <ul>
+<li>学习如何获取线程在运行时期的异常信息</li>
+<li>学习如何向Java程序注入 Hook线程</li>
+</ul>
+<h1 id="获取线程运行时异常"><a href="#获取线程运行时异常" class="headerlink" title="获取线程运行时异常"></a>获取线程运行时异常</h1><p>在Thread类中，关于处理运行时异常的API总共有4个，如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1.  为某个特定线程 指定 UncaughtExceptionHandler</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setDefaultUncaughtExceptionHandler</span><span class="params">(UncaughtExceptionHandler eh)</span> </span>&#123;</span><br><span class="line">        SecurityManager sm = System.getSecurityManager();</span><br><span class="line">        <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</span><br><span class="line">            sm.checkPermission(</span><br><span class="line">                <span class="keyword">new</span> RuntimePermission(<span class="string">&quot;setDefaultUncaughtExceptionHandler&quot;</span>)</span><br><span class="line">                    );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">         defaultUncaughtExceptionHandler = eh;</span><br><span class="line">     &#125;</span><br><span class="line"><span class="comment">//2. 设置全局的 UncaughtExceptionHandler</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> UncaughtExceptionHandler <span class="title">getDefaultUncaughtExceptionHandler</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> defaultUncaughtExceptionHandler;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//3.  获取特定线程的 UncaughtExceptionHandler</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> UncaughtExceptionHandler <span class="title">getUncaughtExceptionHandler</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> uncaughtExceptionHandler != <span class="keyword">null</span> ?</span><br><span class="line">            uncaughtExceptionHandler : group;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//4.  获取全局的 UncaughtExceptionHandler</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUncaughtExceptionHandler</span><span class="params">(UncaughtExceptionHandler eh)</span> </span>&#123;</span><br><span class="line">        checkAccess();</span><br><span class="line">        uncaughtExceptionHandler = eh;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="UncaughtExceptionHandler的介绍"><a href="#UncaughtExceptionHandler的介绍" class="headerlink" title="UncaughtExceptionHandler的介绍"></a>UncaughtExceptionHandler的介绍</h2><ul>
+<li>线程在执行单元中时不允许抛出checked异常的</li>
+<li>线程运行在自己的上下文中，派生它的线程将无法直接获得它运行中出现的异常信息</li>
+</ul>
+<p>所以Java为我们提供了一个 UncaughtExceptionHandler 接口，</p>
+<ul>
+<li>当线程在运行过程中出现了异常时，会回调UncaughtExceptionHandler 接口，从而我们得知 哪个线程在运行时出错，以及错误类型</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Interface for handlers invoked when a &lt;tt&gt;Thread&lt;/tt&gt; abruptly</span></span><br><span class="line"><span class="comment">     * terminates due to an uncaught exception.</span></span><br><span class="line"><span class="comment">     （当一个线程突然的终结了由于一个未被捕获的异常，这个时候这个handler会被调用 ）</span></span><br><span class="line"><span class="comment">     * &lt;p&gt;When a thread is about to terminate due to an uncaught exception</span></span><br><span class="line"><span class="comment">     * the Java Virtual Machine will query the thread for its</span></span><br><span class="line"><span class="comment">     * &lt;tt&gt;UncaughtExceptionHandler&lt;/tt&gt; using</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> #getUncaughtExceptionHandler&#125; and will invoke the handler&#x27;s</span></span><br><span class="line"><span class="comment">     * &lt;tt&gt;uncaughtException&lt;/tt&gt; method, passing the thread and the</span></span><br><span class="line"><span class="comment">     * exception as arguments.</span></span><br><span class="line"><span class="comment">     （当线程由于未捕获的异常即将终止时，Java虚拟机将查询它的线程 为了给 UncaughtExceptionHandler做参数，JVM 传递线程和</span></span><br><span class="line"><span class="comment">*异常作为参数给 uncaughtException方法）</span></span><br><span class="line"><span class="comment">     * If a thread has not had its &lt;tt&gt;UncaughtExceptionHandler&lt;/tt&gt;</span></span><br><span class="line"><span class="comment">     * explicitly set, then its &lt;tt&gt;ThreadGroup&lt;/tt&gt; object acts as its</span></span><br><span class="line"><span class="comment">     * &lt;tt&gt;UncaughtExceptionHandler&lt;/tt&gt;. If the &lt;tt&gt;ThreadGroup&lt;/tt&gt; object</span></span><br><span class="line"><span class="comment">     * has no</span></span><br><span class="line"><span class="comment">     * special requirements for dealing with the exception, it can forward</span></span><br><span class="line"><span class="comment">     * the invocation to the &#123;<span class="doctag">@linkplain</span> #getDefaultUncaughtExceptionHandler</span></span><br><span class="line"><span class="comment">     * default uncaught exception handler&#125;.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> #setDefaultUncaughtExceptionHandler</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> #setUncaughtExceptionHandler</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> ThreadGroup#uncaughtException</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@since</span> 1.5</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@FunctionalInterface</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UncaughtExceptionHandler</span> </span>&#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * Method invoked when the given thread terminates due to the</span></span><br><span class="line"><span class="comment">         * given uncaught exception.</span></span><br><span class="line"><span class="comment">         * &lt;p&gt;Any exception thrown by this method will be ignored by the</span></span><br><span class="line"><span class="comment">         * Java Virtual Machine.</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> t the thread</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> e the exception</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">uncaughtException</span><span class="params">(Thread t, Throwable e)</span></span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>该回调接口会被Thread 中的dispatchUncaughtException方法调用，如下所示：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Dispatch an uncaught exception to the handler. This method is</span></span><br><span class="line"><span class="comment"> * intended to be called only by the JVM.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">dispatchUncaughtException</span><span class="params">(Throwable e)</span> </span>&#123;</span><br><span class="line">    getUncaughtExceptionHandler().uncaughtException(<span class="keyword">this</span>, e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li> 当线程在运行过程中出现异常时，JVM会调用dispatchUncaughtException方法，该方法会将对应的线程实例以及异常信息传递给回调接口</li>
+</ul>
+<h2 id="UncaughtExceptionHandler-实例"><a href="#UncaughtExceptionHandler-实例" class="headerlink" title="UncaughtExceptionHandler 实例"></a>UncaughtExceptionHandler 实例</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CaptureThreadException</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        Thread.setDefaultUncaughtExceptionHandler((t, e) -&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(t.getName() + <span class="string">&quot; occur exception&quot;</span>);</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">final</span> Thread thread = <span class="keyword">new</span> Thread(() -&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                TimeUnit.SECONDS.sleep(<span class="number">2</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//here will throw unchecked exception.</span></span><br><span class="line">            System.out.println(<span class="number">1</span> / <span class="number">0</span>);</span><br><span class="line">        &#125;, <span class="string">&quot;Test-Thread&quot;</span>);</span><br><span class="line"></span><br><span class="line">        thread.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">    Test-Thread occur exception</span><br><span class="line">java.lang.ArithmeticException: / by zero</span><br><span class="line">	at com.wangwenjun.concurrent.chapter07.CaptureThreadException.lambda$main$<span class="number">1</span>(CaptureThreadException.java:<span class="number">22</span>)</span><br><span class="line">	at com.wangwenjun.concurrent.chapter07.CaptureThreadException$$Lambda$<span class="number">2</span>/<span class="number">1078694789.</span>run(Unknown Source)</span><br><span class="line">	at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>这种设计方式是比较常见的，（在后面的设计模式也会讲到），尤其是那种异步执行方法，</li>
+<li>比如Google 的guava toolkit就提供了 EventBus ，在EventBus 中事件源和实践的subscriber两者 借助EventBus 实现了完全的解耦合，但是在subscriber执行任务时有可能会出现异常i情况，EventBus也是借助于一个ExceptionHandler进行回调处理的 </li>
+</ul>
+<h2 id="UncaughtExceptionHandler-源码分析"><a href="#UncaughtExceptionHandler-源码分析" class="headerlink" title="UncaughtExceptionHandler 源码分析"></a>UncaughtExceptionHandler 源码分析</h2><p>当 没有主动的 向线程 注入UncaughtExceptionHandler 回调接口的情况下，线程加入出现了异常 又将如何处理呢</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Returns the handler invoked when this thread abruptly terminates</span></span><br><span class="line"><span class="comment">  * due to an uncaught exception. If this thread has not had an</span></span><br><span class="line"><span class="comment">  * uncaught exception handler explicitly set then this thread&#x27;s</span></span><br><span class="line"><span class="comment">  * &lt;tt&gt;ThreadGroup&lt;/tt&gt; object is returned, unless this thread</span></span><br><span class="line"><span class="comment">  * has terminated, in which case &lt;tt&gt;null&lt;/tt&gt; is returned.</span></span><br><span class="line"><span class="comment">  * <span class="doctag">@since</span> 1.5</span></span><br><span class="line"><span class="comment">  * <span class="doctag">@return</span> the uncaught exception handler for this thread</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> UncaughtExceptionHandler <span class="title">getUncaughtExceptionHandler</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     <span class="keyword">return</span> uncaughtExceptionHandler != <span class="keyword">null</span> ?</span><br><span class="line">         uncaughtExceptionHandler : group;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>getUncaughtExceptionHandler 方法首先会判断当前线程是否设置了handler，</p>
+<ul>
+<li>如果有则执行线程自己的uncaughtException方法 ，</li>
+<li>否则就到所在的ThreadGroup中获取</li>
+</ul>
+</li>
+<li><p>ThreadGroup同样也实现了UncaughtExceptionHandler接口</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadGroup</span> <span class="keyword">implements</span> <span class="title">Thread</span>.<span class="title">UncaughtExceptionHandler</span> </span>&#123;</span><br><span class="line">    ......</span><br><span class="line">       <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">uncaughtException</span><span class="params">(Thread t, Throwable e)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (parent != <span class="keyword">null</span>) &#123;</span><br><span class="line">            parent.uncaughtException(t, e);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            Thread.UncaughtExceptionHandler ueh =</span><br><span class="line">                Thread.getDefaultUncaughtExceptionHandler();</span><br><span class="line">            <span class="keyword">if</span> (ueh != <span class="keyword">null</span>) &#123;</span><br><span class="line">                ueh.uncaughtException(t, e);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!(e <span class="keyword">instanceof</span> ThreadDeath)) &#123;</span><br><span class="line">                System.err.print(<span class="string">&quot;Exception in thread \&quot;&quot;</span></span><br><span class="line">                                 + t.getName() + <span class="string">&quot;\&quot; &quot;</span>);</span><br><span class="line">                e.printStackTrace(System.err);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;    </span><br><span class="line">        </span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先 ThreadGroup实现了  Thread.UncaughtExceptionHandler  接口</p>
+<ol>
+<li>该 ThreadGroup如果有父 ThreadGroup，则直接调用 父group的 uncaughtException方法</li>
+<li>如果 设置了全局默认的 UncaughtExceptionHandler  ，则调用全局的 uncaughtException方法</li>
+<li>如果既没有父 ThreadGroup，也没有全局默认的 UncaughtExceptionHandler  ， 则直接 将异常的堆栈信息定向到 System.err中</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EmptyExceptionHandler</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// get current thread&#x27;s thread group</span></span><br><span class="line">        ThreadGroup mainGroup = Thread.currentThread().getThreadGroup();</span><br><span class="line">        System.out.println(mainGroup.getName());</span><br><span class="line">        System.out.println(mainGroup.getParent());</span><br><span class="line">        System.out.println(mainGroup.getParent().getParent());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> Thread thread = <span class="keyword">new</span> Thread(() -&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                TimeUnit.SECONDS.sleep(<span class="number">2</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//here will throw unchecked exception.</span></span><br><span class="line">            System.out.println(<span class="number">1</span> / <span class="number">0</span>);</span><br><span class="line">        &#125;, <span class="string">&quot;Test-Thread&quot;</span>);</span><br><span class="line"></span><br><span class="line">        thread.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果： </span><br><span class="line">    main</span><br><span class="line">java.lang.ThreadGroup[name=system,maxpri=<span class="number">10</span>]</span><br><span class="line"><span class="keyword">null</span></span><br><span class="line">Exception in thread <span class="string">&quot;Test-Thread&quot;</span> java.lang.ArithmeticException: / by zero</span><br><span class="line">	at com.wangwenjun.concurrent.chapter07.EmptyExceptionHandler.lambda$main$<span class="number">0</span>(EmptyExceptionHandler.java:<span class="number">21</span>)</span><br><span class="line">	at com.wangwenjun.concurrent.chapter07.EmptyExceptionHandler$$Lambda$<span class="number">1</span>/<span class="number">295530567.</span>run(Unknown Source)</span><br><span class="line">	at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</span><br><span class="line"></span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>上面的代码 既没有设置默认的Handler ,也没有对thread指定Handler，因此当thread出现异常时，会向上寻找 Group的 uncaughtException方法</li>
+</ul>
+<pre class="mermaid">graph LR
+线程出现异常 -->MainGroup -->SystemGroup -->System.err</pre>
+
+<pre class="mermaid">graph TD
+线程出现异常 -->getUncaughtExceptionHandler{当前线程是否设置了异常处理器}
+getUncaughtExceptionHandler -->|uncaughtExceptionHandler不为空| CurrThread[当前线程异常处理器处理]
+getUncaughtExceptionHandler -->|uncaughtExceptionHandler为空| group[找所在 group]
+
+group --> 父group{是否存在父group}
+父group -->|父group存在| parent.uncaughtException[父group去处理]
+父group -->|父group不存在| getDefaultUncaughtExceptionHandler[找全局默认的UncaughtExceptionHandler]
+
+getDefaultUncaughtExceptionHandler -->DefaultUncaughtExceptionHandler{是否设置全局DefaultUncaughtExceptionHandler}
+DefaultUncaughtExceptionHandler -->|DefaultUncaughtExceptionHandler不为空|Defaultueh.uncaughtException[DefaultUncaughtExceptionHandler处理]
+DefaultUncaughtExceptionHandler -->|DefaultUncaughtExceptionHandler为空|System.err.print[输出异常堆栈]</pre>
+
+<h1 id="注入钩子函数"><a href="#注入钩子函数" class="headerlink" title="注入钩子函数"></a>注入钩子函数</h1><h2 id="Hook线程介绍"><a href="#Hook线程介绍" class="headerlink" title="Hook线程介绍"></a>Hook线程介绍</h2><p>JVM进程的退出是由于： <strong>JVM进程中没有活跃的非守护线程，或者收到了系统中断信号</strong>，向JVM程序注入一个 Hook线程，在JVM进程退出的时候，Hook 线程会启动执行，<strong>通过Runtime可以为JVM注入多个Hook线程</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadHook</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// Hook线程1</span></span><br><span class="line">        Runtime.getRuntime().addShutdownHook(<span class="keyword">new</span> Thread() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    System.out.println(<span class="string">&quot;The hook thread 2 is running.&quot;</span>);</span><br><span class="line">                    TimeUnit.SECONDS.sleep(<span class="number">1</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">                System.out.println(<span class="string">&quot;The program will exit.&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">		<span class="comment">// Hook线程2 </span></span><br><span class="line">        Runtime.getRuntime().addShutdownHook(<span class="keyword">new</span> Thread() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    System.out.println(<span class="string">&quot;The hook thread 2 is running.&quot;</span>);</span><br><span class="line">                    TimeUnit.SECONDS.sleep(<span class="number">1</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">                System.out.println(<span class="string">&quot;The hook thread 2 will exit.&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="comment">// JVM 退出信号</span></span><br><span class="line">        System.out.println(<span class="string">&quot;The program will is stopping.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">    The program will is stopping.</span><br><span class="line">The hook thread <span class="number">2</span> is running.</span><br><span class="line">The hook thread <span class="number">2</span> is running.</span><br><span class="line">The program will exit.</span><br><span class="line">The hook thread <span class="number">2</span> will exit.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>给Java程序注入了两个Hook线程，在main线程中结束，也就是JVM中没有了活动的非守护线程</li>
+<li>jvm进程即将退出时，两个Hook线程会被启动并且运行 </li>
+</ul>
+<h2 id="Hook线程实战"><a href="#Hook线程实战" class="headerlink" title="Hook线程实战"></a>Hook线程实战</h2><p>我们在开发中经常会遇到Hook线程，比如：</p>
+<ul>
+<li>为了防止某个程序被重复启动，在启动时会创建一个lock文件，进程收到中断信号时候会删除lock文件，我们在mysql 服务器、zookeeper、kafka等系统都能看到lock文件的存在</li>
+</ul>
+<p>本代码利用hook线程的特点，模拟一个防止重复启动的程序</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PreventDuplicated</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> String LOCK_PATH = <span class="string">&quot;/home/yinshi/locks/&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> String LOCK_FILE = <span class="string">&quot;.lock&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> String PERMISSIONS = <span class="string">&quot;rw-------&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="comment">// 1.注入hook线程，在程序退出时删除lock文件</span></span><br><span class="line">        Runtime.getRuntime().addShutdownHook(<span class="keyword">new</span> Thread(() -&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;The program received kill SIGNAL.&quot;</span>);</span><br><span class="line">            getLockFile().toFile().delete();</span><br><span class="line">        &#125;));</span><br><span class="line">        <span class="comment">// 2.检查是否存在 .lock文件</span></span><br><span class="line">        checkRunning();</span><br><span class="line">		<span class="comment">//3.简单模拟程序running</span></span><br><span class="line">        <span class="comment">//simulate the program is running.</span></span><br><span class="line">        <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                TimeUnit.MILLISECONDS.sleep(<span class="number">1</span>);</span><br><span class="line">                System.out.println(<span class="string">&quot;program is running.&quot;</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">checkRunning</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        Path path = getLockFile();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (path.toFile().exists())</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;The program already running.&quot;</span>);</span><br><span class="line"></span><br><span class="line">        Set&lt;PosixFilePermission&gt; perms = PosixFilePermissions.fromString(PERMISSIONS);</span><br><span class="line">        Files.createFile(path, PosixFilePermissions.asFileAttribute(perms));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Path <span class="title">getLockFile</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Paths.get(LOCK_PATH, LOCK_FILE);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>执行kill pid 或者 kill -1 pid 命令后，JVM进程会收到中断信号，并且启动hook线程 删除.lock文件</li>
+</ul>
+<h2 id="Hook线程应用场景以及注意事项"><a href="#Hook线程应用场景以及注意事项" class="headerlink" title="Hook线程应用场景以及注意事项"></a>Hook线程应用场景以及注意事项</h2><ul>
+<li>hook线程只有在收到退出信号的时候会被执行，如果 是 kill -9 ，那么Hook线程不会得到执行，进程将会退出，因此 .lock文件将得不到清理</li>
+<li>hook线程中也可以执行 一些资源释放的工作，比如 关闭文件句柄、socket链接、数据库connection等</li>
+<li>尽量不要在 Hook线程中执行一些耗时非常长的操作，因为其会导致程序迟迟不能退出</li>
+</ul>
+<h1 id="本章总结"><a href="#本章总结" class="headerlink" title="本章总结"></a>本章总结</h1><ul>
+<li>知道了如何通过Handler回调的方式获取线程运行期间的异常信息， </li>
+<li>分析了Thread的源码 和 ThreadGroup的源码，追踪uncaughtException的执行顺序</li>
+<li>了解了Hook的执行时机，帮助程序获得进程中断的信号，有机会在进程退出之前做一些资源释放或者告警通知</li>
+<li>如果强制杀死进程，（比如kill -9） 那么进程将不会收到任何中断信号</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>Yinshi
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://limingzhang666.github.io/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/" title="java高并发详解-07-Hook线程以及捕获线程执行异常">https://limingzhang666.github.io/2021/02/23/java高并发详解-07-Hook线程以及捕获线程执行异常/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Hook%E7%BA%BF%E7%A8%8B/" rel="tag"># Hook线程</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-06-ThreadGroup%E8%AF%A6%E8%A7%A3/" rel="prev" title="java高并发详解-06-ThreadGroup详解">
+                  <i class="fa fa-chevron-left"></i> java高并发详解-06-ThreadGroup详解
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/24/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-08-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8E%9F%E7%90%86%E4%BB%A5%E5%8F%8A%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BA%BF%E7%A8%8B%E6%B1%A0/" rel="next" title="java高并发详解-08-线程池原理以及自定义线程池">
+                  java高并发详解-08-线程池原理以及自定义线程池 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yinshi</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8.8.2/dist/mermaid.min.js', () => {
+    mermaid.init({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    }, '.mermaid');
+  }, window.mermaid);
+}
+</script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments('#valine-comments', () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    new Valine(Object.assign({"enable":true,"appId":"4oBiQGiWDHdACABLWjT7ouaV-gzGzoHsz","appKey":"fr4vMSPUjcHLtIrF2hmRF6UE","serverURLs":"https://4obiqgiw.lc-cn-n1-shared.com","placeholder":"国王不动，手下怎么跟随? --反叛的鲁鲁修","avatar":"","meta":["nick","mail","link"],"pageSize":10,"lang":null,"visitor":false,"comment_count":true,"recordIP":true,"enableQQ":true,"requiredFields":[],"cdh":"https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"}, {
+      el: '#valine-comments',
+      path: "/2021/02/23/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-07-Hook%E7%BA%BF%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%8D%95%E8%8E%B7%E7%BA%BF%E7%A8%8B%E6%89%A7%E8%A1%8C%E5%BC%82%E5%B8%B8/",
+      serverURLs: "https://4obiqgiw.lc-cn-n1-shared.com"
+    }));
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>
