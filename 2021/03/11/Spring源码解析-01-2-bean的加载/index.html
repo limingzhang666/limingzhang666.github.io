@@ -28,19 +28,19 @@
 
   <meta name="description" content="其实这一章，描述了很多次关于循环依赖的问题，后面需要专门去看看 。  Bean的加载对于加载Bean的功能，在Spring中的调用方式为： 123ApplicationContext applicationContext1 &#x3D; new ClassPathXmlApplicationContext(&quot;spring-config.xml&quot;);&#x2F;&#x2F; MyTestBean bean">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Sprig源码解析-002-bean的加载">
-<meta property="og:url" content="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/index.html">
+<meta property="og:title" content="Spring源码解析-01-02-bean的加载">
+<meta property="og:url" content="https://limingzhang666.github.io/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/index.html">
 <meta property="og:site_name" content="Yinshi&#39;s Blog">
 <meta property="og:description" content="其实这一章，描述了很多次关于循环依赖的问题，后面需要专门去看看 。  Bean的加载对于加载Bean的功能，在Spring中的调用方式为： 123ApplicationContext applicationContext1 &#x3D; new ClassPathXmlApplicationContext(&quot;spring-config.xml&quot;);&#x2F;&#x2F; MyTestBean bean">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-03-11T15:21:48.000Z">
-<meta property="article:modified_time" content="2021-03-12T09:07:21.670Z">
+<meta property="article:modified_time" content="2021-03-12T09:11:39.649Z">
 <meta property="article:author" content="Yinshi">
 <meta property="article:tag" content="bean的加载">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/">
+<link rel="canonical" href="https://limingzhang666.github.io/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/">
 
 
 <script class="page-configurations">
@@ -53,7 +53,7 @@
   };
 </script>
 
-  <title>Sprig源码解析-002-bean的加载 | Yinshi's Blog</title>
+  <title>Spring源码解析-01-02-bean的加载 | Yinshi's Blog</title>
   
 
 
@@ -303,7 +303,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
@@ -316,7 +316,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Sprig源码解析-002-bean的加载
+          Spring源码解析-01-02-bean的加载
         </h1>
 
         <div class="post-meta-container">
@@ -355,8 +355,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/" itemprop="commentCount"></span>
+    <a title="valine" href="/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -624,7 +624,7 @@
   </li>
   <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="https://limingzhang666.github.io/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/" title="Sprig源码解析-002-bean的加载">https://limingzhang666.github.io/2021/03/11/Sprig源码解析-001-bean的加载/</a>
+      <a href="https://limingzhang666.github.io/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/" title="Spring源码解析-01-02-bean的加载">https://limingzhang666.github.io/2021/03/11/Spring源码解析-01-2-bean的加载/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -645,8 +645,8 @@
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/" rel="next" title="Sprig源码解析-001-容器的基础">
-                  Sprig源码解析-001-容器的基础 <i class="fa fa-chevron-right"></i>
+                <a href="/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-02-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/" rel="next" title="Spring源码解析-01-02-容器的基础">
+                  Spring源码解析-01-02-容器的基础 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -792,7 +792,7 @@ NexT.utils.loadComments('#valine-comments', () => {
   NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
     new Valine(Object.assign({"enable":true,"appId":"4oBiQGiWDHdACABLWjT7ouaV-gzGzoHsz","appKey":"fr4vMSPUjcHLtIrF2hmRF6UE","serverURLs":"https://4obiqgiw.lc-cn-n1-shared.com","placeholder":"国王不动，手下怎么跟随? --反叛的鲁鲁修","avatar":"","meta":["nick","mail","link"],"pageSize":10,"lang":null,"visitor":false,"comment_count":true,"recordIP":true,"enableQQ":true,"requiredFields":[],"cdh":"https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"}, {
       el: '#valine-comments',
-      path: "/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/",
+      path: "/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/",
       serverURLs: "https://4obiqgiw.lc-cn-n1-shared.com"
     }));
   }, window.Valine);

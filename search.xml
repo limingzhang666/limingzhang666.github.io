@@ -24,8 +24,8 @@
       </tags>
   </entry>
   <entry>
-    <title>Sprig源码解析-001-容器的基础</title>
-    <url>/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-002-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/</url>
+    <title>Spring源码解析-01-02-容器的基础</title>
+    <url>/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-02-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/</url>
     <content><![CDATA[<h1 id="容器的基础（Bean的解析）"><a href="#容器的基础（Bean的解析）" class="headerlink" title="容器的基础（Bean的解析）"></a>容器的基础（Bean的解析）</h1><p>XmlBeanFactory： </p>
 <h2 id="配置文件的封装："><a href="#配置文件的封装：" class="headerlink" title="配置文件的封装："></a>配置文件的封装：</h2><ul>
 <li><p>文件资源统一抽象为： InputStreamSource 资源, Resource 继承 InputStreamSource，</p>
@@ -107,45 +107,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Spring源码解析-02-注册组件</title>
-    <url>/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-02-%E6%B3%A8%E5%86%8C%E7%BB%84%E4%BB%B6/</url>
-    <content><![CDATA[<h2 id="注册组件"><a href="#注册组件" class="headerlink" title="注册组件"></a>注册组件</h2><ul>
-<li>包扫描+组件标注注解（@Controller/@Service/@Repository/@Component）[自己写的类]</li>
-<li>@Bean[导入的第三方包里面的组件]</li>
-<li>@Import[快速给容器中导入一个组件]<ul>
-<li>@Import(要导入到容器中的组件)；容器中就会自动注册这个组件，id默认是全类名</li>
-<li>ImportSelector:返回需要导入的组件的全类名数组；</li>
-<li>ImportBeanDefinitionRegistrar:手动注册bean到容器中</li>
-</ul>
-</li>
-<li>使用Spring提供的 FactoryBean（工厂Bean）;<ul>
-<li>默认获取到的是工厂bean调用getObject创建的对象</li>
-<li>要获取工厂Bean本身，我们需要给id前面加一个&amp;， 即<pre><code>    “&amp;colorFactoryBean&quot;</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="Import"><a href="#Import" class="headerlink" title="@Import"></a>@Import</h3><p>使用@Import 注解，内容包含 MyImportSelector</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="comment">// 导入组件，id默认是组件的全类名（com.liming.bean.Color）</span></span><br><span class="line"><span class="meta">@Import(&#123;Color.class, Red.class, MyImportSelector.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfig2</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="ImportSelector"><a href="#ImportSelector" class="headerlink" title="ImportSelector"></a>ImportSelector</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//自定义逻辑返回需要导入的组件</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportSelector</span> <span class="keyword">implements</span> <span class="title">ImportSelector</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//返回值，就是到导入到容器中的组件全类名</span></span><br><span class="line">	<span class="comment">//AnnotationMetadata:当前标注@Import注解的类的所有注解信息</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> String[] selectImports(AnnotationMetadata importingClassMetadata) &#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="comment">//importingClassMetadata</span></span><br><span class="line">		<span class="comment">//方法不要返回null值</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> String[]&#123;<span class="string">&quot;com.bean.Blue&quot;</span>,<span class="string">&quot;com.bean.Yellow&quot;</span>&#125;;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="ImportBeanDefinitionRegistrar"><a href="#ImportBeanDefinitionRegistrar" class="headerlink" title="ImportBeanDefinitionRegistrar"></a>ImportBeanDefinitionRegistrar</h4><p>使用 ImportBeanDefinitionRegistrar:手动注册bean到容器中</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportBeanDefinitionRegistrar</span> <span class="keyword">implements</span> <span class="title">ImportBeanDefinitionRegistrar</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * AnnotationMetadata：当前类的注解信息</span></span><br><span class="line"><span class="comment">	 * BeanDefinitionRegistry:BeanDefinition注册类；</span></span><br><span class="line"><span class="comment">	 * 		把所有需要添加到容器中的bean；调用</span></span><br><span class="line"><span class="comment">	 * 		BeanDefinitionRegistry.registerBeanDefinition手工注册进来</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">boolean</span> definition = registry.containsBeanDefinition(<span class="string">&quot;com.atguigu.bean.Red&quot;</span>);</span><br><span class="line">		<span class="keyword">boolean</span> definition2 = registry.containsBeanDefinition(<span class="string">&quot;com.atguigu.bean.Blue&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(definition &amp;&amp; definition2)&#123;</span><br><span class="line">			<span class="comment">//指定Bean定义信息；（Bean的类型，Bean。。。）</span></span><br><span class="line">			RootBeanDefinition beanDefinition = <span class="keyword">new</span> RootBeanDefinition(RainBow.class);</span><br><span class="line">			<span class="comment">//注册一个Bean，指定bean名</span></span><br><span class="line">			registry.registerBeanDefinition(<span class="string">&quot;rainBow&quot;</span>, beanDefinition);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="FactoryBean"><a href="#FactoryBean" class="headerlink" title="FactoryBean"></a>FactoryBean</h4><p>实现FactoryBean接口, 然后加上@Bean</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//创建一个Spring定义的FactoryBean</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ColorFactoryBean</span> <span class="keyword">implements</span> <span class="title">FactoryBean</span>&lt;<span class="title">Color</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//返回一个Color对象，这个对象会添加到容器中</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;ColorFactoryBean...getObject...&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Color();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> Class&lt;?&gt; getObjectType() &#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> Color.class;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//是单例？</span></span><br><span class="line">	<span class="comment">//true：这个bean是单实例，在容器中保存一份</span></span><br><span class="line">	<span class="comment">//false：多实例，每次获取都会创建一个新的bean；</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> ColorFactoryBean <span class="title">colorFactoryBean</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> ColorFactoryBean();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testImport</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        printBeans(applicationContext);</span><br><span class="line">		<span class="comment">// ==》》》》》 这个实际 获取的是color对象，虽然id是 colorFactoryBean</span></span><br><span class="line">        Object colorFactoryBean2 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        Object colorFactoryBean3 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;colorFactoryBean==&gt;&quot;</span>+colorFactoryBean2);</span><br><span class="line">        System.out.println(colorFactoryBean2==colorFactoryBean3);</span><br><span class="line">		<span class="comment">// ======》 如果想要获取factoryBean本身，需要在id前面加上  &amp; 符号</span></span><br><span class="line">        Object colorFactoryBean4 = applicationContext.getBean(<span class="string">&quot;&amp;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(colorFactoryBean4);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">result：</span><br><span class="line">colorFactoryBean</span><br><span class="line">===》colorFactoryBean==&gt;com.liming.bean.Color@<span class="number">159f</span>197</span><br><span class="line"><span class="keyword">true</span></span><br><span class="line">====》com.liming.condition.ColorFactoryBean@<span class="number">78</span>aab498</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>Spring源码</category>
-      </categories>
-      <tags>
-        <tag>Spring</tag>
-        <tag>注册组件</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Spring源码解析-01-注解开发</title>
     <url>/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/</url>
     <content><![CDATA[<h2 id="Spring注解解析"><a href="#Spring注解解析" class="headerlink" title="Spring注解解析"></a>Spring注解解析</h2><p>最近在准备面试，翻出之前记录的笔记，再次回顾温习一下，快忘得差不多了。额</p>
@@ -189,6 +150,45 @@
       <tags>
         <tag>Spring</tag>
         <tag>注解</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring源码解析-02-注册组件</title>
+    <url>/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-02-%E6%B3%A8%E5%86%8C%E7%BB%84%E4%BB%B6/</url>
+    <content><![CDATA[<h2 id="注册组件"><a href="#注册组件" class="headerlink" title="注册组件"></a>注册组件</h2><ul>
+<li>包扫描+组件标注注解（@Controller/@Service/@Repository/@Component）[自己写的类]</li>
+<li>@Bean[导入的第三方包里面的组件]</li>
+<li>@Import[快速给容器中导入一个组件]<ul>
+<li>@Import(要导入到容器中的组件)；容器中就会自动注册这个组件，id默认是全类名</li>
+<li>ImportSelector:返回需要导入的组件的全类名数组；</li>
+<li>ImportBeanDefinitionRegistrar:手动注册bean到容器中</li>
+</ul>
+</li>
+<li>使用Spring提供的 FactoryBean（工厂Bean）;<ul>
+<li>默认获取到的是工厂bean调用getObject创建的对象</li>
+<li>要获取工厂Bean本身，我们需要给id前面加一个&amp;， 即<pre><code>    “&amp;colorFactoryBean&quot;</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Import"><a href="#Import" class="headerlink" title="@Import"></a>@Import</h3><p>使用@Import 注解，内容包含 MyImportSelector</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="comment">// 导入组件，id默认是组件的全类名（com.liming.bean.Color）</span></span><br><span class="line"><span class="meta">@Import(&#123;Color.class, Red.class, MyImportSelector.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfig2</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ImportSelector"><a href="#ImportSelector" class="headerlink" title="ImportSelector"></a>ImportSelector</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//自定义逻辑返回需要导入的组件</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportSelector</span> <span class="keyword">implements</span> <span class="title">ImportSelector</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//返回值，就是到导入到容器中的组件全类名</span></span><br><span class="line">	<span class="comment">//AnnotationMetadata:当前标注@Import注解的类的所有注解信息</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> String[] selectImports(AnnotationMetadata importingClassMetadata) &#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="comment">//importingClassMetadata</span></span><br><span class="line">		<span class="comment">//方法不要返回null值</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> String[]&#123;<span class="string">&quot;com.bean.Blue&quot;</span>,<span class="string">&quot;com.bean.Yellow&quot;</span>&#125;;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ImportBeanDefinitionRegistrar"><a href="#ImportBeanDefinitionRegistrar" class="headerlink" title="ImportBeanDefinitionRegistrar"></a>ImportBeanDefinitionRegistrar</h4><p>使用 ImportBeanDefinitionRegistrar:手动注册bean到容器中</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportBeanDefinitionRegistrar</span> <span class="keyword">implements</span> <span class="title">ImportBeanDefinitionRegistrar</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * AnnotationMetadata：当前类的注解信息</span></span><br><span class="line"><span class="comment">	 * BeanDefinitionRegistry:BeanDefinition注册类；</span></span><br><span class="line"><span class="comment">	 * 		把所有需要添加到容器中的bean；调用</span></span><br><span class="line"><span class="comment">	 * 		BeanDefinitionRegistry.registerBeanDefinition手工注册进来</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">boolean</span> definition = registry.containsBeanDefinition(<span class="string">&quot;com.atguigu.bean.Red&quot;</span>);</span><br><span class="line">		<span class="keyword">boolean</span> definition2 = registry.containsBeanDefinition(<span class="string">&quot;com.atguigu.bean.Blue&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(definition &amp;&amp; definition2)&#123;</span><br><span class="line">			<span class="comment">//指定Bean定义信息；（Bean的类型，Bean。。。）</span></span><br><span class="line">			RootBeanDefinition beanDefinition = <span class="keyword">new</span> RootBeanDefinition(RainBow.class);</span><br><span class="line">			<span class="comment">//注册一个Bean，指定bean名</span></span><br><span class="line">			registry.registerBeanDefinition(<span class="string">&quot;rainBow&quot;</span>, beanDefinition);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="FactoryBean"><a href="#FactoryBean" class="headerlink" title="FactoryBean"></a>FactoryBean</h4><p>实现FactoryBean接口, 然后加上@Bean</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//创建一个Spring定义的FactoryBean</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ColorFactoryBean</span> <span class="keyword">implements</span> <span class="title">FactoryBean</span>&lt;<span class="title">Color</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//返回一个Color对象，这个对象会添加到容器中</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;ColorFactoryBean...getObject...&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Color();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> Class&lt;?&gt; getObjectType() &#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> Color.class;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//是单例？</span></span><br><span class="line">	<span class="comment">//true：这个bean是单实例，在容器中保存一份</span></span><br><span class="line">	<span class="comment">//false：多实例，每次获取都会创建一个新的bean；</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> ColorFactoryBean <span class="title">colorFactoryBean</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> ColorFactoryBean();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testImport</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        printBeans(applicationContext);</span><br><span class="line">		<span class="comment">// ==》》》》》 这个实际 获取的是color对象，虽然id是 colorFactoryBean</span></span><br><span class="line">        Object colorFactoryBean2 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        Object colorFactoryBean3 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;colorFactoryBean==&gt;&quot;</span>+colorFactoryBean2);</span><br><span class="line">        System.out.println(colorFactoryBean2==colorFactoryBean3);</span><br><span class="line">		<span class="comment">// ======》 如果想要获取factoryBean本身，需要在id前面加上  &amp; 符号</span></span><br><span class="line">        Object colorFactoryBean4 = applicationContext.getBean(<span class="string">&quot;&amp;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(colorFactoryBean4);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">result：</span><br><span class="line">colorFactoryBean</span><br><span class="line">===》colorFactoryBean==&gt;com.liming.bean.Color@<span class="number">159f</span>197</span><br><span class="line"><span class="keyword">true</span></span><br><span class="line">====》com.liming.condition.ColorFactoryBean@<span class="number">78</span>aab498</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>Spring源码</category>
+      </categories>
+      <tags>
+        <tag>Spring</tag>
+        <tag>注册组件</tag>
       </tags>
   </entry>
   <entry>
@@ -380,6 +380,42 @@
       </tags>
   </entry>
   <entry>
+    <title>git提交统计-gitstats-java</title>
+    <url>/2020/11/24/git%E6%8F%90%E4%BA%A4%E7%BB%9F%E8%AE%A1-gitstats-java/</url>
+    <content><![CDATA[<h2 id="gitstats-java版"><a href="#gitstats-java版" class="headerlink" title="gitstats java版"></a>gitstats java版</h2><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>年终总结总是要统计项目组 一年的代码提交情况，最早是使用gitstats -python版，github地址是：<br>[gitstats]: <a href="https://github.com/hoxu/gitstats">https://github.com/hoxu/gitstats</a></p>
+<p>这个使用了python2.6 ，需要手动download项目下来，然后在本地配置执行，然后会生成一系列可视化的静态页面。这个过程是漫长的，并且页面展示的数据也有可能不是我们想要的。但是给我们提供了一个思路，我们只需要搞清楚 里面的py脚本的原理，便可用java实现 ，定制自己想要的效果 。</p>
+<p>本文参考 ：文章[使用Git工具统计代码]: <a href="https://blog.cyeam.com/kaleidoscope/2015/01/17/gitstats#1-git-shortlog--s-since2013-12-01-before2015-12-10-head-no-merges">https://blog.cyeam.com/kaleidoscope/2015/01/17/gitstats#1-git-shortlog--s-since2013-12-01-before2015-12-10-head-no-merges</a>    “ “</p>
+<p>原始脚本主要用到了8个 git 命令：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git shortlog -s --since=2013-12-01 --before=2015-12-10 HEAD --no-merges</span><br><span class="line"></span><br><span class="line">git show-ref --tags</span><br><span class="line"></span><br><span class="line">git rev-list --pretty=format:<span class="string">&quot;%at %ai %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD | grep -v ^commit</span><br><span class="line"></span><br><span class="line">git rev-list --pretty=format:<span class="string">&quot;%at %T&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD | grep -v ^commit</span><br><span class="line"></span><br><span class="line">git ls-tree -r -l -z HEAD</span><br><span class="line"></span><br><span class="line">git <span class="built_in">log</span> --shortstat --first-parent -m --pretty=format:<span class="string">&quot;%at %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD</span><br><span class="line"></span><br><span class="line">git <span class="built_in">log</span> --shortstat --date-order --pretty=format:<span class="string">&quot;%at %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD</span><br><span class="line"></span><br><span class="line">git --git-dir=.git --work-tree=./ rev-parse --short HEAD</span><br></pre></td></tr></table></figure>
+
+<p>具体的命令含义，可以参考原文，</p>
+<p>我这边的思路，就是把所有的提交历史，影响行数，全部保存到数据库里，</p>
+<p>使用 </p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"> git <span class="built_in">log</span> --shortstat --date-order  --no-merges --pretty=format:<span class="string">&quot;%H %at %an %s &quot;</span>   HEAD</span><br><span class="line"> （ --no-merges 代表： 只输出修改代码的 commit 的数据，开发分支merge到主分支的请求的commit 是不会被统计的）</span><br><span class="line"> 输出示例： </span><br><span class="line">7847dd178ffe1c50f7ae2ecc8dce4f671b6b0df4 1571158821 jackfrued 更新了第91天的文档和资源</span><br><span class="line"> 2 files changed, 108 insertions(+), 28 deletions(-)</span><br><span class="line"></span><br><span class="line">662318eadb8efaf86f0bc9ac4623d8c5b45c1657 1571146991 jackfrued 更新了第91天的内容</span><br><span class="line"> 7 files changed, 148 insertions(+), 42 deletions(-)</span><br><span class="line"></span><br><span class="line">24048b2e1be968750e18d8c2cc5031d6d0ad265e 1570969223 jackfrued 更新了README.md文件</span><br><span class="line"> 1 file changed, 1 insertion(+), 2 deletions(-)</span><br><span class="line"></span><br><span class="line">cef5d95041b1c1a6e03466325258d627386afbd2 1570969065 jackfrued 更新了最后10天的文档</span><br><span class="line"> 17 files changed, 1045 insertions(+), 254 deletions(-)</span><br><span class="line"></span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+
+<p>将所有的提交记录输出到txt文件上，再去读txt文件，写入数据库，后续展示 只需要看如何写sql就行，可以实现定制化</p>
+<h3 id="后续思路（已实现）："><a href="#后续思路（已实现）：" class="headerlink" title="后续思路（已实现）："></a>后续思路（已实现）：</h3><ul>
+<li><p>将需要统计的项目信息配置在数据库中</p>
+</li>
+<li><p>使用egit 自动git clone代码或者 git checkout  and pull最新分支的代码</p>
+</li>
+<li><p>自动将git log 信息写入文件，再读取并解析文件信息写入数据库中 </p>
+<p><img src="/uploads/gitstats-vue/data-back.png"></p>
+<p><img src="/uploads/gitstats-vue/back-code.png"></p>
+<h3 id="todo-（前端echart-图标可视化展示-）"><a href="#todo-（前端echart-图标可视化展示-）" class="headerlink" title="todo （前端echart  图标可视化展示 ）"></a>todo （前端echart  图标可视化展示 ）</h3></li>
+</ul>
+<p><img src="/uploads/gitstats-vue/front-page.png"></p>
+<p><img src="/uploads/gitstats-vue/front-page02.png"></p>
+]]></content>
+      <categories>
+        <category>git</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
+        <tag>gitlog统计</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Spring源码解析-06-AOP动态代理源码解析</title>
     <url>/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-06-AOP%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/</url>
     <content><![CDATA[<h2 id="AOP动态代理"><a href="#AOP动态代理" class="headerlink" title="AOP动态代理"></a>AOP动态代理</h2><h3 id="定义："><a href="#定义：" class="headerlink" title="定义："></a>定义：</h3><p>指在程序运行期间动态的将某段代码切入到指定方法指定位置进行运行的编程方式；</p>
@@ -484,42 +520,6 @@
         <tag>Spring</tag>
         <tag>AOP</tag>
         <tag>动态代理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>git提交统计-gitstats-java</title>
-    <url>/2020/11/24/git%E6%8F%90%E4%BA%A4%E7%BB%9F%E8%AE%A1-gitstats-java/</url>
-    <content><![CDATA[<h2 id="gitstats-java版"><a href="#gitstats-java版" class="headerlink" title="gitstats java版"></a>gitstats java版</h2><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>年终总结总是要统计项目组 一年的代码提交情况，最早是使用gitstats -python版，github地址是：<br>[gitstats]: <a href="https://github.com/hoxu/gitstats">https://github.com/hoxu/gitstats</a></p>
-<p>这个使用了python2.6 ，需要手动download项目下来，然后在本地配置执行，然后会生成一系列可视化的静态页面。这个过程是漫长的，并且页面展示的数据也有可能不是我们想要的。但是给我们提供了一个思路，我们只需要搞清楚 里面的py脚本的原理，便可用java实现 ，定制自己想要的效果 。</p>
-<p>本文参考 ：文章[使用Git工具统计代码]: <a href="https://blog.cyeam.com/kaleidoscope/2015/01/17/gitstats#1-git-shortlog--s-since2013-12-01-before2015-12-10-head-no-merges">https://blog.cyeam.com/kaleidoscope/2015/01/17/gitstats#1-git-shortlog--s-since2013-12-01-before2015-12-10-head-no-merges</a>    “ “</p>
-<p>原始脚本主要用到了8个 git 命令：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git shortlog -s --since=2013-12-01 --before=2015-12-10 HEAD --no-merges</span><br><span class="line"></span><br><span class="line">git show-ref --tags</span><br><span class="line"></span><br><span class="line">git rev-list --pretty=format:<span class="string">&quot;%at %ai %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD | grep -v ^commit</span><br><span class="line"></span><br><span class="line">git rev-list --pretty=format:<span class="string">&quot;%at %T&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD | grep -v ^commit</span><br><span class="line"></span><br><span class="line">git ls-tree -r -l -z HEAD</span><br><span class="line"></span><br><span class="line">git <span class="built_in">log</span> --shortstat --first-parent -m --pretty=format:<span class="string">&quot;%at %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD</span><br><span class="line"></span><br><span class="line">git <span class="built_in">log</span> --shortstat --date-order --pretty=format:<span class="string">&quot;%at %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD</span><br><span class="line"></span><br><span class="line">git --git-dir=.git --work-tree=./ rev-parse --short HEAD</span><br></pre></td></tr></table></figure>
-
-<p>具体的命令含义，可以参考原文，</p>
-<p>我这边的思路，就是把所有的提交历史，影响行数，全部保存到数据库里，</p>
-<p>使用 </p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"> git <span class="built_in">log</span> --shortstat --date-order  --no-merges --pretty=format:<span class="string">&quot;%H %at %an %s &quot;</span>   HEAD</span><br><span class="line"> （ --no-merges 代表： 只输出修改代码的 commit 的数据，开发分支merge到主分支的请求的commit 是不会被统计的）</span><br><span class="line"> 输出示例： </span><br><span class="line">7847dd178ffe1c50f7ae2ecc8dce4f671b6b0df4 1571158821 jackfrued 更新了第91天的文档和资源</span><br><span class="line"> 2 files changed, 108 insertions(+), 28 deletions(-)</span><br><span class="line"></span><br><span class="line">662318eadb8efaf86f0bc9ac4623d8c5b45c1657 1571146991 jackfrued 更新了第91天的内容</span><br><span class="line"> 7 files changed, 148 insertions(+), 42 deletions(-)</span><br><span class="line"></span><br><span class="line">24048b2e1be968750e18d8c2cc5031d6d0ad265e 1570969223 jackfrued 更新了README.md文件</span><br><span class="line"> 1 file changed, 1 insertion(+), 2 deletions(-)</span><br><span class="line"></span><br><span class="line">cef5d95041b1c1a6e03466325258d627386afbd2 1570969065 jackfrued 更新了最后10天的文档</span><br><span class="line"> 17 files changed, 1045 insertions(+), 254 deletions(-)</span><br><span class="line"></span><br><span class="line"> </span><br></pre></td></tr></table></figure>
-
-<p>将所有的提交记录输出到txt文件上，再去读txt文件，写入数据库，后续展示 只需要看如何写sql就行，可以实现定制化</p>
-<h3 id="后续思路（已实现）："><a href="#后续思路（已实现）：" class="headerlink" title="后续思路（已实现）："></a>后续思路（已实现）：</h3><ul>
-<li><p>将需要统计的项目信息配置在数据库中</p>
-</li>
-<li><p>使用egit 自动git clone代码或者 git checkout  and pull最新分支的代码</p>
-</li>
-<li><p>自动将git log 信息写入文件，再读取并解析文件信息写入数据库中 </p>
-<p><img src="/uploads/gitstats-vue/data-back.png"></p>
-<p><img src="/uploads/gitstats-vue/back-code.png"></p>
-<h3 id="todo-（前端echart-图标可视化展示-）"><a href="#todo-（前端echart-图标可视化展示-）" class="headerlink" title="todo （前端echart  图标可视化展示 ）"></a>todo （前端echart  图标可视化展示 ）</h3></li>
-</ul>
-<p><img src="/uploads/gitstats-vue/front-page.png"></p>
-<p><img src="/uploads/gitstats-vue/front-page02.png"></p>
-]]></content>
-      <categories>
-        <category>git</category>
-      </categories>
-      <tags>
-        <tag>git</tag>
-        <tag>gitlog统计</tag>
       </tags>
   </entry>
   <entry>
@@ -643,61 +643,6 @@
       <tags>
         <tag>Hexo</tag>
         <tag>NexT</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hexo+NexT(v7.0+) 搭建博客：基础安装</title>
-    <url>/2019/04/29/hexo-satrted/</url>
-    <content><![CDATA[<p><img src="https://image.chingow.cn/background/006tNc79gy1g37jxk0kq5j327a0ki0th.jpg" alt="Hexo" title="Hexo"></p>
-<p>关于如何搭建Hexo博客的文章已经有很多人写过了，并且有很多人已经写的很深刻很到位了，为什么还要重复写一遍呢？直到我看到了这位同学的博客 <a href="yearito.cn">yearito</a> <strong>（ ps：本站的建站优化大都参考自这里）</strong> ，我有了说服自己的理由：</p>
-<ul>
-<li>你可以参考别人的技术方案，集众所长，亲自实践，然后融入自己的思考写出一篇新文章</li>
-<li>即使并没有做出创新性的贡献，自己重新归纳一遍也有助于梳理流程，深化理解</li>
-</ul>
-<a id="more"></a>
-<p id="div-border-left-red">现在百度 Google 很方便，动动手指就可以搜索到想要的答案，但是太多人都是**『顺手拈来、过目就忘』**，下次遇到同样的问题再搜索一遍。
-为什么会这样呢？不善于总结，不情愿动手思考，时而久之就会变成所谓的 “代码搬运工” ！<p>
-
-<p>闲话不多说了，我们开始吧！</p>
-<h2 id="安装node-js"><a href="#安装node-js" class="headerlink" title="安装node.js"></a>安装node.js</h2><p>在 <a href="https://nodejs.org/en/download/">官方下载网站</a> 下载源代码，选择最后一项 <code>Source Code</code><br>解压到某一目录, 然后进入此目录,依次执行以下 3 条命令</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ ./configure</span><br><span class="line">$ make</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
-
-<p>安装完后查看<code>node.js</code>版本，检验是否安装成功</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ node -v</span><br></pre></td></tr></table></figure>
-
-<h2 id="安装hexo"><a href="#安装hexo" class="headerlink" title="安装hexo"></a>安装hexo</h2><p>在命令行中通过 <strong>npm</strong> 来安装 hexo：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<h3 id="本地启动hexo"><a href="#本地启动hexo" class="headerlink" title="本地启动hexo"></a>本地启动hexo</h3><p>创建一个博客目录（例如 <code>/my-blog</code>），在此目录下，执行初始化命令</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ mkdir -p my-blog</span><br><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ hexo init</span><br></pre></td></tr></table></figure>
-
-<p>执行完毕后，将会生成以下文件结构：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">|-- node_modules       &#x2F;&#x2F;依赖安装目录</span><br><span class="line">|-- scaffolds          &#x2F;&#x2F;模板文件夹，新建的文章将会从此目录下的文件中继承格式</span><br><span class="line">|-- source             &#x2F;&#x2F;资源文件夹，用于放置图片、数据、文章等资源</span><br><span class="line">|   |-- _posts          &#x2F;&#x2F;文章目录</span><br><span class="line">|-- themes             &#x2F;&#x2F;主题文件夹</span><br><span class="line">|   |-- landscape      &#x2F;&#x2F;默认主题</span><br><span class="line">|-- .gitignore         &#x2F;&#x2F;指定不纳入git版本控制的文件</span><br><span class="line">|-- _config.yml        &#x2F;&#x2F;站点配置文件</span><br><span class="line">|-- db.json</span><br><span class="line">|-- package.json</span><br><span class="line">&#96;-- package-lock.json</span><br></pre></td></tr></table></figure>
-
-<p>在根目录下执行如下命令启动<strong>hexo</strong>内置的web容器</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate     <span class="comment"># 生成静态文件</span></span><br><span class="line">$ hexo server       <span class="comment"># 在本地服务器运行</span></span><br></pre></td></tr></table></figure>
-
-<p>在浏览器输入IP地址 <a href="http://localhost:4000/">http://localhost:4000</a>  就可以看到我们熟悉的** Hello Word **了。</p>
-<p><img src="https://image.chingow.cn/images/d7cced3b-950e-6d7b-6edc-dc3058646ddb.png" alt="Hello Word" title="Hello Word"></p>
-<h3 id="常用命令简化和组合"><a href="#常用命令简化和组合" class="headerlink" title="常用命令简化和组合"></a>常用命令简化和组合</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo g    <span class="comment"># 等同于hexo generate</span></span><br><span class="line">$ hexo s    <span class="comment"># 等同于hexo server</span></span><br><span class="line">$ hexo p    <span class="comment"># 等同于hexo port </span></span><br><span class="line">$ hexo d    <span class="comment"># 等同于hexo deploy </span></span><br></pre></td></tr></table></figure>
-
-<p>当本地不想使用默认的4000端口时（比如在服务器上，默认使用80端口），可以使用 port 命令更改启动端口<br>另外，<strong>hexo</strong>支持命令合并，比方说 生成静态文件 → 本地启动80端口，我们可以执行</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo s -g -p 80</span><br></pre></td></tr></table></figure>
-
-<h2 id="安装NexT主题"><a href="#安装NexT主题" class="headerlink" title="安装NexT主题"></a>安装NexT主题</h2><p>hexo 安装主题的方式非常简单, 只需几个简单的命令即可。<br>将NexT主题文件拷贝至<strong>themes</strong>目录下，然后修改 <span id="inline-blue">站点配置文件</span> _config.yml 中的 <code>theme</code>字段为<code>next</code>即可。</p>
-<p>cd 到博客的根目录下执行以下命令下载主题文件：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/hexo-theme-next.git themes/next</span><br><span class="line"></span><br><span class="line">$ vim _config.yml</span><br><span class="line">theme: next</span><br></pre></td></tr></table></figure>
-
-<p>清除 <strong>hexo</strong>缓存，重启服务</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo clean</span><br><span class="line">$ hexo s -g</span><br></pre></td></tr></table></figure>
-
-<p>大部分的设定都能在 <a href="http://theme-next.iissnan.com/getting-started.html">NexT官方文档</a> 里找到, 如主题设定、侧栏、头像、友情链接、打赏等等，在此就不多讲了，照着文档走就行了。</p>
-]]></content>
-      <categories>
-        <category>博客</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
       </tags>
   </entry>
   <entry>
@@ -994,6 +939,61 @@ width: 15%;
         <tag>NexT</tag>
         <tag>阿里云</tag>
         <tag>七牛云</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+NexT(v7.0+) 搭建博客：基础安装</title>
+    <url>/2019/04/29/hexo-satrted/</url>
+    <content><![CDATA[<p><img src="https://image.chingow.cn/background/006tNc79gy1g37jxk0kq5j327a0ki0th.jpg" alt="Hexo" title="Hexo"></p>
+<p>关于如何搭建Hexo博客的文章已经有很多人写过了，并且有很多人已经写的很深刻很到位了，为什么还要重复写一遍呢？直到我看到了这位同学的博客 <a href="yearito.cn">yearito</a> <strong>（ ps：本站的建站优化大都参考自这里）</strong> ，我有了说服自己的理由：</p>
+<ul>
+<li>你可以参考别人的技术方案，集众所长，亲自实践，然后融入自己的思考写出一篇新文章</li>
+<li>即使并没有做出创新性的贡献，自己重新归纳一遍也有助于梳理流程，深化理解</li>
+</ul>
+<a id="more"></a>
+<p id="div-border-left-red">现在百度 Google 很方便，动动手指就可以搜索到想要的答案，但是太多人都是**『顺手拈来、过目就忘』**，下次遇到同样的问题再搜索一遍。
+为什么会这样呢？不善于总结，不情愿动手思考，时而久之就会变成所谓的 “代码搬运工” ！<p>
+
+<p>闲话不多说了，我们开始吧！</p>
+<h2 id="安装node-js"><a href="#安装node-js" class="headerlink" title="安装node.js"></a>安装node.js</h2><p>在 <a href="https://nodejs.org/en/download/">官方下载网站</a> 下载源代码，选择最后一项 <code>Source Code</code><br>解压到某一目录, 然后进入此目录,依次执行以下 3 条命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ ./configure</span><br><span class="line">$ make</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
+
+<p>安装完后查看<code>node.js</code>版本，检验是否安装成功</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ node -v</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装hexo"><a href="#安装hexo" class="headerlink" title="安装hexo"></a>安装hexo</h2><p>在命令行中通过 <strong>npm</strong> 来安装 hexo：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<h3 id="本地启动hexo"><a href="#本地启动hexo" class="headerlink" title="本地启动hexo"></a>本地启动hexo</h3><p>创建一个博客目录（例如 <code>/my-blog</code>），在此目录下，执行初始化命令</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ mkdir -p my-blog</span><br><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ hexo init</span><br></pre></td></tr></table></figure>
+
+<p>执行完毕后，将会生成以下文件结构：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">|-- node_modules       &#x2F;&#x2F;依赖安装目录</span><br><span class="line">|-- scaffolds          &#x2F;&#x2F;模板文件夹，新建的文章将会从此目录下的文件中继承格式</span><br><span class="line">|-- source             &#x2F;&#x2F;资源文件夹，用于放置图片、数据、文章等资源</span><br><span class="line">|   |-- _posts          &#x2F;&#x2F;文章目录</span><br><span class="line">|-- themes             &#x2F;&#x2F;主题文件夹</span><br><span class="line">|   |-- landscape      &#x2F;&#x2F;默认主题</span><br><span class="line">|-- .gitignore         &#x2F;&#x2F;指定不纳入git版本控制的文件</span><br><span class="line">|-- _config.yml        &#x2F;&#x2F;站点配置文件</span><br><span class="line">|-- db.json</span><br><span class="line">|-- package.json</span><br><span class="line">&#96;-- package-lock.json</span><br></pre></td></tr></table></figure>
+
+<p>在根目录下执行如下命令启动<strong>hexo</strong>内置的web容器</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate     <span class="comment"># 生成静态文件</span></span><br><span class="line">$ hexo server       <span class="comment"># 在本地服务器运行</span></span><br></pre></td></tr></table></figure>
+
+<p>在浏览器输入IP地址 <a href="http://localhost:4000/">http://localhost:4000</a>  就可以看到我们熟悉的** Hello Word **了。</p>
+<p><img src="https://image.chingow.cn/images/d7cced3b-950e-6d7b-6edc-dc3058646ddb.png" alt="Hello Word" title="Hello Word"></p>
+<h3 id="常用命令简化和组合"><a href="#常用命令简化和组合" class="headerlink" title="常用命令简化和组合"></a>常用命令简化和组合</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo g    <span class="comment"># 等同于hexo generate</span></span><br><span class="line">$ hexo s    <span class="comment"># 等同于hexo server</span></span><br><span class="line">$ hexo p    <span class="comment"># 等同于hexo port </span></span><br><span class="line">$ hexo d    <span class="comment"># 等同于hexo deploy </span></span><br></pre></td></tr></table></figure>
+
+<p>当本地不想使用默认的4000端口时（比如在服务器上，默认使用80端口），可以使用 port 命令更改启动端口<br>另外，<strong>hexo</strong>支持命令合并，比方说 生成静态文件 → 本地启动80端口，我们可以执行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo s -g -p 80</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装NexT主题"><a href="#安装NexT主题" class="headerlink" title="安装NexT主题"></a>安装NexT主题</h2><p>hexo 安装主题的方式非常简单, 只需几个简单的命令即可。<br>将NexT主题文件拷贝至<strong>themes</strong>目录下，然后修改 <span id="inline-blue">站点配置文件</span> _config.yml 中的 <code>theme</code>字段为<code>next</code>即可。</p>
+<p>cd 到博客的根目录下执行以下命令下载主题文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> my-blog</span><br><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/hexo-theme-next.git themes/next</span><br><span class="line"></span><br><span class="line">$ vim _config.yml</span><br><span class="line">theme: next</span><br></pre></td></tr></table></figure>
+
+<p>清除 <strong>hexo</strong>缓存，重启服务</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo clean</span><br><span class="line">$ hexo s -g</span><br></pre></td></tr></table></figure>
+
+<p>大部分的设定都能在 <a href="http://theme-next.iissnan.com/getting-started.html">NexT官方文档</a> 里找到, 如主题设定、侧栏、头像、友情链接、打赏等等，在此就不多讲了，照着文档走就行了。</p>
+]]></content>
+      <categories>
+        <category>博客</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
       </tags>
   </entry>
   <entry>
@@ -5347,8 +5347,8 @@ ApplicationClassLoader <-- Custom_ClassLoader2 : 父亲</pre>
       </tags>
   </entry>
   <entry>
-    <title>Sprig源码解析-002-bean的加载</title>
-    <url>/2021/03/11/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-001-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/</url>
+    <title>Spring源码解析-01-02-bean的加载</title>
+    <url>/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/</url>
     <content><![CDATA[<ul>
 <li>其实这一章，描述了很多次关于循环依赖的问题，后面需要专门去看看 。</li>
 </ul>
