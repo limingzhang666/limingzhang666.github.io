@@ -1,4 +1,4 @@
----
+    ---
 title: Spring源码解析-01-02-bean的加载
 copyright: true
 comments: true
@@ -910,7 +910,7 @@ try {
 	}
 ```
 
-此方法最吸引我们的无疑 是两个方法 applyBeanPostProcessorsBeforeInstantiation  以及 applyBeanPostProcessorsAfterInitialization 。两个方法的实现非常的简单 ，无非是 对后处理器中的所有 InstantiationAwareBeanPostProcessor 类型的后处理器 进行 postProcessBeforeInstantiation 方法 和 BeanPostProcessor
+此方法最吸引我们的无疑 是两个方法 applyBeanPostProcessorsBeforeInstantiation  以及 applyBeanPostProcessorsAfterInitialization 。两个方法的实现非常的简单 ，无非是 对后处理器中的所有 InstantiationAwareBeanPostProcessor 类型的后处理器 进行 postProcessBeforeInstantiation 方法 和 BeanPostProcesso
 
 
 
