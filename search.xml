@@ -38,7 +38,7 @@
   </entry>
   <entry>
     <title>Spring源码解析-01-01-容器的基础</title>
-    <url>/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-02-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/</url>
+    <url>/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-01-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/</url>
     <content><![CDATA[<h1 id="容器的基础（Bean的解析）"><a href="#容器的基础（Bean的解析）" class="headerlink" title="容器的基础（Bean的解析）"></a>容器的基础（Bean的解析）</h1><p>XmlBeanFactory： </p>
 <h2 id="配置文件的封装："><a href="#配置文件的封装：" class="headerlink" title="配置文件的封装："></a>配置文件的封装：</h2><ul>
 <li><p>文件资源统一抽象为： InputStreamSource 资源, Resource 继承 InputStreamSource，</p>
@@ -308,6 +308,78 @@
       </tags>
   </entry>
   <entry>
+    <title>Spring源码解析-05-自动装配</title>
+    <url>/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-05-%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D/</url>
+    <content><![CDATA[<h2 id="自动装配"><a href="#自动装配" class="headerlink" title="自动装配"></a>自动装配</h2><p>Spring利用依赖注入（DI），完成对IOC容器中中各个组件的依赖关系赋值；</p>
+<h3 id="Autowired：自动注入"><a href="#Autowired：自动注入" class="headerlink" title="@Autowired：自动注入"></a>@Autowired：自动注入</h3><ul>
+<li>默认优先按照类型去容器中找对应的组件:applicationContext.getBean(BookDao.class);找到就赋值</li>
+<li>如果找到多个相同类型的组件，再将属性的名称作为组件的id去容器中查找 applicationContext.getBean(“bookDao”)</li>
+<li>@Qualifier(“bookDao”)：使用@Qualifier指定需要装配的组件的id，而不是使用属性名</li>
+<li>自动装配默认一定要将属性赋值好，没有就会报错；可以使用@Autowired(required=false);</li>
+<li>@Primary：让Spring进行自动装配的时候，默认使用首选的bean；也可以继续使用@Qualifier指定需要装配的bean的名字</li>
+</ul>
+<h3 id="Resource-JSR250"><a href="#Resource-JSR250" class="headerlink" title="@Resource(JSR250)"></a>@Resource(JSR250)</h3><p>@Resource:</p>
+<ul>
+<li><p>默认是按照组件名称进行装配的；</p>
+</li>
+<li><p>可以和@Autowired一样实现自动装配功能；</p>
+</li>
+<li><p>没有能支持@Primary功能</p>
+</li>
+<li><p>没有支持@Autowired（reqiured=false）;</p>
+</li>
+</ul>
+<h3 id="Inject-JSR330-java规范的注解"><a href="#Inject-JSR330-java规范的注解" class="headerlink" title="@Inject(JSR330)[java规范的注解]"></a>@Inject(JSR330)[java规范的注解]</h3><ul>
+<li><p>需要导入javax.inject的包，</p>
+</li>
+<li><p>和Autowired的功能一样。</p>
+</li>
+<li><p>没有required=false的功能；</p>
+<h3 id="ps"><a href="#ps" class="headerlink" title="ps:"></a>ps:</h3></li>
+</ul>
+<p>@Autowired:Spring定义的； </p>
+<p>@Resource、@Inject都是java规范</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><h3 id="AutowiredAnnotationBeanPostProcessor"><a href="#AutowiredAnnotationBeanPostProcessor" class="headerlink" title="AutowiredAnnotationBeanPostProcessor"></a>AutowiredAnnotationBeanPostProcessor</h3><ul>
+<li>AutowiredAnnotationBeanPostProcessor:解析完成自动装配功能；</li>
+</ul>
+<h3 id="Autowired位置"><a href="#Autowired位置" class="headerlink" title="@Autowired位置"></a>@Autowired位置</h3><p>@Autowired:构造器，参数，方法，属性 ，都是从容器中获取参数组件的值</p>
+<ul>
+<li><p>标注在set方法位置： @Bean+方法参数；参数从容器中获取;默认不写@Autowired效果是一样的；都能自动装配</p>
+</li>
+<li><p>标在构造器上：如果组件只有一个有参构造器，这个有参构造器的@Autowired可以省略，参数位置的组件还是可以自动从容器中获取</p>
+</li>
+<li><p>放在参数位置： </p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//默认加在ioc容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Boss</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Car car;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//构造器要用的组件，都是从容器中获取</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Boss</span><span class="params">(Car car)</span></span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.car = car;</span><br><span class="line">		System.out.println(<span class="string">&quot;Boss...有参构造器&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Car <span class="title">getCar</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> car;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//@Autowired </span></span><br><span class="line">	<span class="comment">//标注在方法，Spring容器创建当前对象，就会调用方法，完成赋值；</span></span><br><span class="line">	<span class="comment">//方法使用的参数，自定义类型的值从ioc容器中获取</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setCar</span><span class="params">(// <span class="meta">@Autowired</span></span></span></span><br><span class="line"><span class="function"><span class="params">        Car car)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.car = car;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;Boss [car=&quot;</span> + car + <span class="string">&quot;]&quot;</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ComponentScan(&#123;&quot;com.liming.service&quot;,&quot;com.liming.dao&quot;,</span></span><br><span class="line"><span class="meta">	&quot;com.liming.controller&quot;,&quot;com.liming.bean&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConifgOfAutowired</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Primary</span></span><br><span class="line">	<span class="meta">@Bean(&quot;bookDao2&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> BookDao <span class="title">bookDao</span><span class="params">()</span></span>&#123;</span><br><span class="line">		BookDao bookDao = <span class="keyword">new</span> BookDao();</span><br><span class="line">		bookDao.setLable(<span class="string">&quot;2&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> bookDao;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@Bean</span>标注的方法创建对象的时候，方法参数的值从容器中获取</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> car</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">color</span><span class="params">(Car car)</span></span>&#123;</span><br><span class="line">		Color color = <span class="keyword">new</span> Color();</span><br><span class="line">		color.setCar(car);</span><br><span class="line">		<span class="keyword">return</span> color;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="把Spring底层一些组件注入到自定义的Bean中"><a href="#把Spring底层一些组件注入到自定义的Bean中" class="headerlink" title="把Spring底层一些组件注入到自定义的Bean中"></a>把Spring底层一些组件注入到自定义的Bean中</h3><p>自定义组件想要使用Spring容器底层的一些组件（ApplicationContext，BeanFactory，xxx）；</p>
+<ul>
+<li><pre><code>    自定义组件实现xxxAware；在创建对象的时候，会调用接口规定的方法注入相关组件；Aware；</code></pre>
+</li>
+<li><pre><code>    把Spring底层一些组件注入到自定义的Bean中；</code></pre>
+</li>
+<li><pre><code>    xxxAware：功能使用xxxProcessor；</code></pre>
+</li>
+<li><pre><code>        ApplicationContextAware==》ApplicationContextAwareProcessor. invokeAwareInterfaces ；会帮忙把spring底层逐渐传入到当前bean </code></pre>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Red</span> <span class="keyword">implements</span> <span class="title">ApplicationContextAware</span>,<span class="title">BeanNameAware</span>,<span class="title">EmbeddedValueResolverAware</span> </span>&#123;</span><br><span class="line">   </span><br><span class="line">   <span class="keyword">private</span> ApplicationContext applicationContext;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      System.out.println(<span class="string">&quot;传入的ioc：&quot;</span>+applicationContext);</span><br><span class="line">      <span class="keyword">this</span>.applicationContext = applicationContext;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      System.out.println(<span class="string">&quot;当前bean的名字：&quot;</span>+name);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEmbeddedValueResolver</span><span class="params">(StringValueResolver resolver)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      String resolveStringValue = resolver.resolveStringValue(<span class="string">&quot;你好 $&#123;os.name&#125; 我是 #&#123;20*18&#125;&quot;</span>);</span><br><span class="line">      System.out.println(<span class="string">&quot;解析的字符串：&quot;</span>+resolveStringValue);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>Spring源码</category>
+      </categories>
+      <tags>
+        <tag>Spring</tag>
+        <tag>自动装配</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Spring源码解析-06-AOP动态代理源码解析</title>
     <url>/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-06-AOP%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/</url>
     <content><![CDATA[<h2 id="AOP动态代理"><a href="#AOP动态代理" class="headerlink" title="AOP动态代理"></a>AOP动态代理</h2><h3 id="定义："><a href="#定义：" class="headerlink" title="定义："></a>定义：</h3><p>指在程序运行期间动态的将某段代码切入到指定方法指定位置进行运行的编程方式；</p>
@@ -412,78 +484,6 @@
         <tag>Spring</tag>
         <tag>AOP</tag>
         <tag>动态代理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Spring源码解析-05-自动装配</title>
-    <url>/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-05-%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D/</url>
-    <content><![CDATA[<h2 id="自动装配"><a href="#自动装配" class="headerlink" title="自动装配"></a>自动装配</h2><p>Spring利用依赖注入（DI），完成对IOC容器中中各个组件的依赖关系赋值；</p>
-<h3 id="Autowired：自动注入"><a href="#Autowired：自动注入" class="headerlink" title="@Autowired：自动注入"></a>@Autowired：自动注入</h3><ul>
-<li>默认优先按照类型去容器中找对应的组件:applicationContext.getBean(BookDao.class);找到就赋值</li>
-<li>如果找到多个相同类型的组件，再将属性的名称作为组件的id去容器中查找 applicationContext.getBean(“bookDao”)</li>
-<li>@Qualifier(“bookDao”)：使用@Qualifier指定需要装配的组件的id，而不是使用属性名</li>
-<li>自动装配默认一定要将属性赋值好，没有就会报错；可以使用@Autowired(required=false);</li>
-<li>@Primary：让Spring进行自动装配的时候，默认使用首选的bean；也可以继续使用@Qualifier指定需要装配的bean的名字</li>
-</ul>
-<h3 id="Resource-JSR250"><a href="#Resource-JSR250" class="headerlink" title="@Resource(JSR250)"></a>@Resource(JSR250)</h3><p>@Resource:</p>
-<ul>
-<li><p>默认是按照组件名称进行装配的；</p>
-</li>
-<li><p>可以和@Autowired一样实现自动装配功能；</p>
-</li>
-<li><p>没有能支持@Primary功能</p>
-</li>
-<li><p>没有支持@Autowired（reqiured=false）;</p>
-</li>
-</ul>
-<h3 id="Inject-JSR330-java规范的注解"><a href="#Inject-JSR330-java规范的注解" class="headerlink" title="@Inject(JSR330)[java规范的注解]"></a>@Inject(JSR330)[java规范的注解]</h3><ul>
-<li><p>需要导入javax.inject的包，</p>
-</li>
-<li><p>和Autowired的功能一样。</p>
-</li>
-<li><p>没有required=false的功能；</p>
-<h3 id="ps"><a href="#ps" class="headerlink" title="ps:"></a>ps:</h3></li>
-</ul>
-<p>@Autowired:Spring定义的； </p>
-<p>@Resource、@Inject都是java规范</p>
-<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><h3 id="AutowiredAnnotationBeanPostProcessor"><a href="#AutowiredAnnotationBeanPostProcessor" class="headerlink" title="AutowiredAnnotationBeanPostProcessor"></a>AutowiredAnnotationBeanPostProcessor</h3><ul>
-<li>AutowiredAnnotationBeanPostProcessor:解析完成自动装配功能；</li>
-</ul>
-<h3 id="Autowired位置"><a href="#Autowired位置" class="headerlink" title="@Autowired位置"></a>@Autowired位置</h3><p>@Autowired:构造器，参数，方法，属性 ，都是从容器中获取参数组件的值</p>
-<ul>
-<li><p>标注在set方法位置： @Bean+方法参数；参数从容器中获取;默认不写@Autowired效果是一样的；都能自动装配</p>
-</li>
-<li><p>标在构造器上：如果组件只有一个有参构造器，这个有参构造器的@Autowired可以省略，参数位置的组件还是可以自动从容器中获取</p>
-</li>
-<li><p>放在参数位置： </p>
-</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//默认加在ioc容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Boss</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Car car;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//构造器要用的组件，都是从容器中获取</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Boss</span><span class="params">(Car car)</span></span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.car = car;</span><br><span class="line">		System.out.println(<span class="string">&quot;Boss...有参构造器&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Car <span class="title">getCar</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> car;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//@Autowired </span></span><br><span class="line">	<span class="comment">//标注在方法，Spring容器创建当前对象，就会调用方法，完成赋值；</span></span><br><span class="line">	<span class="comment">//方法使用的参数，自定义类型的值从ioc容器中获取</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setCar</span><span class="params">(// <span class="meta">@Autowired</span></span></span></span><br><span class="line"><span class="function"><span class="params">        Car car)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.car = car;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;Boss [car=&quot;</span> + car + <span class="string">&quot;]&quot;</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ComponentScan(&#123;&quot;com.liming.service&quot;,&quot;com.liming.dao&quot;,</span></span><br><span class="line"><span class="meta">	&quot;com.liming.controller&quot;,&quot;com.liming.bean&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConifgOfAutowired</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Primary</span></span><br><span class="line">	<span class="meta">@Bean(&quot;bookDao2&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> BookDao <span class="title">bookDao</span><span class="params">()</span></span>&#123;</span><br><span class="line">		BookDao bookDao = <span class="keyword">new</span> BookDao();</span><br><span class="line">		bookDao.setLable(<span class="string">&quot;2&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> bookDao;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@Bean</span>标注的方法创建对象的时候，方法参数的值从容器中获取</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> car</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">color</span><span class="params">(Car car)</span></span>&#123;</span><br><span class="line">		Color color = <span class="keyword">new</span> Color();</span><br><span class="line">		color.setCar(car);</span><br><span class="line">		<span class="keyword">return</span> color;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="把Spring底层一些组件注入到自定义的Bean中"><a href="#把Spring底层一些组件注入到自定义的Bean中" class="headerlink" title="把Spring底层一些组件注入到自定义的Bean中"></a>把Spring底层一些组件注入到自定义的Bean中</h3><p>自定义组件想要使用Spring容器底层的一些组件（ApplicationContext，BeanFactory，xxx）；</p>
-<ul>
-<li><pre><code>    自定义组件实现xxxAware；在创建对象的时候，会调用接口规定的方法注入相关组件；Aware；</code></pre>
-</li>
-<li><pre><code>    把Spring底层一些组件注入到自定义的Bean中；</code></pre>
-</li>
-<li><pre><code>    xxxAware：功能使用xxxProcessor；</code></pre>
-</li>
-<li><pre><code>        ApplicationContextAware==》ApplicationContextAwareProcessor. invokeAwareInterfaces ；会帮忙把spring底层逐渐传入到当前bean </code></pre>
-</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Red</span> <span class="keyword">implements</span> <span class="title">ApplicationContextAware</span>,<span class="title">BeanNameAware</span>,<span class="title">EmbeddedValueResolverAware</span> </span>&#123;</span><br><span class="line">   </span><br><span class="line">   <span class="keyword">private</span> ApplicationContext applicationContext;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      System.out.println(<span class="string">&quot;传入的ioc：&quot;</span>+applicationContext);</span><br><span class="line">      <span class="keyword">this</span>.applicationContext = applicationContext;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      System.out.println(<span class="string">&quot;当前bean的名字：&quot;</span>+name);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEmbeddedValueResolver</span><span class="params">(StringValueResolver resolver)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      String resolveStringValue = resolver.resolveStringValue(<span class="string">&quot;你好 $&#123;os.name&#125; 我是 #&#123;20*18&#125;&quot;</span>);</span><br><span class="line">      System.out.println(<span class="string">&quot;解析的字符串：&quot;</span>+resolveStringValue);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>Spring源码</category>
-      </categories>
-      <tags>
-        <tag>Spring</tag>
-        <tag>自动装配</tag>
       </tags>
   </entry>
   <entry>
@@ -2150,7 +2150,7 @@ DefaultUncaughtExceptionHandler -->|DefaultUncaughtExceptionHandler为空|System
 <ul>
 <li><p>java 堆是GC管理的内存区域，所以也称为 <strong><em>GC堆</em></strong></p>
 </li>
-<li><p>以前的GC 器 大部分使用的是 <strong>经典分代收集</strong> 理论设计的，所以 将java堆 化为为 新生代、老年代、永久代、Eden区，2个Survivor 。但是现在 也存在不使用 分代收集的 GC器</p>
+<li><p>以前的GC 器 大部分使用的是 <strong>经典分代收集</strong> 理论设计的，所以 将java堆 化为为 新生代、老年代、永久代、Eden区，2个Survivor 。但是现在 也存在不使用 分代收集的 GC器 </p>
 </li>
 <li><p>所有线程共享的java堆 可以划分出 多个线程私有的  <strong><em>分配缓冲区******（Thread Local Allocation Buffer，TLAB）</em></strong>，用于  <strong>提高分配内存的效率</strong></p>
 </li>
@@ -2272,6 +2272,27 @@ DefaultUncaughtExceptionHandler -->|DefaultUncaughtExceptionHandler为空|System
 <li>使用直接指针的好处就是 速度更快，节省了一次指针定位的时间开销，由于对象访问非常频繁，因为这类开销积少成多后是 非常可观的执行成本</li>
 <li>hotspot 使用的就是  直接指针</li>
 </ul>
+<h1 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h1><ol>
+<li>方法区和java堆 是线程共享的 ，虚拟机栈、本地方法栈、程序计数器都是线程私有的 </li>
+<li>虚拟机栈描述了java 方法执行的 线程内存模型，一个java方法被调用，jvm就会创建一个对应的栈帧（stackFrame），方法的执行开始到结束对应这一个栈帧的入栈和出栈。</li>
+<li>局部变量表是 虚拟机栈的一部分，里面存储了 编译期 可知的8种基本数据类型（short，int，long，double，float，byte，char，boolean）、引用类型reference（存储对象的地址 或者句柄），returnAdress返回地址类型（存储的是一个字节码的指令地址 ）</li>
+<li>java 堆是gc管理的区域，将gc堆进行精细的划分区域是分了更高效的分配和回收内存 。</li>
+<li>以前的GC 器 大部分使用的是 <strong>经典分代收集</strong> 理论设计的，所以 将java堆 化为为 新生代、老年代、永久代、Eden区，2个Survivor 。但是现在 也存在不使用 分代收集的 GC器 </li>
+<li>java堆用于存储对象实例 </li>
+<li>方法区用于存储类型信息、常量、静态变量， java8以前使用永久代的方式 收集该区域内存 ，后面使用<strong>本地内存方式实现的元空间</strong>代替永久代 , GC的行为在这个区域发生的频率很低，这个区域的回收目标主要是针对 常量池的回收和对类型的卸载 。所以称为 永久代一点不为过</li>
+<li>分配内存的2种方式 ：指针碰撞（内存区域是否规整，GC器是否具有空间压缩功能）、空闲列表（）</li>
+<li>分配内存时候如何防止并发：<ul>
+<li>1种 是对分配内存空间的操作进行同步处理（cas配上失败重试的方式保证原子性）</li>
+<li>本地线程分配缓冲（THread local allocation buffer），先预先给每个线程分配一小块内存，线程需要创建对象分配内存是否，先在线程的缓冲区分配，不够了再分配新的缓冲区 </li>
+</ul>
+</li>
+<li>访问定位对象的2种方式： <ul>
+<li>句柄，在java堆划出一个句柄池区域，java栈本地变量表 reference 存储句柄池的地址 ，句柄中存储 到对象实例数据和对象类型数据的  指针 。  这样的好处在于 当对象发生移动时候，java栈中存储的reference 不需要改变，只需要改变句柄的指针就可以 </li>
+<li>直接指针 ：java方法栈 reference存储的就是 对象的地址 ，好处就是定位迅速 </li>
+</ul>
+</li>
+<li>元空间的异常 有可能发生在 ：spring或者hirbernate 的动态增强，生成大量的 动态类的场景中。</li>
+</ol>
 ]]></content>
       <categories>
         <category>jvm</category>
@@ -2390,6 +2411,13 @@ DefaultUncaughtExceptionHandler -->|DefaultUncaughtExceptionHandler为空|System
 <ul>
 <li>在大量使用反射、动态代理、CGLib等字节码框架，动态生成JSP以及OSGi这类频繁自定义类加载器的场景中，通常都需要Java虚拟机具备类型卸载的能力，以保证不会对方法区造成过大的内存压<br>力。</li>
 </ul>
+<h1 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h1><ol>
+<li>对于线程私有的 本地方法栈、虚拟机栈、程序计数器 跟随线程的生命周期 ，每个方法的调用和退出对应着一个栈帧的入栈和出栈，栈帧的大小在类结构确定的时候，分配内存的大小就已经确认了，此处的内存回收是已知的，不用过多考虑</li>
+<li>对于线程公有的区域： 方法区，java堆。 因为一个接口可能存在多个实现类，方法的不同分支产生的对象数量不等 ，所需的内存大小也不同。 这些都是动态的，只有在运行时期，我们才能确认这部分的数据。所以GC 主要管理的就是这部分的 内存（分配和回收）</li>
+<li>判断对象是否死亡2种算法： 引用计数器，GCRoots可达性分析</li>
+<li>引用：狭隘的引用概念： 如果reference类型的数据中存储的数值代表着  另一块内存的起始地址，就称 该 reference数据是 某块内存，某个对象的引用 。 后面又分 强引用，软引用，弱引用，虚引用 。</li>
+<li>分代收集理论： 弱分代假说，</li>
+</ol>
 ]]></content>
       <categories>
         <category>jvm</category>
@@ -5347,236 +5375,6 @@ ApplicationClassLoader <-- Custom_ClassLoader2 : 父亲</pre>
       </tags>
   </entry>
   <entry>
-    <title>Spring源码解析-01-02-bean的加载</title>
-    <url>/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-2-bean%E7%9A%84%E5%8A%A0%E8%BD%BD/</url>
-    <content><![CDATA[<ul>
-<li>其实这一章，描述了很多次关于循环依赖的问题，后面需要专门去看看 。</li>
-</ul>
-<h1 id="Bean的加载"><a href="#Bean的加载" class="headerlink" title="Bean的加载"></a>Bean的加载</h1><p>对于加载Bean的功能，在Spring中的调用方式为：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">ApplicationContext applicationContext1 = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">&quot;spring-config.xml&quot;</span>);</span><br><span class="line"><span class="comment">// MyTestBean bean = applicationContext1.getBean(MyTestBean.class);</span></span><br><span class="line">MyTestBean bean = applicationContext1.getBean(<span class="string">&quot;myTestBean&quot;</span>);</span><br></pre></td></tr></table></figure>
-
-<p>现在阅读源码看看Spring代码是如何实现的</p>
-<ul>
-<li>BeanFactory</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">boolean containsBean(String name);</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>AbstractBeanFactory</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getBean</span><span class="params">(String name, Object... args)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> doGetBean(name, <span class="keyword">null</span>, args, <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">T <span class="title">doGetBean</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">			String name, <span class="meta">@Nullable</span> Class&lt;T&gt; requiredType, <span class="meta">@Nullable</span> Object[] args, <span class="keyword">boolean</span> typeCheckOnly)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="comment">// 提取对应的beanName</span></span><br><span class="line">		String beanName = transformedBeanName(name);</span><br><span class="line">		System.out.println(<span class="string">&quot;doGetBean beanName=&quot;</span>+beanName);</span><br><span class="line">		Object bean;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Eagerly check singleton cache for manually registered singletons.</span></span><br><span class="line">		<span class="comment">// 急切地检查手动注册的单例缓存。</span></span><br><span class="line">		<span class="comment">/**</span></span><br><span class="line"><span class="comment">		 * 检查缓存中或者实例工厂中是否有对应的实例</span></span><br><span class="line"><span class="comment">		 * 为什么首先会 使用这段代码呢，因为在创建单例Bean 的时候会存在依赖注入的情况，而在创建依赖的时候为了避免循环依赖，</span></span><br><span class="line"><span class="comment">		 * spring 创建bean的原则是不等 bean创建完成就会将bean 的ObjectFactory 提早曝光</span></span><br><span class="line"><span class="comment">		 * 也就是将 ObjectFactory 加入到缓存中 ，一旦下个bean 创建时候需要依赖上个bean ，则直接使用ObjectFactory</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line"></span><br><span class="line">		<span class="comment">// 直接尝试从缓存获取 或者 singletonFactories中的ObjectFactory 中获取</span></span><br><span class="line">		Object sharedInstance = getSingleton(beanName);</span><br><span class="line">		<span class="keyword">if</span> (sharedInstance != <span class="keyword">null</span> &amp;&amp; args == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				<span class="keyword">if</span> (isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">					logger.trace(<span class="string">&quot;Returning eagerly cached instance of singleton bean &#x27;&quot;</span> + beanName +</span><br><span class="line">							<span class="string">&quot;&#x27; that is not fully initialized yet - a consequence of a circular reference&quot;</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> &#123;</span><br><span class="line">					logger.trace(<span class="string">&quot;Returning cached instance of singleton bean &#x27;&quot;</span> + beanName + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 返回对应的实例，有时候存在诸如 BeanFactory的情况，并不是直接返回实例本身，而是返回指定方法返回的实例</span></span><br><span class="line">			bean = getObjectForBeanInstance(sharedInstance, name, beanName, <span class="keyword">null</span>);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">//只有在单例情况才会尝试解决循环依赖，原型模式情况下，如果存在A中有B的属性，B中有Ade属性，</span></span><br><span class="line">			<span class="comment">// 那么当依赖注入的时候，就会产生当A还未创建完的时候，因为对于B的创建再次返回创建A，造成循环依赖，也就是下面的情况</span></span><br><span class="line">			<span class="comment">// isPrototypeCurrentlyInCreation(beanName)为 true</span></span><br><span class="line">			<span class="comment">// Fail if we&#x27;re already creating this bean instance:</span></span><br><span class="line">			<span class="comment">// We&#x27;re assumably within a circular reference.</span></span><br><span class="line">			<span class="keyword">if</span> (isPrototypeCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> BeanCurrentlyInCreationException(beanName);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="comment">// Check if bean definition exists in this factory.</span></span><br><span class="line">			BeanFactory parentBeanFactory = getParentBeanFactory();</span><br><span class="line">			<span class="comment">// 如果beanDefinitionMap中 也就是所有已经加载的类中 不包括beanName，则尝试从parentBeanFactory中检查</span></span><br><span class="line">			<span class="keyword">if</span> (parentBeanFactory != <span class="keyword">null</span> &amp;&amp; !containsBeanDefinition(beanName)) &#123;</span><br><span class="line">				<span class="comment">// Not found -&gt; check parent.</span></span><br><span class="line">				String nameToLookup = originalBeanName(name);</span><br><span class="line">				<span class="comment">// 递归 到BeanFactory 中寻找</span></span><br><span class="line">				<span class="keyword">if</span> (parentBeanFactory <span class="keyword">instanceof</span> AbstractBeanFactory) &#123;</span><br><span class="line">					<span class="keyword">return</span> ((AbstractBeanFactory) parentBeanFactory).doGetBean(</span><br><span class="line">							nameToLookup, requiredType, args, typeCheckOnly);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (args != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="comment">// Delegation to parent with explicit args.</span></span><br><span class="line">					<span class="keyword">return</span> (T) parentBeanFactory.getBean(nameToLookup, args);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (requiredType != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="comment">// No args -&gt; delegate to standard getBean method.</span></span><br><span class="line">					<span class="keyword">return</span> parentBeanFactory.getBean(nameToLookup, requiredType);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> &#123;</span><br><span class="line">					<span class="keyword">return</span> (T) parentBeanFactory.getBean(nameToLookup);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 如果 不是仅仅做类型检查 则是创建Bean，这里要进行记录</span></span><br><span class="line">			<span class="keyword">if</span> (!typeCheckOnly) &#123;</span><br><span class="line">				markBeanAsCreated(beanName);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// 将存储XML配置文件的 GernericBeanDefinition 转换为 RootBeanDefinition，</span></span><br><span class="line">			<span class="comment">// 如果指定beanName 是子Bean 的话，同时会合并父类的相关属性</span></span><br><span class="line">				RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);</span><br><span class="line">				checkMergedBeanDefinition(mbd, beanName, args);</span><br><span class="line"></span><br><span class="line">				<span class="comment">// Guarantee initialization of beans that the current bean depends on.</span></span><br><span class="line">				String[] dependsOn = mbd.getDependsOn();</span><br><span class="line">				<span class="comment">// 如果存在依赖，则需要递归实例化的bean</span></span><br><span class="line">				<span class="keyword">if</span> (dependsOn != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="keyword">for</span> (String dep : dependsOn) &#123;</span><br><span class="line">						<span class="keyword">if</span> (isDependent(beanName, dep)) &#123;</span><br><span class="line">							<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(mbd.getResourceDescription(), beanName,</span><br><span class="line">									<span class="string">&quot;Circular depends-on relationship between &#x27;&quot;</span> + beanName + <span class="string">&quot;&#x27; and &#x27;&quot;</span> + dep + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="comment">// 缓存依赖调用</span></span><br><span class="line">						registerDependentBean(dep, beanName);</span><br><span class="line">						<span class="keyword">try</span> &#123;</span><br><span class="line">							getBean(dep);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">catch</span> (NoSuchBeanDefinitionException ex) &#123;</span><br><span class="line">							<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(mbd.getResourceDescription(), beanName,</span><br><span class="line">									<span class="string">&quot;&#x27;&quot;</span> + beanName + <span class="string">&quot;&#x27; depends on missing bean &#x27;&quot;</span> + dep + <span class="string">&quot;&#x27;&quot;</span>, ex);</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 实例化 依赖的bean后便可以实例化 mbd本身了</span></span><br><span class="line">				<span class="comment">// singleton 模式的创建</span></span><br><span class="line">				<span class="comment">// Create bean instance.</span></span><br><span class="line">				<span class="keyword">if</span> (mbd.isSingleton()) &#123;</span><br><span class="line">					sharedInstance = getSingleton(beanName, () -&gt; &#123;</span><br><span class="line">						<span class="keyword">try</span> &#123;</span><br><span class="line">							<span class="keyword">return</span> createBean(beanName, mbd, args);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">							<span class="comment">// Explicitly remove instance from singleton cache: It might have been put there</span></span><br><span class="line">							<span class="comment">// eagerly by the creation process, to allow for circular reference resolution.</span></span><br><span class="line">							<span class="comment">// Also remove any beans that received a temporary reference to the bean.</span></span><br><span class="line">							destroySingleton(beanName);</span><br><span class="line">							<span class="keyword">throw</span> ex;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;);</span><br><span class="line">					<span class="comment">//</span></span><br><span class="line">					bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (mbd.isPrototype()) &#123;</span><br><span class="line">					<span class="comment">// It&#x27;s a prototype -&gt; create a new instance.</span></span><br><span class="line">					<span class="comment">// prototype 模式的创建 （new）</span></span><br><span class="line">					Object prototypeInstance = <span class="keyword">null</span>;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						beforePrototypeCreation(beanName);</span><br><span class="line">						prototypeInstance = createBean(beanName, mbd, args);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">finally</span> &#123;</span><br><span class="line">						afterPrototypeCreation(beanName);</span><br><span class="line">					&#125;</span><br><span class="line">					bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="keyword">else</span> &#123;</span><br><span class="line">					String scopeName = mbd.getScope();</span><br><span class="line">					<span class="keyword">if</span> (!StringUtils.hasLength(scopeName)) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;No scope name defined for bean ´&quot;</span> + beanName + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">					&#125;</span><br><span class="line">					Scope scope = <span class="keyword">this</span>.scopes.get(scopeName);</span><br><span class="line">					<span class="keyword">if</span> (scope == <span class="keyword">null</span>) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;No Scope registered for scope name &#x27;&quot;</span> + scopeName + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						Object scopedInstance = scope.get(beanName, () -&gt; &#123;</span><br><span class="line">							beforePrototypeCreation(beanName);</span><br><span class="line">							<span class="keyword">try</span> &#123;</span><br><span class="line">								<span class="keyword">return</span> createBean(beanName, mbd, args);</span><br><span class="line">							&#125;</span><br><span class="line">							<span class="keyword">finally</span> &#123;</span><br><span class="line">								afterPrototypeCreation(beanName);</span><br><span class="line">							&#125;</span><br><span class="line">						&#125;);</span><br><span class="line">						bean = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">catch</span> (IllegalStateException ex) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName,</span><br><span class="line">								<span class="string">&quot;Scope &#x27;&quot;</span> + scopeName + <span class="string">&quot;&#x27; is not active for the current thread; consider &quot;</span> +</span><br><span class="line">								<span class="string">&quot;defining a scoped proxy for this bean if you intend to refer to it from a singleton&quot;</span>,</span><br><span class="line">								ex);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">				cleanupAfterBeanCreationFailure(beanName);</span><br><span class="line">				<span class="keyword">throw</span> ex;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Check if required type matches the type of the actual bean instance.</span></span><br><span class="line">		<span class="comment">// 检查需要的类型是否 符合bean的实际类型</span></span><br><span class="line">		<span class="keyword">if</span> (requiredType != <span class="keyword">null</span> &amp;&amp; !requiredType.isInstance(bean)) &#123;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				T convertedBean = getTypeConverter().convertIfNecessary(bean, requiredType);</span><br><span class="line">				<span class="keyword">if</span> (convertedBean == <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> BeanNotOfRequiredTypeException(name, requiredType, bean.getClass());</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">return</span> convertedBean;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (TypeMismatchException ex) &#123;</span><br><span class="line">				<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">					logger.trace(<span class="string">&quot;Failed to convert bean &#x27;&quot;</span> + name + <span class="string">&quot;&#x27; to required type &#x27;&quot;</span> +</span><br><span class="line">							ClassUtils.getQualifiedName(requiredType) + <span class="string">&quot;&#x27;&quot;</span>, ex);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> BeanNotOfRequiredTypeException(name, requiredType, bean.getClass());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> (T) bean;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>从上面代码可以看出bean的加载经历 了一个相当复杂的过程，其中涉及各种各样的考虑。</p>
-<p>对于加载的过程涉及的步骤大致如下：</p>
-<ol>
-<li><p>转换对应的beanName</p>
-<ul>
-<li>传入的参数name 可能是别名，也可以是FactoryBean,所以需要进行一系列的解析，解析的内容包括一下内容：<ul>
-<li>去除Factory的修饰符， 比如 如果name是 “&amp;aa”,name首先会去除 &amp;，使得name=“aa”</li>
-<li>去指定alias所表示的最终beanName，例如 别名A指向名称为B的bean，则返回B； 如果别名A指向别名B，别名B指向 名称为C的bean，则返回C</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>尝试从缓存中加载单例</p>
-<ul>
-<li><p>单例在Spring的同一个容器中 只会被创建一次，后续在获取Bean，就直接从单例缓存中获取了。</p>
-</li>
-<li><p>当然这里也是尝试加载，首先尝试从缓存中加载，如果加载不成功则尝试从singletonFactories 中加载。</p>
-</li>
-<li><p>因为在创建单例bean的时候会存在依赖注入的情况，而在创建依赖的时候为了避免循环依赖，在Spring中创建bean的原则是 <strong>不等bean创建完成就会创建bean的 ObjectFactory 提早曝光加入到缓存中 ，一旦下一个bean创建时候需要依赖上一个 bean则直接使用ObjectFactory</strong> </p>
-</li>
-</ul>
-</li>
-<li><p>bean的实例化</p>
-<ul>
-<li>如果从缓存中得到了bean 的原始状态，则需要 对bean进行实例化</li>
-<li>强调一下： 缓存中记录的只是最原始的bean 状态，并不一定是 我们最终想要的bean 。举个例子，假如 我们需要对工厂bean进行处理，那么这里得到的其实是 工厂bean的 初始状态， 但是我们真正需要的是工厂bean 中定义的factory-method方法中返回的bean ，而 getObjectForBeanInstance 就是完成这个工作的，</li>
-</ul>
-</li>
-<li><p>原型模式的依赖检查</p>
-<ul>
-<li>只有在单例的情况下，才会尝试解决循环依赖 ，如果存在A 中有B的属性，B中有A的属性 ，那么当依赖注入的时候，就会产生当A 还未创建完成的时候因为对于B的创建再次返回创建A，造成循环依赖 ，也就是情况：if (isPrototypeCurrentlyInCreation(beanName)) =true</li>
-</ul>
-</li>
-<li><p>检测parentBeanFactory</p>
-<ul>
-<li>从代码上看，如果缓存没有数据的话，就直接转到父类工厂上去加载了，为啥呢</li>
-<li>if (parentBeanFactory != null &amp;&amp; !containsBeanDefinition(beanName)) <ul>
-<li>parentBeanFactory != null ，parentBeanFactory如果为空，则其他一切都是浮云，这个无fuck可说</li>
-<li> !containsBeanDefinition(beanName)这个判断比较重要， 她是在检测如果当前加载的XML配置文件 中不包含beanName 所对应的配置，就只能到parentBeanFactory 去尝试下了，然后再去 递归的调用getBean 方法</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>将存储XML配置文件的GernericBeanDefinition 转换为 RootBeanDefinition</p>
-<ul>
-<li>因为从XML配置文件中读取到的Bean信息是存储在GernericBeanDefinition 中的，但是所有的Bean后续处理都是针对RootBeanDefinition的，所以这里需要进行一个转换，转换的同时 如果父类bean不为空的话，则会一并合并父类的属性</li>
-</ul>
-</li>
-<li><p>寻找依赖</p>
-<ul>
-<li>因为bean的初始化过程中 可能会用到某些属性，而这些属性很可能是动态配置的，并且配置成依赖其他的bean，那么这个时候就有必要先加载依赖的bean，</li>
-<li>所以在Spring的加载顺寻中，在初始化某一个bean的时候首先会初始化这个bean所对应的依赖 </li>
-</ul>
-</li>
-<li><p><strong>针对不同的scope 进行bean的创建</strong></p>
-<ul>
-<li>在Spring中存在不同的scope，其中默认的是Singleton，但是还有些其他的配置 诸如 prototype、request之类的。这个步骤中，Spring会根据 不同的配置进行不同的初始化策略</li>
-</ul>
-</li>
-<li><p>类型转换</p>
-<ul>
-<li>程序到这里返回bean后已经基本结束了，通常对该方法的调用参数requiredType 是为空的 ，</li>
-<li>但是可能会存在这种情况： 返回的bean 其实是个String ，但是requiredType却传入 Integer类型，那么这个时候本步骤就会起作用了，他的功能是将返回的bean转换为requiredType. </li>
-<li>在Spring 中提供了各种各样的转换器，用户也可以自己扩展转换器来满足需求 。</li>
-</ul>
-</li>
-</ol>
-<h2 id="1-1-FactoryBean的使用"><a href="#1-1-FactoryBean的使用" class="headerlink" title="1.1 FactoryBean的使用"></a>1.1 FactoryBean的使用</h2><ul>
-<li>一般情况下，Spring通过反射机制利用bean的class 属性指定实现类 来实例化bean。在某些情况下，实例化bean的过程比较复杂，如果按照传统的方式，则需要在<bean> 中提供大量的配置信息，配置方式的灵活性受限，这是采用编码的方式可能会得到一个简单的方案 。  </li>
-<li>spring为此通过了一个  org.springframework.beans.factory.FactoryBean 的工厂类接口 ，用户可以通过实现该接口定制实例化bean的 逻辑 </li>
-<li>org.springframework.beans.factory.FactoryBean 接口对于Spring框架非常重要，Spring本身就提供了70多个 FactoryBean的实现。他们隐藏了实例化一些复杂bean的细节 ，为上层应用带来了便利 。</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">FactoryBean</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * The name of an attribute that can be</span></span><br><span class="line"><span class="comment">	 * &#123;<span class="doctag">@link</span> org.springframework.core.AttributeAccessor#setAttribute set&#125; on a</span></span><br><span class="line"><span class="comment">	 * &#123;<span class="doctag">@link</span> org.springframework.beans.factory.config.BeanDefinition&#125; so that</span></span><br><span class="line"><span class="comment">	 * factory beans can signal their object type when it can&#x27;t be deduced from</span></span><br><span class="line"><span class="comment">	 * the factory bean class.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@since</span> 5.2</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	String OBJECT_TYPE_ATTRIBUTE = <span class="string">&quot;factoryBeanObjectType&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">    <span class="comment">// 返回 由FactoryBean 创建的bean的实例，如果 isSingleton()返回 true，则该实例会放到Spring容器中单实例缓存池 中</span></span><br><span class="line">	<span class="function">T <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception</span>;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">    <span class="comment">// 返回 FactoryBean 创建的bean类型</span></span><br><span class="line">	Class&lt;?&gt; getObjectType();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回 由FactoryBean 创建的bean实例的作用域 是singleton 还是 prototype</span></span><br><span class="line">	<span class="function"><span class="keyword">default</span> <span class="keyword">boolean</span> <span class="title">isSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>当配置文件中<bean>的class 属性配置的实现类是 FactoryBean是，通过getBean（）方法返回的不是FactoryBean本身 ，而是 FactoryBean#getObject()方法所返回的对象 ，相当于 Factory#getObject() 代理了getBean() 方法</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//@Data</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxSpeed;</span><br><span class="line">	<span class="keyword">private</span> String brand;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">double</span> price;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getMaxSpeed</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> maxSpeed;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setMaxSpeed</span><span class="params">(<span class="keyword">int</span> maxSpeed)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.maxSpeed = maxSpeed;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getBrand</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> brand;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBrand</span><span class="params">(String brand)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.brand = brand;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">getPrice</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> price;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPrice</span><span class="params">(<span class="keyword">double</span> price)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.price = price;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// factoryBean</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CarFactoryBean</span> <span class="keyword">implements</span> <span class="title">FactoryBean</span>&lt;<span class="title">Car</span>&gt; </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> String carInfo;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Car <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		Car car = <span class="keyword">new</span> Car();</span><br><span class="line">		String[] infos = carInfo.split(<span class="string">&quot;,&quot;</span>);</span><br><span class="line">		car.setBrand(infos[<span class="number">0</span>]);</span><br><span class="line">		car.setMaxSpeed(Integer.valueOf(infos[<span class="number">1</span>]));</span><br><span class="line">		car.setPrice(Double.valueOf(infos[<span class="number">1</span>]));</span><br><span class="line">		<span class="keyword">return</span> car;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> Class&lt;?&gt; getObjectType() &#123;</span><br><span class="line">		<span class="keyword">return</span> Car.class;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSingleton</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getCarInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> carInfo;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setCarInfo</span><span class="params">(String carInfo)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.carInfo = carInfo;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 配置文件</span></span><br><span class="line">	&lt;bean id=<span class="string">&quot;car&quot;</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">&quot;com.mazhichu.spring.factory.CarFactoryBean&quot;</span>&gt;</span><br><span class="line">		&lt;property name=<span class="string">&quot;carInfo&quot;</span> value=<span class="string">&quot;BMW,200,200000&quot;</span>/&gt;</span><br><span class="line">	&lt;/bean&gt;</span><br><span class="line">       </span><br><span class="line"><span class="comment">// 测试类</span></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">MyTestBeanTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		ApplicationContext applicationContext1 = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">&quot;spring-config.xml&quot;</span>);</span><br><span class="line">		MyTestBean bean = applicationContext1.getBean(MyTestBean.class);</span><br><span class="line">		Car car = (Car)applicationContext1.getBean(<span class="string">&quot;car&quot;</span>);</span><br><span class="line">		System.out.println(car.toString());</span><br><span class="line">        <span class="comment">// factoryBean 需要加 &amp;</span></span><br><span class="line">		CarFactoryBean carFactoryBean = (CarFactoryBean)applicationContext1.getBean(<span class="string">&quot;&amp;car&quot;</span>);</span><br><span class="line">		System.out.println(car.toString());</span><br><span class="line">		System.out.println(carFactoryBean.toString());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 运行 结果</span></span><br><span class="line">Car&#123;maxSpeed=<span class="number">200</span>, brand=<span class="string">&#x27;BMW&#x27;</span>, price=<span class="number">200.0</span>&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>当调用getBean(“car”)时，Spring通过反射机制发现 CarFactoryBean 实现了FactoryBean接口， 这时候 Spring 容器就调用 接口方法getObject 方法返回 Car对象</li>
-<li>如果希望 FactoryBean对象，则需要在使用getBean（beanName）方法时 ，在beanName 前面显示的加上”&amp;”前缀，例如getBean（“&amp;car”），CarFactoryBean carFactoryBean = (CarFactoryBean)applicationContext1.getBean(“&amp;car”);</li>
-</ul>
-<h2 id="1-2-缓存中获取单例Bean"><a href="#1-2-缓存中获取单例Bean" class="headerlink" title="1.2 缓存中获取单例Bean"></a>1.2 缓存中获取单例Bean</h2><ul>
-<li>前面知道FactoryBean的用法后，我们就可以了解 bean加载的过程了，</li>
-<li>单例在Spring的同一个容器内只会被创建一次 ，后续在获取bean 就直接从单例缓存中获取， 当然这里也只是尝试加载，</li>
-<li>首先尝试从缓存中加载，然后再尝试从singletonFactories 中加载 。</li>
-<li>因为在创建单例bean 的时候，会出现依赖注入的情况，而在创建依赖的时候，为了避免循环依赖 ，Spring 创建bean 的原则是 不等bean创建完成就会将创建bean的ObjectFactory提早曝光加入到缓存中，一旦下一个bean创建的时候需要依赖上个bean，则直接使用 ObjectFactory</li>
-</ul>
-<h3 id="getSingleton逻辑"><a href="#getSingleton逻辑" class="headerlink" title="getSingleton逻辑"></a>getSingleton逻辑</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">getSingleton</span><span class="params">(String beanName)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 参数 true，设置标识 允许早期依赖</span></span><br><span class="line">		<span class="keyword">return</span> getSingleton(beanName, <span class="keyword">true</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Return the (raw) singleton object registered under the given name.</span></span><br><span class="line"><span class="comment">	 * &lt;p&gt;Checks already instantiated singletons and also allows for an early</span></span><br><span class="line"><span class="comment">	 * reference to a currently created singleton (resolving a circular reference).</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> beanName the name of the bean to look for</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> allowEarlyReference whether early references should be created or not</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the registered singleton object, or &#123;<span class="doctag">@code</span> null&#125; if none found</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> Object <span class="title">getSingleton</span><span class="params">(String beanName, <span class="keyword">boolean</span> allowEarlyReference)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// Quick check for existing instance without full singleton lock</span></span><br><span class="line">		<span class="comment">//1. 检查缓存中是否存在单例，首先从 singletonObjects 中获取</span></span><br><span class="line">		Object singletonObject = <span class="keyword">this</span>.singletonObjects.get(beanName);</span><br><span class="line">		<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span> &amp;&amp; isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">            <span class="comment">// 2. 再尝试从 earlySingletonObjects 中获取</span></span><br><span class="line">			singletonObject = <span class="keyword">this</span>.earlySingletonObjects.get(beanName);</span><br><span class="line">			<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span> &amp;&amp; allowEarlyReference) &#123;</span><br><span class="line">				<span class="comment">// 3.如果为空 ，则锁定全局变量 并进行处理</span></span><br><span class="line">				<span class="keyword">synchronized</span> (<span class="keyword">this</span>.singletonObjects) &#123;</span><br><span class="line">					<span class="comment">// Consistent creation of early reference within full singleton lock</span></span><br><span class="line">					singletonObject = <span class="keyword">this</span>.singletonObjects.get(beanName);</span><br><span class="line">					<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">						<span class="comment">//如果此bean正在加载，则不处理</span></span><br><span class="line">						singletonObject = <span class="keyword">this</span>.earlySingletonObjects.get(beanName);</span><br><span class="line">						<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">                            <span class="comment">// 4. 获取 ObjectFactory ，通过ObjectFactory.getObject 获取bean</span></span><br><span class="line">							<span class="comment">// 当某些 方法需要提前初始化的时候，</span></span><br><span class="line">							<span class="comment">// 则会调用 addSingletonFactory 方法将对应的ObjectFactory初始化策略存储在SingletonFactoryes</span></span><br><span class="line">							ObjectFactory&lt;?&gt; singletonFactory = <span class="keyword">this</span>.singletonFactories.get(beanName);</span><br><span class="line">							<span class="keyword">if</span> (singletonFactory != <span class="keyword">null</span>) &#123;</span><br><span class="line">								<span class="comment">// 调用预先设定的getObject方法</span></span><br><span class="line">								singletonObject = singletonFactory.getObject();</span><br><span class="line">								<span class="comment">// 记录在缓存中，earlySingletonObjects 与 singletonFactories互斥</span></span><br><span class="line">								<span class="keyword">this</span>.earlySingletonObjects.put(beanName, singletonObject);</span><br><span class="line">								<span class="keyword">this</span>.singletonFactories.remove(beanName);</span><br><span class="line">							&#125;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> singletonObject;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这个方法因为设计循环依赖的检测，以及涉及很多变量的记录存取，所以让人 困惑</p>
-<ol>
-<li>首先尝试 从 singletonObjects 里面获取实例，</li>
-<li>如果获取不到再从 earlySIngletontonObjects里面获取，</li>
-<li>如果还获取不到，再尝试 从singletonFactories 里面获取beanName 对应的ObjectFactory ，然后调用这个 ObjectFactory 的getObject方法来创建bean ，并放到 earlySingletonObjects中去，并且从 singletonFactories 里面remove掉这个 ObjectFactory，</li>
-<li>而对于后续的所有内存操作都只为了循环依赖检测时候使用，也就是在allowEarlyReference 为 true 的情况下才会使用</li>
-</ol>
-<h3 id="各类Map缓存的介绍"><a href="#各类Map缓存的介绍" class="headerlink" title="各类Map缓存的介绍"></a>各类Map缓存的介绍</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/** Cache of singleton objects: bean name to bean instance. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; singletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">256</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Cache of singleton factories: bean name to ObjectFactory. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">16</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Cache of early singleton objects: bean name to bean instance. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; earlySingletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">16</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Set of registered singletons, containing the bean names in registration order. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Set&lt;String&gt; registeredSingletons = <span class="keyword">new</span> LinkedHashSet&lt;&gt;(<span class="number">256</span>);</span><br></pre></td></tr></table></figure>
-
-
-
-<ul>
-<li>singletonObjects :用于保存beanName 和创建bean实例之间的关系， beanName-&gt; bean instance</li>
-<li>singletonFactories :用于保存beanName 和创建Bean的工厂之间的关系 ，beanName-&gt;objectFactory</li>
-<li>earlySingletonObjects： 也是保存BeanName 和创建bean 实例之间额关系，与 singletonObjects 的不同之处在于：当一个单例bean被放在这里之后，那么当bean还在创建过程中，就可以通过getBean方法获取到了， 其目的是用来检测循环引用 </li>
-<li>registeredSingletons ：用来保存所有已经注册的bean</li>
-</ul>
-<h2 id="1-3-从bean的实例中获取对象"><a href="#1-3-从bean的实例中获取对象" class="headerlink" title="1.3 从bean的实例中获取对象"></a>1.3 从bean的实例中获取对象</h2><p>在getBean方法中 getObjectForBeanInstance 是个高频率使用的方法，无论从缓存中获得bean 还是根据 不同的scope 策略加载bean 。</p>
-<p>总之 我们得到bean的实例后要做第一步就是调用这个方法来检测一下正确性，其实 就是用于检测当前bean 是否是 FactoryBean类型的bean ，如果是，那么需要调用该bean对应的FactoryBean 实例中的getObject作为返回值 。</p>
-<ul>
-<li>无论从缓存中获取到的bean还是通过不同的scope 策略加载的bean 都只是最原始的bean状态，并不一定是我们最想要的bean。 </li>
-<li>举个例子，加入我们需要对工厂bean进行处理，那么这里得到的其实是工厂bean的初始状态，但是我们真正需要的是工厂bean 中定义的 factory-method 方法中返回的bean ，而 getObjectForBeanInstance 方法就是完成这个工作的 </li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">getObjectForBeanInstance</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">			Object beanInstance, String name, String beanName, <span class="meta">@Nullable</span> RootBeanDefinition mbd)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 如果指定的name 是工厂相关（以 &amp;为前缀）且 beanInstance 又不是FactoryBean类型，则 验证不通过</span></span><br><span class="line">		<span class="comment">// Don&#x27;t let calling code try to dereference the factory if the bean isn&#x27;t a factory.</span></span><br><span class="line">		<span class="keyword">if</span> (BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (beanInstance <span class="keyword">instanceof</span> NullBean) &#123;</span><br><span class="line">				<span class="keyword">return</span> beanInstance;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (!(beanInstance <span class="keyword">instanceof</span> FactoryBean)) &#123;</span><br><span class="line">				<span class="comment">// beanInstance 又不是FactoryBean类型，则 验证不通过</span></span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> BeanIsNotAFactoryException(beanName, beanInstance.getClass());</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (mbd != <span class="keyword">null</span>) &#123;</span><br><span class="line">				mbd.isFactoryBean = <span class="keyword">true</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> beanInstance;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Now we have the bean instance, which may be a normal bean or a FactoryBean.</span></span><br><span class="line">		<span class="comment">// If it&#x27;s a FactoryBean, we use it to create a bean instance, unless the</span></span><br><span class="line">		<span class="comment">// caller actually wants a reference to the factory.</span></span><br><span class="line">		<span class="comment">// 现在我们有了个Bean的实例，这个实例可能会是正常的bean 或者 factoryBean</span></span><br><span class="line">		<span class="comment">// 如果是FactoryBean 我们使用它创建实例，但是如果 用户想要直接获取工厂实例 而不是工厂的getObject 方法对应的实例，</span></span><br><span class="line">		<span class="comment">// 那么传入的name 应该加入前缀 &amp;</span></span><br><span class="line">		<span class="keyword">if</span> (!(beanInstance <span class="keyword">instanceof</span> FactoryBean)) &#123;</span><br><span class="line">			<span class="keyword">return</span> beanInstance;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 加载FactoryBean</span></span><br><span class="line">		Object object = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">if</span> (mbd != <span class="keyword">null</span>) &#123;</span><br><span class="line">			mbd.isFactoryBean = <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 尝试从缓存中加载bean</span></span><br><span class="line">			object = getCachedObjectForFactoryBean(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (object == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// 到这里已经明确知道  beanInstance 一定是 FactoryBean类型</span></span><br><span class="line">			<span class="comment">// Return bean instance from factory.</span></span><br><span class="line">			FactoryBean&lt;?&gt; factory = (FactoryBean&lt;?&gt;) beanInstance;</span><br><span class="line">			<span class="comment">// Caches object obtained from FactoryBean if it is a singleton.</span></span><br><span class="line"></span><br><span class="line">			<span class="comment">// containsBeanDefinition 检测 beanDefinitionMap中 也就是在所有已经加载的类中检查是否定义beanName</span></span><br><span class="line">			<span class="keyword">if</span> (mbd == <span class="keyword">null</span> &amp;&amp; containsBeanDefinition(beanName)) &#123;</span><br><span class="line">				<span class="comment">// 将存储XML配置文件的 GernericBeanDefinition 转换为RootBeanDefinition，</span></span><br><span class="line">				<span class="comment">// 如果指定beanName 是子bean的话，会合并父类的相关属性</span></span><br><span class="line">				mbd = getMergedLocalBeanDefinition(beanName);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 是否是用户定义的而不是应用程序本身定义的</span></span><br><span class="line">			<span class="keyword">boolean</span> synthetic = (mbd != <span class="keyword">null</span> &amp;&amp; mbd.isSynthetic());</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">			<span class="comment">// !!!!!!重点方法</span></span><br><span class="line">			object = getObjectFromFactoryBean(factory, beanName, !synthetic);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> object;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>从上面代码来看，其实这个方法并没有上面重要的信息，大多是 写辅助代码以及一些功能性的判断，</li>
-<li>而真正的核心代码却委托给了  getObjectFromFactoryBean（）</li>
-</ul>
-<h3 id="getObjectFromFactoryBean（）"><a href="#getObjectFromFactoryBean（）" class="headerlink" title="getObjectFromFactoryBean（）"></a>getObjectFromFactoryBean（）</h3><ul>
-<li>对FactoryBean正确性的验证 </li>
-<li>对非 FactoryBean 不做任何处理</li>
-<li>对bean进行转换</li>
-<li>将从 Factory中解析bean 的工作委托给 getObjectFromFactoryBean</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">getObjectFromFactoryBean</span><span class="params">(FactoryBean&lt;?&gt; factory, String beanName, <span class="keyword">boolean</span> shouldPostProcess)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 1.如果是单例模式</span></span><br><span class="line">		<span class="keyword">if</span> (factory.isSingleton() &amp;&amp; containsSingleton(beanName)) &#123;</span><br><span class="line">			<span class="keyword">synchronized</span> (getSingletonMutex()) &#123;</span><br><span class="line">				Object object = <span class="keyword">this</span>.factoryBeanObjectCache.get(beanName);</span><br><span class="line">				<span class="keyword">if</span> (object == <span class="keyword">null</span>) &#123;</span><br><span class="line">					 <span class="comment">// 1.1 就是 ObjectFactory.getObject 方法</span></span><br><span class="line">					object = doGetObjectFromFactoryBean(factory, beanName);</span><br><span class="line">					<span class="comment">// Only post-process and store if not put there already during getObject() call above</span></span><br><span class="line">					<span class="comment">// (e.g. because of circular reference processing triggered by custom getBean calls)</span></span><br><span class="line">					Object alreadyThere = <span class="keyword">this</span>.factoryBeanObjectCache.get(beanName);</span><br><span class="line">					<span class="keyword">if</span> (alreadyThere != <span class="keyword">null</span>) &#123;</span><br><span class="line">						object = alreadyThere;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						<span class="keyword">if</span> (shouldPostProcess) &#123;</span><br><span class="line">							<span class="keyword">if</span> (isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">								<span class="comment">// Temporarily return non-post-processed object, not storing it yet..</span></span><br><span class="line">								<span class="keyword">return</span> object;</span><br><span class="line">							&#125;</span><br><span class="line">							beforeSingletonCreation(beanName);</span><br><span class="line">							<span class="keyword">try</span> &#123;</span><br><span class="line">								<span class="comment">// 调用ObjectFactory 的后处理器</span></span><br><span class="line">								object = postProcessObjectFromFactoryBean(object, beanName);</span><br><span class="line">							&#125;</span><br><span class="line">							<span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">								<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName,</span><br><span class="line">										<span class="string">&quot;Post-processing of FactoryBean&#x27;s singleton object failed&quot;</span>, ex);</span><br><span class="line">							&#125;</span><br><span class="line">							<span class="keyword">finally</span> &#123;</span><br><span class="line">								afterSingletonCreation(beanName);</span><br><span class="line">							&#125;</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">if</span> (containsSingleton(beanName)) &#123;</span><br><span class="line">							<span class="comment">// 1.3. 再放入缓存中</span></span><br><span class="line">							<span class="keyword">this</span>.factoryBeanObjectCache.put(beanName, object);</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">return</span> object;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 2.不是单例，就可以重复创建了</span></span><br><span class="line">			<span class="comment">// 2.1 就是 ObjectFactory.getObject 方法</span></span><br><span class="line">			Object object = doGetObjectFromFactoryBean(factory, beanName);</span><br><span class="line">			<span class="keyword">if</span> (shouldPostProcess) &#123;</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					<span class="comment">// 调用ObjectFactory 的后处理器</span></span><br><span class="line">					object = postProcessObjectFromFactoryBean(object, beanName);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName, <span class="string">&quot;Post-processing of FactoryBean&#x27;s object failed&quot;</span>, ex);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> object;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>这个方法只做了一件事情，就是返回的bean 如果是单例的 ，那就必须保证全局唯一， 同时，也因为是单例的，所以不必重复创建 ，可以使用缓存来提高性能 。也就是说已经加载过就要记录下来以便于下次复用 ，否则就直接获取了 </li>
-<li>在 doGetObjectFromFactoryBean 方法中，我们终于看到想要看到的方法，也就是 Object=factory.getObject();</li>
-</ul>
-<h3 id="postProcessObjectFromFactoryBean-object-beanName-后处理器"><a href="#postProcessObjectFromFactoryBean-object-beanName-后处理器" class="headerlink" title="postProcessObjectFromFactoryBean(object, beanName)后处理器"></a>postProcessObjectFromFactoryBean(object, beanName)后处理器</h3><ul>
-<li>AbstractAutowireCapableBeanFactory#postProcessObjectFromFactoryBean</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Applies the &#123;<span class="doctag">@code</span> postProcessAfterInitialization&#125; callback of all</span></span><br><span class="line"><span class="comment">	 * registered BeanPostProcessors, giving them a chance to post-process the</span></span><br><span class="line"><span class="comment">	 * object obtained from FactoryBeans (for example, to auto-proxy them).</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@see</span> #applyBeanPostProcessorsAfterInitialization</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> Object <span class="title">postProcessObjectFromFactoryBean</span><span class="params">(Object object, String beanName)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> applyBeanPostProcessorsAfterInitialization(object, beanName);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 以后应用非常广泛的  XXBeanPostProcessor</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">applyBeanPostProcessorsAfterInitialization</span><span class="params">(Object existingBean, String beanName)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		Object result = existingBean;</span><br><span class="line">		<span class="keyword">for</span> (BeanPostProcessor processor : getBeanPostProcessors()) &#123;</span><br><span class="line">			Object current = processor.postProcessAfterInitialization(result, beanName);</span><br><span class="line">			<span class="keyword">if</span> (current == <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> result;</span><br><span class="line">			&#125;</span><br><span class="line">			result = current;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>在Spring 获取Bean的规则中有这样一条：  尽可能保证所有bean初始化后都会调用注册的BeanPostProcessor 的 postProcessAfterInitialization 方法进行处理</li>
-</ul>
-<h2 id="1-4-获取单例"><a href="#1-4-获取单例" class="headerlink" title="1.4 获取单例"></a>1.4 获取单例</h2><p>之前我们知道了如何从缓存中获取单例的过程， 如果缓存中不存在已经加载的单例bean，就需要 从头开始bean的加载过程。 而spring中使用getSIngleton 的重载方法实现bean的加载过程</p>
-<p>org/springframework/beans/factory/support/AbstractBeanFactory.java:342</p>
-<ul>
-<li>DefaultSingletonBeanRegistry#getSingleton(java.lang.String, org.springframework.beans.factory.ObjectFactory&lt;?&gt;)</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getSingleton</span><span class="params">(String beanName, ObjectFactory&lt;?&gt; singletonFactory)</span> </span>&#123;</span><br><span class="line">		Assert.notNull(beanName, <span class="string">&quot;Bean name must not be null&quot;</span>);</span><br><span class="line">		<span class="comment">// 全局变量需要同步</span></span><br><span class="line">		<span class="keyword">synchronized</span> (<span class="keyword">this</span>.singletonObjects) &#123;</span><br><span class="line">			<span class="comment">// 首先检查对应的bean 是否已经加载过，因为singleton模式 其实就是复用以创建的bean，所以 这一步是必须的</span></span><br><span class="line">			Object singletonObject = <span class="keyword">this</span>.singletonObjects.get(beanName);</span><br><span class="line">			<span class="comment">// 如果为空才可以进行 singleton 的bean 的初始化</span></span><br><span class="line">			<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">if</span> (<span class="keyword">this</span>.singletonsCurrentlyInDestruction) &#123;</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationNotAllowedException(beanName,</span><br><span class="line">							<span class="string">&quot;Singleton bean creation not allowed while singletons of this factory are in destruction &quot;</span> +</span><br><span class="line">							<span class="string">&quot;(Do not request a bean from a BeanFactory in a destroy method implementation!)&quot;</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">					logger.debug(<span class="string">&quot;Creating shared instance of singleton bean &#x27;&quot;</span> + beanName + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">//</span></span><br><span class="line">                <span class="comment">// 通过 this.singletonsCurrentlyInCreation.add(beanName) 将当前正在创建的bean 记录在缓存中。</span></span><br><span class="line">				<span class="comment">// 这样便可以对循环依赖进行检测</span></span><br><span class="line">				beforeSingletonCreation(beanName);</span><br><span class="line">				<span class="comment">//</span></span><br><span class="line">				<span class="keyword">boolean</span> newSingleton = <span class="keyword">false</span>;</span><br><span class="line">				<span class="keyword">boolean</span> recordSuppressedExceptions = (<span class="keyword">this</span>.suppressedExceptions == <span class="keyword">null</span>);</span><br><span class="line">				<span class="keyword">if</span> (recordSuppressedExceptions) &#123;</span><br><span class="line">					<span class="keyword">this</span>.suppressedExceptions = <span class="keyword">new</span> LinkedHashSet&lt;&gt;();</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					<span class="comment">// 初始化 bean</span></span><br><span class="line">					singletonObject = singletonFactory.getObject();</span><br><span class="line">					newSingleton = <span class="keyword">true</span>;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">catch</span> (IllegalStateException ex) &#123;</span><br><span class="line">					<span class="comment">// Has the singleton object implicitly appeared in the meantime -&gt;</span></span><br><span class="line">					<span class="comment">// if yes, proceed with it since the exception indicates that state.</span></span><br><span class="line">					singletonObject = <span class="keyword">this</span>.singletonObjects.get(beanName);</span><br><span class="line">					<span class="keyword">if</span> (singletonObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">						<span class="keyword">throw</span> ex;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">catch</span> (BeanCreationException ex) &#123;</span><br><span class="line">					<span class="keyword">if</span> (recordSuppressedExceptions) &#123;</span><br><span class="line">						<span class="keyword">for</span> (Exception suppressedException : <span class="keyword">this</span>.suppressedExceptions) &#123;</span><br><span class="line">							ex.addRelatedCause(suppressedException);</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">throw</span> ex;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">finally</span> &#123;</span><br><span class="line">					<span class="keyword">if</span> (recordSuppressedExceptions) &#123;</span><br><span class="line">						<span class="keyword">this</span>.suppressedExceptions = <span class="keyword">null</span>;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="comment">//</span></span><br><span class="line">                    <span class="comment">// this.singletonsCurrentlyInCreation.remove(beanName)，</span></span><br><span class="line">					<span class="comment">// 移除 缓存中对该bean的正在加载的状态 的记录</span></span><br><span class="line">					afterSingletonCreation(beanName);</span><br><span class="line">					<span class="comment">//</span></span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">if</span> (newSingleton) &#123;</span><br><span class="line">					<span class="comment">// 加入缓存 ，并删除 各类辅助状态</span></span><br><span class="line">					addSingleton(beanName, singletonObject);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> singletonObject;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">addSingleton</span><span class="params">(String beanName, Object singletonObject)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">synchronized</span> (<span class="keyword">this</span>.singletonObjects) &#123;</span><br><span class="line">			<span class="keyword">this</span>.singletonObjects.put(beanName, singletonObject);</span><br><span class="line">			<span class="keyword">this</span>.singletonFactories.remove(beanName);</span><br><span class="line">			<span class="keyword">this</span>.earlySingletonObjects.remove(beanName);</span><br><span class="line">			<span class="keyword">this</span>.registeredSingletons.add(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上述代码其实是使用 了回调方法，使得 程序可以在 单例创建的前后做一些准备 以及处理操作， 而真正的获取单例bean的方法其实并不是在 此方法中实现的。其实 现在逻辑是在 ObjectFactory 类型的实例singletonFactory 中实现的。而这些 准备及处理操作包括如下内容：</p>
-<ol>
-<li><p>检查缓存是否已经加载过</p>
-</li>
-<li><p>若没有加载，则记录 beanName 的正在加载状态</p>
-</li>
-<li><p>加载单例前，记录加载状态 ，</p>
-<p>beforeSingletonCreation(beanName)：通过 this.singletonsCurrentlyInCreation.add(beanName) 将当前正在创建的bean 记录在缓存中。这样便可以对循环依赖进行检测</p>
-</li>
-</ol>
-<ol start="4">
-<li><p>通过调用参数 传入的ObjectFactory 的个体Object 方法实例化bean </p>
-</li>
-<li><p>加载单例后的处理方法调用 </p>
-</li>
-<li><p>将结果记录至缓存 并删除 加载bean过程中所记录的各种辅助状态 </p>
-</li>
-<li><p>返回处理结果</p>
-</li>
-</ol>
-<h2 id="1-5-准备创建bean"><a href="#1-5-准备创建bean" class="headerlink" title="1.5 准备创建bean"></a>1.5 准备创建bean</h2><p>跟踪了这么多Spring源码，经历了这么多函数，或多或少发现了一些规律 ：</p>
-<ul>
-<li>一个真正干活的函数其实是以 do开头的，比如 doGetObjectFromFactoryBean； 而 给我们错觉的函数，比如 getObjectFromFactoryBean ，其实只是从全局角度去做些 统筹的工作 。</li>
-</ul>
-<p>这个规律对于createBean 也不例外，可以看看createBean做了哪些准备工作 </p>
-<ul>
-<li>org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean<ul>
-<li>org.springframework.beans.factory.support.AbstractBeanFactory#createBean<ul>
-<li>org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#createBean</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;**</span><br><span class="line">	 * Central method of this class: creates a bean instance,</span><br><span class="line">	 * populates the bean instance, applies post-processors, etc.</span><br><span class="line">	 * @see #doCreateBean</span><br><span class="line">	 *&#x2F;</span><br><span class="line">	@Override</span><br><span class="line">	protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)</span><br><span class="line">			throws BeanCreationException &#123;</span><br><span class="line"></span><br><span class="line">		if (logger.isTraceEnabled()) &#123;</span><br><span class="line">			logger.trace(&quot;Creating instance of bean &#39;&quot; + beanName + &quot;&#39;&quot;);</span><br><span class="line">		&#125;</span><br><span class="line">		RootBeanDefinition mbdToUse &#x3D; mbd;</span><br><span class="line"></span><br><span class="line">		&#x2F;&#x2F; Make sure bean class is actually resolved at this point, and</span><br><span class="line">		&#x2F;&#x2F; clone the bean definition in case of a dynamically resolved Class</span><br><span class="line">		&#x2F;&#x2F; which cannot be stored in the shared merged bean definition.</span><br><span class="line"></span><br><span class="line">		&#x2F;&#x2F; 1. 锁定class ，根据设置的class 属性或者根据className 来解析class</span><br><span class="line">		Class&lt;?&gt; resolvedClass &#x3D; resolveBeanClass(mbd, beanName);</span><br><span class="line">		if (resolvedClass !&#x3D; null &amp;&amp; !mbd.hasBeanClass() &amp;&amp; mbd.getBeanClassName() !&#x3D; null) &#123;</span><br><span class="line">			mbdToUse &#x3D; new RootBeanDefinition(mbd);</span><br><span class="line">			mbdToUse.setBeanClass(resolvedClass);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		&#x2F;&#x2F; Prepare method overrides.</span><br><span class="line">		&#x2F;&#x2F; 2. 验证以及准备覆盖的方法</span><br><span class="line">		try &#123;</span><br><span class="line">			mbdToUse.prepareMethodOverrides();</span><br><span class="line">		&#125;</span><br><span class="line">		catch (BeanDefinitionValidationException ex) &#123;</span><br><span class="line">			throw new BeanDefinitionStoreException(mbdToUse.getResourceDescription(),</span><br><span class="line">					beanName, &quot;Validation of method overrides failed&quot;, ex);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		try &#123;</span><br><span class="line">			&#x2F;&#x2F; 3. 给BeanPostProcessor 一个机会来返回代理，来替代真正的实例</span><br><span class="line">			&#x2F;&#x2F; Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.</span><br><span class="line">			Object bean &#x3D; resolveBeforeInstantiation(beanName, mbdToUse);</span><br><span class="line">			if (bean !&#x3D; null) &#123;</span><br><span class="line">				return bean;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		catch (Throwable ex) &#123;</span><br><span class="line">			throw new BeanCreationException(mbdToUse.getResourceDescription(), beanName,</span><br><span class="line">					&quot;BeanPostProcessor before instantiation of bean failed&quot;, ex);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		try &#123;</span><br><span class="line">			&#x2F;&#x2F; 4. doXXXX 才是真正做符合方法名称事情的方法</span><br><span class="line">			Object beanInstance &#x3D; doCreateBean(beanName, mbdToUse, args);</span><br><span class="line">			if (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(&quot;Finished creating instance of bean &#39;&quot; + beanName + &quot;&#39;&quot;);</span><br><span class="line">			&#125;</span><br><span class="line">			return beanInstance;</span><br><span class="line">		&#125;</span><br><span class="line">		catch (BeanCreationException | ImplicitlyAppearedSingletonException ex) &#123;</span><br><span class="line">			&#x2F;&#x2F; A previously detected exception with proper bean creation context already,</span><br><span class="line">			&#x2F;&#x2F; or illegal singleton state to be communicated up to DefaultSingletonBeanRegistry.</span><br><span class="line">			throw ex;</span><br><span class="line">		&#125;</span><br><span class="line">		catch (Throwable ex) &#123;</span><br><span class="line">			throw new BeanCreationException(</span><br><span class="line">					mbdToUse.getResourceDescription(), beanName, &quot;Unexpected exception during bean creation&quot;, ex);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li><p>根据设置的class 属性或者根据className 来解析 Class</p>
-</li>
-<li><p>对override 属性进行标记及验证 </p>
-</li>
-<li><p>应用初始化前的后处理器，解析指定bean 是否存在 初始化前的短路操作 </p>
-</li>
-<li><p>创建bean</p>
-</li>
-</ol>
-<h3 id="实例化的前置处理"><a href="#实例化的前置处理" class="headerlink" title="实例化的前置处理"></a>实例化的前置处理</h3><p>在真正调用docreate方法创建bean的实力前，使用resolveBeforeInstantiation 对 BeanDefinition 中的属性做些前置处理 。</p>
-<p>无论其中是否有相应的逻辑实现我们都可以理解，因为真正逻辑实现前后 留有处理函数也是 可扩展的一种体现， 但是这并不是最重要的 ，在函数 中 还提供了一个 短路判断，这才是最为关键的部分 。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// 3. 给BeanPostProcessor 一个机会来返回代理，来替代真正的实例</span></span><br><span class="line">			<span class="comment">// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.</span></span><br><span class="line">			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);</span><br><span class="line">			<span class="keyword">if</span> (bean != <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> bean;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
-
-<p>当经过前置处理后，返回的结果如果不为空，那么会直接略过后续的Bean的创建 而直接返回结果。    </p>
-<p>这一特性虽然很容易被忽略，但是却起着至关重要的作用，我们熟知的AOP功能 就是基于这里的判断 </p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> Object <span class="title">resolveBeforeInstantiation</span><span class="params">(String beanName, RootBeanDefinition mbd)</span> </span>&#123;</span><br><span class="line">		Object bean = <span class="keyword">null</span>;</span><br><span class="line">		<span class="comment">// 如果尚未被解析</span></span><br><span class="line">		<span class="keyword">if</span> (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) &#123;</span><br><span class="line">			<span class="comment">// Make sure bean class is actually resolved at this point.</span></span><br><span class="line">			<span class="keyword">if</span> (!mbd.isSynthetic() &amp;&amp; hasInstantiationAwareBeanPostProcessors()) &#123;</span><br><span class="line">				Class&lt;?&gt; targetType = determineTargetType(beanName, mbd);</span><br><span class="line">				<span class="keyword">if</span> (targetType != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="comment">//</span></span><br><span class="line">					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);</span><br><span class="line">					<span class="comment">//</span></span><br><span class="line">					<span class="keyword">if</span> (bean != <span class="keyword">null</span>) &#123;</span><br><span class="line">						bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			mbd.beforeInstantiationResolved = (bean != <span class="keyword">null</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>此方法最吸引我们的无疑 是两个方法 applyBeanPostProcessorsBeforeInstantiation  以及 applyBeanPostProcessorsAfterInitialization 。两个方法的实现非常的简单 ，无非是 对后处理器中的所有 InstantiationAwareBeanPostProcessor 类型的后处理器 进行 postProcessBeforeInstantiation 方法 和 BeanPostProcessor</p>
-]]></content>
-      <categories>
-        <category>Sprig源码解析</category>
-      </categories>
-      <tags>
-        <tag>bean的加载</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>深入理解jvm-08-虚拟机类加载机制</title>
     <url>/2021/01/14/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-08-%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6/</url>
     <content><![CDATA[<h1 id="虚拟机类加载机制"><a href="#虚拟机类加载机制" class="headerlink" title="虚拟机类加载机制"></a>虚拟机类加载机制</h1><p>代码编译的结果从本地机器码转变为字节码，是存储格式发展的一小步，却是编程语言发展的一大步。</p>
@@ -6793,6 +6591,249 @@ ApplicationClassLoader <-- Custom_ClassLoader2 : 父亲</pre>
       </tags>
   </entry>
   <entry>
+    <title>深入理解jvm-17-线程安全与锁优化</title>
+    <url>/2021/02/01/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-17-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E9%94%81%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h1 id="线程安全与锁优化"><a href="#线程安全与锁优化" class="headerlink" title="线程安全与锁优化"></a>线程安全与锁优化</h1><h2 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h2><p>《Java并发编程实战（Java Concurrency In Practice）》的作者Brian Goetz为“线程安全”做出了一个比较恰当的定义：</p>
+<ul>
+<li>当多个线程同时访问一个对象时，如果不用考虑这些线程在运行时环境的调度和交替执行，也不需要进行额外的同步，或者在调用方进行任何其他的协调操作，调用这个对象的行为都可以获得正确的结果，那就称这个对象是 线程安全的</li>
+<li>这个定义就很严谨而且有可操作性，它要求线程安全的代码都必须具备一个共同特征：<strong>代码本身封装了所有必要的正确性保障手段（如互斥同步等</strong>），令调用者无须关心多线程下的调用问题，更无须自己实现任何措施来保证多线程环境下的正确调用。这点听起来简单，但其实并不容易做到，在许多场景中，我们都会将这个定义弱化一些</li>
+</ul>
+<h3 id="Java语言中的线程安全"><a href="#Java语言中的线程安全" class="headerlink" title="Java语言中的线程安全"></a>Java语言中的线程安全</h3><ul>
+<li><p>在Java语言中，线程安全具体是如何体现的？</p>
+</li>
+<li><p>有哪些操作是线程安全的？</p>
+</li>
+</ul>
+<p>为了更深入地理解线程安全，在这里我们可以不把线程安全当作一个非真即假的二元排他选项来看待，而是按照线程安全的“安全程度”由强至弱来排序，我们可以将Java语言中各种操作共享的数据分为以下五类：<strong>不可变、绝对线程安全、相对线程安全、线程兼容和线程对立。</strong></p>
+<h4 id="不可变"><a href="#不可变" class="headerlink" title="不可变"></a>不可变</h4><p>在Java语言里面，<strong>不可变（Immutable）的对象一定是线程安全的</strong>，无论是对象的方法实现还是方法的调用者，都不需要再进行任何线程安全保障措施。  在讲解“final关键字带来的可见性”时曾经提到过一点：  只要一个不可变对象被正确的构建出来（即没有发生this 引用逃逸的情况），那其外部的可见状态永远都不会改变，永远都不会看到它再多个线程之中处于不一致的状态。“不可变”带来的安全性是最直接、最纯粹的。</p>
+<ul>
+<li><p>Java语言中，如果多线程共享的数据是一个基本数据类型，那么只要在定义时使用final关键字修饰它就可以保证它是不可变的。</p>
+</li>
+<li><p>如果共享数据是一个对象，由于Java语言目前暂时还没有提供值类型的支持，那就需要对象自行保证其行为不会对其状态产生任何影响才行。</p>
+</li>
+<li><p>不妨类比java.lang.String类的对象实例，它是一个典型的不可变对象，用户调用它的substring()、replace()和concat()这些方法都不会影响它原来的值，只会返回一个新构造的字符串对象</p>
+</li>
+<li><p>保证对象行为不影响自己状态的途径有很多种，最简单的一种就是把对象里面带有状态的变量都声明为final，这样在构造函数结束之后，它就是不可变的，例如代码清单13-1中所示的java.lang.Integer构造函数，它通过将内部状态变量value定义为final来保障状态不变</p>
+</li>
+<li><p>代码清单13-1　JDK中Integer类的构造函数</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* The value of the &lt;code&gt;Integer&lt;/code&gt;.</span></span><br><span class="line"><span class="comment">* <span class="doctag">@serial</span></span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> value;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* Constructs a newly allocated &lt;code&gt;Integer&lt;/code&gt; object that</span></span><br><span class="line"><span class="comment">* represents the specified &lt;code&gt;int&lt;/code&gt; value.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> value the value to be represented by the</span></span><br><span class="line"><span class="comment">* &lt;code&gt;Integer&lt;/code&gt; object.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Integer</span><span class="params">(<span class="keyword">int</span> value)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">this</span>.value = value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在Java类库API中符合不可变要求的类型，除了上面提到的String之外，常用的还有枚举类型及java.lang.Number的部分子类，如Long和Double等数值包装类型、BigInteger和BigDecimal等大数据类型。但同为Number子类型的原子类AtomicInteger和AtomicLong则是可变的，读者不妨看看这两个原子类的源码，想一想为什么它们要设计成可变的。 </p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AtomicInteger</span> <span class="keyword">extends</span> <span class="title">Number</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">6214790243416807050L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * This class intended to be implemented using VarHandles, but there</span></span><br><span class="line"><span class="comment">     * are unresolved cyclic startup dependencies.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> jdk.internal.misc.Unsafe U = jdk.internal.misc.Unsafe.getUnsafe();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> VALUE = U.objectFieldOffset(AtomicInteger.class, <span class="string">&quot;value&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> value; <span class="comment">//因为 被 volatile修饰了</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new AtomicInteger with the given initial value.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> initialValue the initial value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AtomicInteger</span><span class="params">(<span class="keyword">int</span> initialValue)</span> </span>&#123;</span><br><span class="line">        value = initialValue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new AtomicInteger with initial value &#123;<span class="doctag">@code</span> 0&#125;.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AtomicInteger</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="绝对线程安全"><a href="#绝对线程安全" class="headerlink" title="绝对线程安全"></a>绝对线程安全</h4><p>绝对的线程安全能够完全满足Brian Goetz给出的线程安全的定义，这个定义其实是很严格的，一个类要达到“不管运行时环境如何，调用者都不需要任何额外的同步措施”可能需要付出非常高昂的，甚至不切实际的代价。</p>
+<p>在Java API中标注自己是线程安全的类，大多数都不是绝对的线程安全。</p>
+<p>我们可以通过Java API中一个不是“绝对线程安全”的“线程安全类型”来看看这个语境里的“绝对”究竟是什么意思。</p>
+<p>如果说java.util.Vector是一个线程安全的容器，相信所有的Java程序员对此都不会有异议，<strong>因为它的add()、get()和size()等方法都是被synchronized修饰的</strong>，尽管这样效率不高，但保证了具备原子性、可见性和有序性。不过，即使它所有的方法都被修饰成synchronized，也不意味着调用它的时候就永远都不再需要同步手段了，请看看代码清单13-2中的测试代码。</p>
+<p>代码清单13-2　对Vector线程安全的测试</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VectorTestCase_1</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Vector&lt;Integer&gt; vector = <span class="keyword">new</span> Vector&lt;Integer&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">                vector.add(i);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Thread removeThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                        vector.remove(i);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            Thread printThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                        System.out.println((vector.get(i)));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            removeThread.start();</span><br><span class="line">            printThread.start();</span><br><span class="line">            <span class="comment">//不要同时产生过多的线程，否则会导致操作系统假死</span></span><br><span class="line">            <span class="keyword">while</span> (Thread.activeCount() &gt; <span class="number">20</span>) ;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果:</span><br><span class="line">Exception in thread <span class="string">&quot;Thread-469&quot;</span> java.lang.ArrayIndexOutOfBoundsException: Array index out of range: <span class="number">17</span></span><br><span class="line">	at java.base/java.util.Vector.get(Vector.java:<span class="number">777</span>)</span><br><span class="line">	at org.fenixsoft.jvm.chapter13.VectorTestCase_1$<span class="number">2.</span>run(VectorTestCase_1.java:<span class="number">31</span>)</span><br><span class="line">	at java.base/java.lang.Thread.run(Thread.java:<span class="number">844</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>尽管这里使用到的Vector的get()、remove()和size()方法都是同步的，</p>
+<ul>
+<li>但是在多线程的环境中，如果不在方法调用端做额外的同步措施，使用这段代码仍然是不安全的。</li>
+<li>因为如果另一个线程恰好在错误的时间里删除了一个元素，导致序号i已经不再可用，再用访问数组就会抛出一个ArrayIndexOutOfBoundsException异常。</li>
+<li>如果要保证这段代码能正确执行下去，我们不得不把removeThread和printThread的定义改成代码清单13-3所示的这样</li>
+</ul>
+<p>代码清单13-3　必须加入同步保证Vector访问的线程安全性</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VectorTestCase_2</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Vector&lt;Integer&gt; vector = <span class="keyword">new</span> Vector&lt;Integer&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">                vector.add(i);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Thread removeThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">synchronized</span> (vector) &#123;</span><br><span class="line">                        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                            vector.remove(i);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            Thread printThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">synchronized</span> (vector) &#123;</span><br><span class="line">                        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                            System.out.println((vector.get(i)));</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            removeThread.start();</span><br><span class="line">            printThread.start();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//不要同时产生过多的线程，否则会导致操作系统假死</span></span><br><span class="line">            <span class="keyword">while</span> (Thread.activeCount() &gt; <span class="number">20</span>) ;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>假如Vector一定要做到绝对的线程安全，那就必须<strong>在它内部维护一组一致性的快照访问</strong>才行，每次对其中元素进行改动都要产生新的快照，这样要付出的时间和空间成本都是非常大的。</li>
+</ul>
+<h4 id="相对线程安全"><a href="#相对线程安全" class="headerlink" title="相对线程安全"></a>相对线程安全</h4><p>相对线程安全就是我们通常意义上所讲的线程安全，它需要保证对这个对象单次的操作是线程安全的，我们在调用的时候不需要进行额外的保障措施，</p>
+<ul>
+<li>但是对于一些特定顺序的连续调用，就可能需要在调用端使用额外的同步手段来保证调用的正确性。代码清单13-2和代码清单13-3就是相对线程安<br>全的案例。</li>
+<li>在Java语言中，大部分声称线程安全的类都属于这种类型，例如Vector、HashTable、Collections的synchronizedCollection()方法包装的集合等。</li>
+</ul>
+<h4 id="线程兼容"><a href="#线程兼容" class="headerlink" title="线程兼容"></a>线程兼容</h4><p>线程兼容是指对象本身并不是线程安全的，</p>
+<ul>
+<li>但是可以通过在调用端正确地使用同步手段来保证对象在并发环境中可以安全地使用。我们平常说一个类不是线程安全的，</li>
+<li>通常就是指这种情况。Java类库API中大部分的类都是线程兼容的，如与前面的Vector和HashTable相对应的集合类ArrayList和HashMap等。</li>
+</ul>
+<h4 id="线程对立"><a href="#线程对立" class="headerlink" title="线程对立"></a>线程对立</h4><p>线程对立是指不管调用端是否采取了同步措施，都无法在多线程环境中并发使用代码。由于Java语言天生就支持多线程的特性，线程对立这种排斥多线程的代码是很少出现的，而且通常都是有害的，应当尽量避免。</p>
+<h3 id="线程安全的实现方法"><a href="#线程安全的实现方法" class="headerlink" title="线程安全的实现方法"></a>线程安全的实现方法</h3><ul>
+<li>了解过什么是线程安全之后，紧接着的一个问题就是我们应该如何实现线程安全。这听起来似乎是一件由代码如何编写来决定的事情，不应该出现在讲解Java虚拟机的书里。确实，如何实现线程安全与代码编写有很大的关系，</li>
+<li>但虚拟机提供的同步和锁机制也起到了至关重要的作用。如何编写代码实现线程安全，以及虚拟机如何实现同步与锁这两方面都会涉及，相对而言更偏重后者一些，只要读者明白了Java虚拟机线程安全措施的原理与运作过程，自己再去思考代码如何编写就不是一件困难的事情了。</li>
+</ul>
+<h4 id="互斥同步（Mutual-Exclusion-amp-Synchronization）"><a href="#互斥同步（Mutual-Exclusion-amp-Synchronization）" class="headerlink" title="互斥同步（Mutual Exclusion &amp; Synchronization）"></a>互斥同步（Mutual Exclusion &amp; Synchronization）</h4><p>互斥同步（Mutual Exclusion &amp; Synchronization）是一种最常见也是最主要的并发正确性保障手段。</p>
+<ul>
+<li><p>同步是指在多个线程并发访问共享数据时，保证共享数据在同一个时刻只被一条（或者是一些，当使用信号量的时候）线程使用。</p>
+</li>
+<li><p>而互斥是实现同步的一种手段，临界区（Critical Section）、互斥量（Mutex）和信号量（Semaphore）都是常见的互斥实现方式。</p>
+</li>
+<li><p>因此在“互斥同步”这四个字里面，互斥是因，同步是果；互斥是方法，同步是目的。</p>
+</li>
+</ul>
+<ul>
+<li>在Java里面，最基本的互斥同步手段就是<strong>synchronized</strong>关键字，这是一种块结构（BlockStructured）的同步语法。</li>
+<li>synchronized关键字经过Javac编译之后，会在同步块的前后分别形成monitorenter和monitorexit这两个字节码指令。</li>
+<li>这两个字节码指令都需要一个reference类型的参数来指明要锁定和解锁的对象。</li>
+<li>如果Java源码中的synchronized明确指定了对象参数，那就以这个对象的引用作为reference；</li>
+<li>如果没有明确指定，那将根据synchronized修饰的方法类型（如实例方法或类方法），来决定是取代码所在的对象实例还是取类型对应的Class对象来作为线程要持有的锁。</li>
+</ul>
+<p>根据《Java虚拟机规范》的要求，<strong>在执行monitorenter指令时，首先要去尝试获取对象的锁。</strong>如果这个对象没被锁定，或者当前线程已经持有了那个对象的锁，就把锁的计数器的值增加一，</p>
+<p>而<strong>在执行monitorexit指令时会将锁计数器的值减一</strong>。一旦计数器的值为零，锁随即就被释放了。如果获取对象锁失败，那当前线程就应当被阻塞等待，直到请求锁定的对象被持有它的线程释放为止。</p>
+<p>我们可以得出两个关于synchronized的直接推论，这是使用它时需特别注意的：</p>
+<ul>
+<li>被synchronized修饰的同步块<strong>对同一条线程来说是可重入的</strong>。这意味着同一线程反复进入同步块也不会出现自己把自己锁死的情况。</li>
+<li>被synchronized修饰的同步块<strong>在持有锁的线程执行完毕并释放锁之前，会无条件地阻塞后面其他线程的进入</strong>。这意味着无法像处理某些数据库中的锁那样，强制已获取锁的线程释放锁；也无法强制正在等待锁的线程中断等待或超时退出。</li>
+</ul>
+<p>从执行成本的角度看，持有锁是一个重量级（Heavy-Weight）的操作。</p>
+<p>在主流Java虚拟机实现中，Java的线程是映射到操作系统的原生内核线程之上的，如果要阻塞或唤醒一条线程，则需要操作系统来帮忙完成，这就不可避免地陷入用户态到核心态的转换中，进行这种状态转换需要耗费很多的处理器时间。</p>
+<p>尤其是对于代码特别简单的同步块（譬如被synchronized修饰的getter()或setter()方法），状态转换消耗的时间甚至会比用户代码本身执行的时间还要长。因此才说，synchronized是Java语言中一个重量级的操作，有经验的程序员都只会在确实必要的情况下才使用这种操作。而虚拟机本身也会进行一些优化，譬如在通知操作系统阻塞线程之前加入一段自旋等待过程，以避免频繁地切入核心态之中</p>
+<h3 id="锁Lock"><a href="#锁Lock" class="headerlink" title="锁Lock"></a>锁Lock</h3><p>除了synchronized关键字以外，自JDK 5起（实现了JSR 166[1]），Java类库中新提供了java.util.concurrent包（下文称J.U.C包），其中的<br><strong>java.util.concurrent.locks.Lock接口便成了Java的另一种全新的互斥同步手段</strong>。基于Lock接口，用户能够以非块结构（Non-Block Structured）来实现互斥同步，从而摆脱了语言特性的束缚，改为在类库层面去实现同步，这也为日后扩展出不同调度算法、不同特征、不同性能、不同语义的各种锁提供了广阔的空间。</p>
+<h4 id="重入锁（ReentrantLock）"><a href="#重入锁（ReentrantLock）" class="headerlink" title="重入锁（ReentrantLock）"></a>重入锁（ReentrantLock）</h4><p>重入锁（ReentrantLock）是Lock接口最常见的一种实现[2]，顾名思义，它与synchronized一样是可重入[3]的。在基本用法上，ReentrantLock也与synchronized很相似，只是代码写法上稍有区别而已。不过，ReentrantLock与synchronized相比增加了一些高级功能，</p>
+<p>主要有以下三项：等待可中断、可实现公平锁及锁可以绑定多个条件。</p>
+<ul>
+<li>等待可中断：是指当持有锁的线程长期不释放锁的时候，正在等待的线程可以选择放弃等待，改为处理其他事情。可中断特性对处理执行时间非常长的同步块很有帮助。</li>
+<li>公平锁：是指多个线程在等待同一个锁时，必须按照申请锁的时间顺序来依次获得锁；而非公平锁则不保证这一点，在锁被释放时，任何一个等待锁的线程都有机会获得锁。synchronized中的锁是非公平的，ReentrantLock在默认情况下也是非公平的，但可以通过带布尔值的构造函数要求使用公平锁。不过一旦使用了公平锁，将会导致ReentrantLock的性能急剧下降，会明显影响吞吐量。</li>
+<li>锁绑定多个条件：是指一个ReentrantLock对象可以同时绑定多个Condition对象。在synchronized中，锁对象的wait()跟它的notify()或者notifyAll()方法配合可以实现一个隐含的条件，如果要和多于一个的条件关联的时候，就不得不额外添加一个锁；而ReentrantLock则无须这样做，多次调用newCondition()方法即可。</li>
+</ul>
+<p>ReentrantLock在功能上是synchronized的超集，在性能上又至少不会弱于synchronized，那synchronized修饰符是否应该被直接抛弃，不再使用了呢？当然不是，基于以下理由，仍然推荐在synchronized与ReentrantLock都可满足需要时优先使用synchronized：</p>
+<ul>
+<li>synchronized是在<strong>Java语法层面的同步，足够清晰，也足够简单</strong>。每个Java程序员都熟悉synchronized，但J.U.C中的Lock接口则并非如此。因此在只需要基础的同步功能时，更推荐synchronized。</li>
+<li>Lock应该<strong>确保在finally块中释放锁</strong>，否则一旦受同步保护的代码块中抛出异常，则有可能永远不会释放持有的锁。这一点必须由程序员自己来保证，而使用synchronized的话则可以由Java虚拟机来确保即使出现异常，锁也能被自动释放。</li>
+<li>从长远来看，Java虚拟机更容易针对synchronized来进行优化，因为Java虚拟机可以在线程和对象的元数据中记录synchronized中锁的相关信息，而使用J.U.C中的Lock的话，Java虚拟机是很难得知具体哪些锁对象是由特定线程锁持有的。</li>
+</ul>
+<h3 id="非阻塞同步"><a href="#非阻塞同步" class="headerlink" title="非阻塞同步"></a>非阻塞同步</h3><ul>
+<li>互斥同步面临的<strong>主要问题是进行线程阻塞和唤醒所带来的性能开销</strong>，因此这种同步也被称为阻塞同步（Blocking Synchronization）。</li>
+<li>从解决问题的方式上看，<strong>互斥同步属于一种悲观的并发策略</strong>，其总是认为只要不去做正确的同步措施（例如加锁），那就肯定会出现问题，无论共享的数据是否真的会出现竞争，它都会进行加锁（这里讨论的是概念模型，实际上虚拟机会优化掉很大一部分不必要的加锁），这将会导致用户态到核心态转换、维护锁计数器和检查是否有被阻塞的线程需要被唤醒等开销。</li>
+</ul>
+<p>随着硬件指令集的发展，我们已经有了另外一个选择：<strong>基于冲突检测的乐观并发策略</strong>，通俗地说就是不管风险，先进行操作，如果没有其他线程争用共享数据，那操作就直接成功了；如果共享的数据的确被争用，产生了冲突，那再进行其他的补偿措施，<strong>最常用的补偿措施是不断地重试</strong>，直到出现没有竞争的共享数据为止。<strong>这种乐观并发策略的实现不再需要把线程阻塞挂起，因此这种同步操作被称为非阻塞同步（Non-Blocking Synchronization</strong>），使用这种措施的代码也常被称为<strong>无锁（Lock-Free）编程。</strong></p>
+<p>为什么说使用乐观并发策略需要“硬件指令集的发展”？</p>
+<p>因为我们必须要求<strong>操作和冲突检测这两个步骤具备原子性</strong>。靠什么来保证原子性？如果这里再使用互斥同步来保证就完全失去意义了，所以我们只能靠硬件来实现这件事情，<strong>硬件保证某些从语义上看起来需要多次操作的行为可以只通过一条处理器指令就能完成</strong>，这类指令常用的有：</p>
+<ul>
+<li>测试并设置（Test-and-Set）；</li>
+<li>获取并增加（Fetch-and-Increment）；</li>
+<li>·交换（Swap）；</li>
+<li><strong>比较并交换（Compare-and-Swap，下文称CAS）</strong>；</li>
+<li>加载链接/条件储存（Load-Linked/Store-Conditional，下文称LL/SC）</li>
+</ul>
+<p>前面的三条是20世纪就已经存在于大多数指令集之中的处理器指令，后面的两条是现代处理器新增的，而且这两条指令的目的和功能也是类似的.</p>
+<p>因为Java里最终暴露出来的是CAS操作，所以我们以CAS指令为例进行讲解。</p>
+<h4 id="CAS指令"><a href="#CAS指令" class="headerlink" title="CAS指令"></a>CAS指令</h4><ul>
+<li>CAS指令需要有三个操作数，分别是<strong>内存位置</strong>（在Java中可以简单地理解为变量的内存地址，用V表示）、<strong>旧的预期值</strong>（用A表示）和<strong>准备设置的新值</strong>（用B表示）。</li>
+<li>CAS指令执行时，<strong>当且仅当V符合A时，处理器才会用B更新V的值，否则它就不执行更新。但是，不管是否更新了V的值，都会返回V的旧值</strong>，上述的处理过程是一个原子操作，执行期间不会被其他线程中断。</li>
+<li>在JDK 5之后，Java类库中才开始使用CAS操作，该操作由<strong>sun.misc.Unsafe</strong>类里面的compareAndSwapInt()和compareAndSwapLong()等几个方法包装提供。</li>
+<li>HotSpot虚拟机在内部对这些方法做了特殊处理，即时编译出来的结果就是一条平台相关的处理器CAS指令，没有方法调用的过程，或者可以认为是无条件内联进去了[5]。</li>
+<li>不过由于Unsafe类在设计上就不是提供给用户程序调用的类（Unsafe::getUnsafe()的代码中限制了只有启动类加载器（Bootstrap ClassLoader）加载的Class才能访问它），因此在JDK 9之前只有Java类库可以使用CAS，譬如J.U.C包里面的整数原子类，其中的compareAndSet()和getAndIncrement()等方法都使用了Unsafe类的CAS操作来实现。</li>
+<li>而如果用户程序也有使用CAS操作的需求，那要么就采用反射手段突破Unsafe的访问限制，要么就只能通过Java类库API来间接使用它。直到JDK 9之后，Java类库才在VarHandle类里开放了面向用户程序使用的CAS操作</li>
+</ul>
+<p>下面笔者将用一段在前面章节中没有解决的问题代码来介绍如何通过CAS操作避免阻塞同步。测试的代码如代码清单12-1所示，为了节省版面笔者就不重复贴到这里了。这段代码里我们曾经通过20个线程自增10000次的操作来<strong>证明volatile变量不具备原子性</strong>，那么如何才能让它具备原子性呢？之前我们的解决方案是<strong>把race++操作或increase()方法用同步块包裹起来</strong>，这毫无疑问是一个解决方案，但是如果改成代码清单13-4所示的写法，效率将会提高许多。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Atomic变量自增运算测试</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> zzm</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AtomicTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> AtomicInteger race = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        race.incrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> THREADS_COUNT = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        Thread[] threads = <span class="keyword">new</span> Thread[THREADS_COUNT];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; THREADS_COUNT; i++) &#123;</span><br><span class="line">            threads[i] = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">                        increase();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            threads[i].start();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (Thread.activeCount() &gt; <span class="number">1</span>)</span><br><span class="line">            Thread.yield();</span><br><span class="line"></span><br><span class="line">        System.out.println(race);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>使用AtomicInteger代替int后，程序输出了正确的结果，这一切都要归功于incrementAndGet()方法的原子性。它的实现其实非常简单，如代码清单13-5所示</li>
+<li>代码清单13-5　incrementAndGet()方法的JDK源码</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Atomically increments the current value,</span></span><br><span class="line"><span class="comment">   * with memory effects as specified by &#123;<span class="doctag">@link</span> VarHandle#getAndAdd&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * &lt;p&gt;Equivalent to &#123;<span class="doctag">@code</span> addAndGet(1)&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> the updated value</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">incrementAndGet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> U.getAndAddInt(<span class="keyword">this</span>, VALUE, <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Atomically adds the given value to the current value of a field</span></span><br><span class="line"><span class="comment">   * or array element within the given object &#123;<span class="doctag">@code</span> o&#125;</span></span><br><span class="line"><span class="comment">   * at the given &#123;<span class="doctag">@code</span> offset&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> o object/array to update the field/element in</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> offset field/element offset</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> delta the value to add</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> the previous value</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@since</span> 1.8</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@HotSpotIntrinsicCandidate</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getAndAddInt</span><span class="params">(Object o, <span class="keyword">long</span> offset, <span class="keyword">int</span> delta)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">int</span> v;</span><br><span class="line">      <span class="keyword">do</span> &#123;</span><br><span class="line">          v = getIntVolatile(o, offset);</span><br><span class="line">      &#125; <span class="keyword">while</span> (!weakCompareAndSetInt(o, offset, v, v + delta));</span><br><span class="line">      <span class="keyword">return</span> v;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@HotSpotIntrinsicCandidate</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">weakCompareAndSetInt</span><span class="params">(Object o, <span class="keyword">long</span> offset,</span></span></span><br><span class="line"><span class="function"><span class="params">                                            <span class="keyword">int</span> expected,</span></span></span><br><span class="line"><span class="function"><span class="params">                                            <span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> compareAndSetInt(o, offset, expected, x);</span><br><span class="line">  &#125;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Atomically updates Java variable to &#123;<span class="doctag">@code</span> x&#125; if it is currently</span></span><br><span class="line"><span class="comment">   * holding &#123;<span class="doctag">@code</span> expected&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * &lt;p&gt;This operation has memory semantics of a &#123;<span class="doctag">@code</span> volatile&#125; read</span></span><br><span class="line"><span class="comment">   * and write.  Corresponds to C11 atomic_compare_exchange_strong.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> &#123;<span class="doctag">@code</span> true&#125; if successful</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@HotSpotIntrinsicCandidate</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="keyword">boolean</span> <span class="title">compareAndSetInt</span><span class="params">(Object o, <span class="keyword">long</span> offset,</span></span></span><br><span class="line"><span class="function"><span class="params">                                               <span class="keyword">int</span> expected,</span></span></span><br><span class="line"><span class="function"><span class="params">                                               <span class="keyword">int</span> x)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>incrementAndGet()方法在一个无限循环中，不断尝试将一个比当前值大一的新值赋值给自己。如果失败了，那说明在执行CAS操作的时候，旧值已经发生改变，于是再次循环进行下一次操作，直到设置成功为止。</p>
+<h4 id="CAS操作的“ABA问题”"><a href="#CAS操作的“ABA问题”" class="headerlink" title="CAS操作的“ABA问题”"></a>CAS操作的“ABA问题”</h4><p>尽管CAS看起来很美好，既简单又高效，但显然这种操作无法涵盖互斥同步的所有使用场景，并且CAS从语义上来说并不是真正完美的，它存在一个逻辑漏洞：如果一个变量V初次读取的时候是A值，并且在准备赋值的时候检查到它仍然为A值，那就能说明它的值没有被其他线程改变过了吗？</p>
+<p>这是不能的，因为如果在这段期间它的值曾经被改成B，后来又被改回为A，那CAS操作就会误认为它从来没有被改变过。这个漏洞称为CAS操作的“ABA问题”</p>
+<h3 id="无同步方案"><a href="#无同步方案" class="headerlink" title="无同步方案"></a>无同步方案</h3><p>要保证线程安全，也并非一定要进行阻塞或非阻塞同步，<strong>同步与线程安全两者没有必然的联系</strong>。<strong>同步只是保障存在共享数据争用时正确性的手段，如果能让一个方法本来就不涉及共享数据，那它自然就不需要任何同步措施去保证其正确性</strong>，因此会有一些代码天生就是线程安全的，笔者简单介绍其中的两类。</p>
+<h4 id="可重入代码"><a href="#可重入代码" class="headerlink" title="可重入代码"></a>可重入代码</h4><ul>
+<li>可重入代码（Reentrant Code）：这种代码又称纯代码（Pure Code），是指可以在代码执行的任何时刻中断它，转而去执行另外一段代码（包括递归调用它本身），而在控制权返回后，原来的程序不会出现任何错误，也不会对结果有所影响。</li>
+<li>在特指多线程的上下文语境里（不涉及信号量等因素），我们可以认为可重入代码是线程安全代码的一个真子集，这意味着相对线程安全来说，可重入性是更为基础的特性，它可以保证代码线程安全，</li>
+<li>即所有可重入的代码都是线程安全的，但并非所有的线程安全的代码都是可重入的。</li>
+<li>可重入代码有一些共同的特征，例如，不依赖全局变量、存储在堆上的数据和公用的系统资源，用到的状态量都由参数中传入，不调用非可重入的方法等。</li>
+<li>我们可以通过一个比较简单的原则来判断代码是否具备可重入性：如果一个方法的返回结果是可以预测的，只要输入了相同的数据，就都能返回相同的结果，那它就满足可重入性的要求，当然也就是线程安全的。</li>
+</ul>
+<h4 id="线程本地存储（Thread-Local-Storage）"><a href="#线程本地存储（Thread-Local-Storage）" class="headerlink" title="线程本地存储（Thread Local Storage）"></a>线程本地存储（Thread Local Storage）</h4><ul>
+<li>如果一段代码中所需要的数据必须与其他代码共享，那就看看这些共享数据的代码是否能保证在同一个线程中执行。如果能保证，我们就可以把共享数据的可<br>见范围限制在同一个线程之内，这样，无须同步也能保证线程之间不出现数据争用的问题。</li>
+<li>大部分使用消费队列的架构模式（如“生产者-消费者”模式）都会将产品的消费过程限制在一个线程中消费完，其中最重要的一种应用实例就是经典Web交互模型中的“一个请求对应一个服务器线程”（Thread-per-Request）的处理方式，这种处理方式的广泛应用使得很多Web服务端应用都可以使用线程本地存储来解决线程安全问题。</li>
+<li>Java语言中，如果一个变量要被多线程访问，可以使用volatile关键字将它声明为“易变的”；</li>
+<li>如果一个变量只要被某个线程独享，可以通过java.lang.ThreadLocal类来实现线程本地存储的功能。每一个线程的Thread对象中都有一个ThreadLocalMap对象，这个对象存储了一组以ThreadLocal.threadLocalHashCode为键，以本地线程变量为值的K-V值对，ThreadLocal对象就是当前线程的ThreadLocalMap的访问入口，每一个ThreadLocal对象都包含了一个独一无二的threadLocalHashCode值，使用这个值就可以在线程K-V值对中找回对应的本地线程变量。</li>
+</ul>
+<h2 id="锁优化"><a href="#锁优化" class="headerlink" title="锁优化"></a>锁优化</h2><p>高效并发是从JDK 5升级到JDK 6后一项重要的改进项，HotSpot虚拟机开发团队在这个版本上花费了大量的资源去实现各种锁优化技术，</p>
+<p>如<strong>适应性自旋（Adaptive Spinning）、锁消除（LockElimination）、锁膨胀（Lock Coarsening）、轻量级锁（Lightweight Locking）、偏向锁（BiasedLocking）</strong>等，这些技术都是为了在线程之间更高效地共享数据及解决竞争问题，从而提高程序的执行效率。</p>
+<h3 id="自旋锁与自适应自旋"><a href="#自旋锁与自适应自旋" class="headerlink" title="自旋锁与自适应自旋"></a>自旋锁与自适应自旋</h3><ul>
+<li>互斥同步对性能最大的影响是阻塞的实现，挂起线程和恢复线程的操作都需要转入内核态中完成，这些操作给Java虚拟机的并发性能带来了很大的压力</li>
+<li>同时，虚拟机的开发团队也注意到在许多应用上，共享数据的锁定状态只会持续很短的一段时间，为了这段时间去挂起和恢复线程并不值得</li>
+<li>如果物理机器有一个以上的处理器或者处理器核心，能让两个或以上的线程同时并行执行，我们就可以让后面请求锁的那个线程“稍等一会”，但不放弃处理器的执行时间，看看持有锁的线程是否很快就会释放锁。</li>
+<li>为了让线程等待，我们只须让线程执行一个忙循环（自旋），这项技术就是所谓的自旋锁。</li>
+<li><strong>自旋等待不能代替阻塞</strong>，且先不说对处理器数量的要求，自旋等待本身虽然避免了线程切换的开销，但它是要占用处理器时间的，所以如果<strong>锁被占用的时间很</strong><br><strong>短，自旋等待的效果就会非常好</strong>，反之如果锁被占用的时间很长，那么自旋的线程只会白白消耗处理器资源，而不会做任何有价值的工作，这就会带来性能的浪费。</li>
+<li>因此自旋等待的时间必须有一定的限度，如果自旋超过了限定的次数仍然没有成功获得锁，就应当使用传统的方式去挂起线程。自旋次数的默认值是十次，用户也可以使用参数-XX：PreBlockSpin来自行更改。</li>
+</ul>
+<ul>
+<li>在JDK 6中对自旋锁的优化，引入了自适应的自旋。</li>
+<li>自适应意味着自旋的时间不再是固定的了，而是由前一次在同一个锁上的自旋时间及锁的拥有者的状态来决定的。</li>
+<li>如果在同一个锁对象上，自旋等待刚刚成功获得过锁，并且持有锁的线程正在运行中，那么虚拟机就会认为这次自旋也很有可能再次成功，进而允许自旋等待持续相对更长的时间，比如持续100次忙循环。</li>
+<li>另一方面，如果对于某个锁，自旋很少成功获得过锁，那在以后要获取这个锁时将有可能直接省略掉自旋过程，以避免浪费处理器资源。</li>
+<li>有了自适应自旋，随着程序运行时间的增长及性能监控信息的不断完善，虚拟机对程序锁的状况预测就会越来越精准，虚拟机就会变得越来越“聪明”了。</li>
+</ul>
+<h3 id="锁消除"><a href="#锁消除" class="headerlink" title="锁消除"></a>锁消除</h3><ul>
+<li>锁消除是指虚拟机即时编译器在运行时，对一些代码要求同步，但是<strong>对被检测到不可能存在共享数据竞争的锁进行消除</strong></li>
+<li>锁消除的主要判定依据<strong>来源于逃逸分析的数据支持，</strong>如果判断到一段代码中，在堆上的所有数据都不会逃逸出去被其他线程访问到，那就可<br>以把它们当作栈上数据对待，认为它们是线程私有的，同步加锁自然就无须再进行。</li>
+</ul>
+<p>代码清单13-6　一段看起来没有同步的代码</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">concatString</span><span class="params">(String s1, String s2, String s3)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> s1 + s2 + s3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们也知道，由于String是一个不可变的类，对字符串的连接操作总是通过生成新的String对象来进行的，因此Javac编译器会对String连接做自动优化。在JDK 5之前，字符串加法会转化为StringBuffer对象的连续append()操作，在JDK 5及以后的版本中，会转化为StringBuilder对象的连续append()操作。即代码清单13-6所示的代码可能会变成代码清单13-7所示的样子[1]。</p>
+<p>代码清单13-7　Javac转化后的字符串连接操作</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">concatString</span><span class="params">(String s1, String s2, String s3)</span> </span>&#123;</span><br><span class="line">    StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">    sb.append(s1);</span><br><span class="line">    sb.append(s2);</span><br><span class="line">    sb.append(s3);</span><br><span class="line">    <span class="keyword">return</span> sb.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>每个StringBuffer.append()方法中都有一个同步块，锁就是sb对象。虚拟机观察变量sb，经过逃逸分析后会发现它的动态作用域被限制在concatString()方法内<br>部。也就是sb的所有引用都永远不会逃逸到concatString()方法之外，其他线程无法访问到它，所以这里虽然有锁，但是可以被安全地消除掉。在解释执行时这里仍然会加锁，但在经过服务端编译器的即时编译之后，这段代码就会忽略所有的同步措施而直接执行。</p>
+<h3 id="锁粗化"><a href="#锁粗化" class="headerlink" title="锁粗化"></a>锁粗化</h3><p>原则上，我们在编写代码的时候，总是推荐将同步块的作用范围限制得尽量小——只在共享数据的实际作用域中才进行同步，这样是为了使得需要同步的操作数量尽可能变少，即使存在锁竞争，等待锁的线程也能尽可能快地拿到锁。</p>
+<p>大多数情况下，上面的原则都是正确的，但是如果一系列的连续操作都对同一个对象反复加锁和解锁，甚至加锁操作是出现在循环体之中的，那即使没有线程竞争，频繁地进行互斥同步操作也会导致不必要的性能损耗。</p>
+<p>代码清单13-7所示连续的append()方法就属于这类情况。如果虚拟机探测到有这样一串零碎的操作都对同一个对象加锁，将会把加锁同步的范围扩展（粗化）到整个操作序列的外部，</p>
+<p>以代码清单13-7为例，就是扩展到第一个append()操作之前直至最后一个append()操作之后，这样只需要加锁一次就可以了。</p>
+<h3 id="轻量级锁"><a href="#轻量级锁" class="headerlink" title="轻量级锁"></a>轻量级锁</h3><p>轻量级锁是JDK 6时加入的新型锁机制，它名字中的“轻量级”是相对于使用操作系统互斥量来实现的传统锁而言的，因此传统的锁机制就被称为“重量级”锁。</p>
+<ul>
+<li><p>不过，需要强调一点，<strong>轻量级锁并不是用来代替重量级锁的</strong>，它设计的初衷是在没有多线程竞争的前提下，减少传统的重量级锁使用操作系统互斥量产生的性能消耗。</p>
+</li>
+<li><p>要理解轻量级锁，以及后面会讲到的偏向锁的原理和运作过程，必须要对HotSpot虚拟机对象的内存布局（尤其是对象头部分）有所了解</p>
+</li>
+</ul>
+<p>HotSpot虚拟机的对象头（Object Header）分为两部分，</p>
+<ul>
+<li><p>第一部分用于存储对象自身的运行时数据，如哈希码（HashCode）、GC分代年龄（Generational GC Age）等。这部分数据的长度在32位和64位的Java虚拟机中分别会占用32个或64个比特，官方称它为“MarkWord”。这部分是实现轻量级锁和偏向锁的关键。</p>
+</li>
+<li><p>另外一部分用于存储指向方法区对象类型数据的指针，如果是数组对象，还会有一个额外的部分用于存储数组长度。</p>
+</li>
+<li><p>由于对象头信息是与对象自身定义的数据无关的额外存储成本，考虑到Java虚拟机的空间使用效率，Mark Word被设计成一个非固定的动态数据结构，以便在极小的空间内存储尽量多的信息。</p>
+</li>
+<li><p>它会根据对象的状态复用自己的存储空间。例如在32位的HotSpot虚拟机中，对象未被锁定的状态下，Mark Word的32个比特空间里的25个比特将用于存储对象哈希码，4个比特用于存储对象分代年龄，2个比特用于存储锁标志位，还有1个比特固定为0（这表示未进入偏向模式）。对象除了未被锁定的正常状态外，还有轻量级锁定、重量级锁定、GC标记、可偏向等几种不同状态，这些状态下对象头的存储内容如表13-1所示。</p>
+</li>
+</ul>
+<p><img src="source/uploads/jvm/15lock/01MarkWord.png"></p>
+<h4 id="轻量级锁的工作过程"><a href="#轻量级锁的工作过程" class="headerlink" title="轻量级锁的工作过程"></a>轻量级锁的工作过程</h4><ol>
+<li><p>在代码即将进入同步块的时候，如果此同步对象没有被锁定（锁标志位为“01”状态），虚拟机首先将在当前线程的栈帧中建立一个名为锁记录（LockRecord）的空间，用于存储锁对象目前的Mark Word的拷贝（官方为这份拷贝加了一个Displaced前缀，即Displaced Mark Word），这时候线程堆栈与对象头的状态如图13-3所示。</p>
+<p><img src="source/uploads/jvm/15lock/02stackAndObjectHeader.png"></p>
+</li>
+<li><p>然后，虚拟机将使用CAS操作尝试把对象的Mark Word更新为指向Lock Record的指针。如果这个更新动作成功了，即代表该线程拥有了这个对象的锁，并且对象Mark Word的锁标志位（Mark Word的最后两个比特）将转变为“00”，表示此对象处于轻量级锁定状态。这时候线程堆栈与对象头的状态如图13-4所示</p>
+</li>
+</ol>
+<p><img src="source/uploads/jvm/15lock/03AfterstackAndObjectHeader.png"></p>
+<p>如果这个更新操作失败了，那就意味着至少存在一条线程与当前线程竞争获取该对象的锁。虚拟机首先会检查对象的Mark Word是否指向当前线程的栈帧，</p>
+<p>如果是，说明当前线程已经拥有了这个对象的锁，那直接进入同步块继续执行就可以了，</p>
+<p>否则就说明这个锁对象已经被其他线程抢占了。</p>
+<p>如果出现两条以上的线程争用同一个锁的情况，那轻量级锁就不再有效，<strong>必须要膨胀为重量级锁</strong>，锁标志的状态值变为“10”，此时Mark Word中存储的就是指向重量级锁（互斥量）的指针，后面等待锁的线程也必须进入阻塞状态。</p>
+<p>上面描述的是轻量级锁的加锁过程，它的解锁过程也同样是通过CAS操作来进行的，如果对象的Mark Word仍然指向线程的锁记录，那就用CAS操作把对象当前的Mark Word和线程中复制的DisplacedMark Word替换回来。假如能够成功替换，那整个同步过程就顺利完成了；如果替换失败，则说明有其他线程尝试过获取该锁，就要在释放锁的同时，唤醒被挂起的线程。</p>
+<p>轻量级锁能提升程序同步性能的依据是“对于绝大部分的锁，在整个同步周期内都是不存在竞争的”这一经验法则。如果没有竞争，轻量级锁便通过CAS操作成功避免了使用互斥量的开销；但如果确实存在锁竞争，除了互斥量的本身开销外，还额外发生了CAS操作的开销。因此在有竞争的情况下，轻量级锁反而会比传统的重量级锁更慢。</p>
+<h3 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h3><p>偏向锁也是JDK 6中引入的一项锁优化措施，它的目的是消除数据在无竞争情况下的同步原语，进一步提高程序的运行性能。如果说<strong>轻量级锁是在无竞争的情况下使用CAS操作去消除同步使用的互斥量</strong>，那<strong>偏向锁就是在无竞争的情况下把整个同步都消除掉，连CAS操作都不去做了</strong>。</p>
+<p>偏向锁中的“偏”，就是偏心的“偏”、偏袒的“偏”。它的意思是这个锁会偏向于第一个获得它的线程，如果在接下来的执行过程中，该锁一直没有被其他的线程获取，则持有偏向锁的线程将永远不需要再进行同步。</p>
+<h4 id="偏向锁过程"><a href="#偏向锁过程" class="headerlink" title="偏向锁过程"></a>偏向锁过程</h4><p>假设当前虚拟机启用了偏向锁（启用参数-XX：+UseBiased Locking，这是自JDK 6起HotSpot虚拟机的默认值），那么当锁对象第一次被线程获取的时候，虚拟机将会把对象头中的标志位设置为“01”、把偏向模式设置为“1”，表示进入偏向模式。同时使用CAS操作把获取到这个锁的线程的ID记录在对象的Mark Word之中。如果CAS操作成功，持有偏向锁的线程以后每次进入这个锁相关的同步块时，虚拟机都可以不再进行任何同步操作（例如加锁、解锁及对Mark Word的更新操等）。</p>
+<p>一旦出现另外一个线程去尝试获取这个锁的情况，偏向模式就马上宣告结束。根据锁对象目前是否处于被锁定的状态决定是否撤销偏向（偏向模式设置为“0”），撤销后标志位恢复到未锁定（标志位为“01”）或轻量级锁定（标志位为“00”）的状态，后续的同步操作就按照上面介绍的轻量级锁那样去执行。偏向锁、轻量级锁的状态转化及对象Mark Word的关系如图13-5所示。</p>
+<p><img src="source/uploads/jvm/15lock/04pianxiangLOCK"></p>
+<p>细心的读者看到这里可能会发现一个问题：当对象进入偏向状态的时候，Mark Word大部分的空间（23个比特）都用于存储持有锁的线程ID了，这部分空间占用了原有存储对象哈希码的位置，那原来对象的哈希码怎么办呢？</p>
+<ul>
+<li>在Java语言里面一个对象如果计算过哈希码，就应该一直保持该值不变（强烈推荐但不强制，因为用户可以重载hashCode()方法按自己的意愿返回哈希码），否则很多依赖对象哈希码的API都可能存在出错风险。</li>
+<li>作为绝大多数对象哈希码来源的Object::hashCode()方法，返回的是对象的一致性哈希码（Identity Hash Code），这个值是能强制保证不变的，它通过在对象头中存储计算结果来保证第一次计算之后，再次调用该方法取到的哈希码值永远不会再发生改变</li>
+<li>因此，当一个对象已经计算过一致性哈希码后，它就再也无法进入偏向锁状态了；而当一个对象当前正处于偏向锁状态，又收到需要计算其一致性哈希码请求时，它的偏向状态会被立即撤销，并且锁会膨胀为重量级锁。在重量级锁的实现中，对象头指向了重量级锁的位置，代表重量级锁的ObjectMonitor类里有字段可以记录非加锁状态（标志位为“01”）下的Mark Word，其中自然可以存储原来的哈希码。</li>
+</ul>
+<p>偏向锁可以提高带有同步但无竞争的程序性能，但它同样是一个带有效益权衡（Trade Off）性质的优化，也就是说它并非总是对程序运行有利。如果程序中大多数的锁都总是被多个不同的线程访问，那偏向模式就是多余的。在具体问题具体分析的前提下，有时候使用参数-XX：-UseBiasedLocking来禁止偏向锁优化反而可以提升性能。</p>
+]]></content>
+      <categories>
+        <category>jvm</category>
+      </categories>
+      <tags>
+        <tag>线程安全与锁优化</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>深入理解jvm-16-Java内存模型与线程</title>
     <url>/2021/01/31/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-16-Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/</url>
     <content><![CDATA[<h1 id="Java内存模型与线程"><a href="#Java内存模型与线程" class="headerlink" title="Java内存模型与线程"></a>Java内存模型与线程</h1><p>衡量一个服务性能的高低好坏，<strong>每秒事务处理数（Transactions Per Second，TPS</strong>）是重要的指标之一，它代表着一秒内服务端平均能响应的请求总数，而TPS值与程序的并发能力又是有非常密切的关系。对于计算量相同的任务，程序线程并发协调得有条不紊，效率自然就会很高；反之 线程之间频繁争用数据，互相阻塞甚至死锁，将会大大降低程序得并发能力。</p>
@@ -7061,249 +7102,6 @@ ApplicationClassLoader <-- Custom_ClassLoader2 : 父亲</pre>
       </categories>
       <tags>
         <tag>java内存模型与线程</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>深入理解jvm-17-线程安全与锁优化</title>
-    <url>/2021/02/01/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3jvm-17-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E9%94%81%E4%BC%98%E5%8C%96/</url>
-    <content><![CDATA[<h1 id="线程安全与锁优化"><a href="#线程安全与锁优化" class="headerlink" title="线程安全与锁优化"></a>线程安全与锁优化</h1><h2 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h2><p>《Java并发编程实战（Java Concurrency In Practice）》的作者Brian Goetz为“线程安全”做出了一个比较恰当的定义：</p>
-<ul>
-<li>当多个线程同时访问一个对象时，如果不用考虑这些线程在运行时环境的调度和交替执行，也不需要进行额外的同步，或者在调用方进行任何其他的协调操作，调用这个对象的行为都可以获得正确的结果，那就称这个对象是 线程安全的</li>
-<li>这个定义就很严谨而且有可操作性，它要求线程安全的代码都必须具备一个共同特征：<strong>代码本身封装了所有必要的正确性保障手段（如互斥同步等</strong>），令调用者无须关心多线程下的调用问题，更无须自己实现任何措施来保证多线程环境下的正确调用。这点听起来简单，但其实并不容易做到，在许多场景中，我们都会将这个定义弱化一些</li>
-</ul>
-<h3 id="Java语言中的线程安全"><a href="#Java语言中的线程安全" class="headerlink" title="Java语言中的线程安全"></a>Java语言中的线程安全</h3><ul>
-<li><p>在Java语言中，线程安全具体是如何体现的？</p>
-</li>
-<li><p>有哪些操作是线程安全的？</p>
-</li>
-</ul>
-<p>为了更深入地理解线程安全，在这里我们可以不把线程安全当作一个非真即假的二元排他选项来看待，而是按照线程安全的“安全程度”由强至弱来排序，我们可以将Java语言中各种操作共享的数据分为以下五类：<strong>不可变、绝对线程安全、相对线程安全、线程兼容和线程对立。</strong></p>
-<h4 id="不可变"><a href="#不可变" class="headerlink" title="不可变"></a>不可变</h4><p>在Java语言里面，<strong>不可变（Immutable）的对象一定是线程安全的</strong>，无论是对象的方法实现还是方法的调用者，都不需要再进行任何线程安全保障措施。  在讲解“final关键字带来的可见性”时曾经提到过一点：  只要一个不可变对象被正确的构建出来（即没有发生this 引用逃逸的情况），那其外部的可见状态永远都不会改变，永远都不会看到它再多个线程之中处于不一致的状态。“不可变”带来的安全性是最直接、最纯粹的。</p>
-<ul>
-<li><p>Java语言中，如果多线程共享的数据是一个基本数据类型，那么只要在定义时使用final关键字修饰它就可以保证它是不可变的。</p>
-</li>
-<li><p>如果共享数据是一个对象，由于Java语言目前暂时还没有提供值类型的支持，那就需要对象自行保证其行为不会对其状态产生任何影响才行。</p>
-</li>
-<li><p>不妨类比java.lang.String类的对象实例，它是一个典型的不可变对象，用户调用它的substring()、replace()和concat()这些方法都不会影响它原来的值，只会返回一个新构造的字符串对象</p>
-</li>
-<li><p>保证对象行为不影响自己状态的途径有很多种，最简单的一种就是把对象里面带有状态的变量都声明为final，这样在构造函数结束之后，它就是不可变的，例如代码清单13-1中所示的java.lang.Integer构造函数，它通过将内部状态变量value定义为final来保障状态不变</p>
-</li>
-<li><p>代码清单13-1　JDK中Integer类的构造函数</p>
-</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* The value of the &lt;code&gt;Integer&lt;/code&gt;.</span></span><br><span class="line"><span class="comment">* <span class="doctag">@serial</span></span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> value;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* Constructs a newly allocated &lt;code&gt;Integer&lt;/code&gt; object that</span></span><br><span class="line"><span class="comment">* represents the specified &lt;code&gt;int&lt;/code&gt; value.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> value the value to be represented by the</span></span><br><span class="line"><span class="comment">* &lt;code&gt;Integer&lt;/code&gt; object.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Integer</span><span class="params">(<span class="keyword">int</span> value)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">this</span>.value = value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在Java类库API中符合不可变要求的类型，除了上面提到的String之外，常用的还有枚举类型及java.lang.Number的部分子类，如Long和Double等数值包装类型、BigInteger和BigDecimal等大数据类型。但同为Number子类型的原子类AtomicInteger和AtomicLong则是可变的，读者不妨看看这两个原子类的源码，想一想为什么它们要设计成可变的。 </p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AtomicInteger</span> <span class="keyword">extends</span> <span class="title">Number</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">6214790243416807050L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * This class intended to be implemented using VarHandles, but there</span></span><br><span class="line"><span class="comment">     * are unresolved cyclic startup dependencies.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> jdk.internal.misc.Unsafe U = jdk.internal.misc.Unsafe.getUnsafe();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> VALUE = U.objectFieldOffset(AtomicInteger.class, <span class="string">&quot;value&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> value; <span class="comment">//因为 被 volatile修饰了</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new AtomicInteger with the given initial value.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> initialValue the initial value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AtomicInteger</span><span class="params">(<span class="keyword">int</span> initialValue)</span> </span>&#123;</span><br><span class="line">        value = initialValue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new AtomicInteger with initial value &#123;<span class="doctag">@code</span> 0&#125;.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AtomicInteger</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="绝对线程安全"><a href="#绝对线程安全" class="headerlink" title="绝对线程安全"></a>绝对线程安全</h4><p>绝对的线程安全能够完全满足Brian Goetz给出的线程安全的定义，这个定义其实是很严格的，一个类要达到“不管运行时环境如何，调用者都不需要任何额外的同步措施”可能需要付出非常高昂的，甚至不切实际的代价。</p>
-<p>在Java API中标注自己是线程安全的类，大多数都不是绝对的线程安全。</p>
-<p>我们可以通过Java API中一个不是“绝对线程安全”的“线程安全类型”来看看这个语境里的“绝对”究竟是什么意思。</p>
-<p>如果说java.util.Vector是一个线程安全的容器，相信所有的Java程序员对此都不会有异议，<strong>因为它的add()、get()和size()等方法都是被synchronized修饰的</strong>，尽管这样效率不高，但保证了具备原子性、可见性和有序性。不过，即使它所有的方法都被修饰成synchronized，也不意味着调用它的时候就永远都不再需要同步手段了，请看看代码清单13-2中的测试代码。</p>
-<p>代码清单13-2　对Vector线程安全的测试</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VectorTestCase_1</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Vector&lt;Integer&gt; vector = <span class="keyword">new</span> Vector&lt;Integer&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">                vector.add(i);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Thread removeThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                        vector.remove(i);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            Thread printThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                        System.out.println((vector.get(i)));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            removeThread.start();</span><br><span class="line">            printThread.start();</span><br><span class="line">            <span class="comment">//不要同时产生过多的线程，否则会导致操作系统假死</span></span><br><span class="line">            <span class="keyword">while</span> (Thread.activeCount() &gt; <span class="number">20</span>) ;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果:</span><br><span class="line">Exception in thread <span class="string">&quot;Thread-469&quot;</span> java.lang.ArrayIndexOutOfBoundsException: Array index out of range: <span class="number">17</span></span><br><span class="line">	at java.base/java.util.Vector.get(Vector.java:<span class="number">777</span>)</span><br><span class="line">	at org.fenixsoft.jvm.chapter13.VectorTestCase_1$<span class="number">2.</span>run(VectorTestCase_1.java:<span class="number">31</span>)</span><br><span class="line">	at java.base/java.lang.Thread.run(Thread.java:<span class="number">844</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>尽管这里使用到的Vector的get()、remove()和size()方法都是同步的，</p>
-<ul>
-<li>但是在多线程的环境中，如果不在方法调用端做额外的同步措施，使用这段代码仍然是不安全的。</li>
-<li>因为如果另一个线程恰好在错误的时间里删除了一个元素，导致序号i已经不再可用，再用访问数组就会抛出一个ArrayIndexOutOfBoundsException异常。</li>
-<li>如果要保证这段代码能正确执行下去，我们不得不把removeThread和printThread的定义改成代码清单13-3所示的这样</li>
-</ul>
-<p>代码清单13-3　必须加入同步保证Vector访问的线程安全性</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VectorTestCase_2</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Vector&lt;Integer&gt; vector = <span class="keyword">new</span> Vector&lt;Integer&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">                vector.add(i);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Thread removeThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">synchronized</span> (vector) &#123;</span><br><span class="line">                        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                            vector.remove(i);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            Thread printThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">synchronized</span> (vector) &#123;</span><br><span class="line">                        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; vector.size(); i++) &#123;</span><br><span class="line">                            System.out.println((vector.get(i)));</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            removeThread.start();</span><br><span class="line">            printThread.start();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//不要同时产生过多的线程，否则会导致操作系统假死</span></span><br><span class="line">            <span class="keyword">while</span> (Thread.activeCount() &gt; <span class="number">20</span>) ;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>假如Vector一定要做到绝对的线程安全，那就必须<strong>在它内部维护一组一致性的快照访问</strong>才行，每次对其中元素进行改动都要产生新的快照，这样要付出的时间和空间成本都是非常大的。</li>
-</ul>
-<h4 id="相对线程安全"><a href="#相对线程安全" class="headerlink" title="相对线程安全"></a>相对线程安全</h4><p>相对线程安全就是我们通常意义上所讲的线程安全，它需要保证对这个对象单次的操作是线程安全的，我们在调用的时候不需要进行额外的保障措施，</p>
-<ul>
-<li>但是对于一些特定顺序的连续调用，就可能需要在调用端使用额外的同步手段来保证调用的正确性。代码清单13-2和代码清单13-3就是相对线程安<br>全的案例。</li>
-<li>在Java语言中，大部分声称线程安全的类都属于这种类型，例如Vector、HashTable、Collections的synchronizedCollection()方法包装的集合等。</li>
-</ul>
-<h4 id="线程兼容"><a href="#线程兼容" class="headerlink" title="线程兼容"></a>线程兼容</h4><p>线程兼容是指对象本身并不是线程安全的，</p>
-<ul>
-<li>但是可以通过在调用端正确地使用同步手段来保证对象在并发环境中可以安全地使用。我们平常说一个类不是线程安全的，</li>
-<li>通常就是指这种情况。Java类库API中大部分的类都是线程兼容的，如与前面的Vector和HashTable相对应的集合类ArrayList和HashMap等。</li>
-</ul>
-<h4 id="线程对立"><a href="#线程对立" class="headerlink" title="线程对立"></a>线程对立</h4><p>线程对立是指不管调用端是否采取了同步措施，都无法在多线程环境中并发使用代码。由于Java语言天生就支持多线程的特性，线程对立这种排斥多线程的代码是很少出现的，而且通常都是有害的，应当尽量避免。</p>
-<h3 id="线程安全的实现方法"><a href="#线程安全的实现方法" class="headerlink" title="线程安全的实现方法"></a>线程安全的实现方法</h3><ul>
-<li>了解过什么是线程安全之后，紧接着的一个问题就是我们应该如何实现线程安全。这听起来似乎是一件由代码如何编写来决定的事情，不应该出现在讲解Java虚拟机的书里。确实，如何实现线程安全与代码编写有很大的关系，</li>
-<li>但虚拟机提供的同步和锁机制也起到了至关重要的作用。如何编写代码实现线程安全，以及虚拟机如何实现同步与锁这两方面都会涉及，相对而言更偏重后者一些，只要读者明白了Java虚拟机线程安全措施的原理与运作过程，自己再去思考代码如何编写就不是一件困难的事情了。</li>
-</ul>
-<h4 id="互斥同步（Mutual-Exclusion-amp-Synchronization）"><a href="#互斥同步（Mutual-Exclusion-amp-Synchronization）" class="headerlink" title="互斥同步（Mutual Exclusion &amp; Synchronization）"></a>互斥同步（Mutual Exclusion &amp; Synchronization）</h4><p>互斥同步（Mutual Exclusion &amp; Synchronization）是一种最常见也是最主要的并发正确性保障手段。</p>
-<ul>
-<li><p>同步是指在多个线程并发访问共享数据时，保证共享数据在同一个时刻只被一条（或者是一些，当使用信号量的时候）线程使用。</p>
-</li>
-<li><p>而互斥是实现同步的一种手段，临界区（Critical Section）、互斥量（Mutex）和信号量（Semaphore）都是常见的互斥实现方式。</p>
-</li>
-<li><p>因此在“互斥同步”这四个字里面，互斥是因，同步是果；互斥是方法，同步是目的。</p>
-</li>
-</ul>
-<ul>
-<li>在Java里面，最基本的互斥同步手段就是<strong>synchronized</strong>关键字，这是一种块结构（BlockStructured）的同步语法。</li>
-<li>synchronized关键字经过Javac编译之后，会在同步块的前后分别形成monitorenter和monitorexit这两个字节码指令。</li>
-<li>这两个字节码指令都需要一个reference类型的参数来指明要锁定和解锁的对象。</li>
-<li>如果Java源码中的synchronized明确指定了对象参数，那就以这个对象的引用作为reference；</li>
-<li>如果没有明确指定，那将根据synchronized修饰的方法类型（如实例方法或类方法），来决定是取代码所在的对象实例还是取类型对应的Class对象来作为线程要持有的锁。</li>
-</ul>
-<p>根据《Java虚拟机规范》的要求，<strong>在执行monitorenter指令时，首先要去尝试获取对象的锁。</strong>如果这个对象没被锁定，或者当前线程已经持有了那个对象的锁，就把锁的计数器的值增加一，</p>
-<p>而<strong>在执行monitorexit指令时会将锁计数器的值减一</strong>。一旦计数器的值为零，锁随即就被释放了。如果获取对象锁失败，那当前线程就应当被阻塞等待，直到请求锁定的对象被持有它的线程释放为止。</p>
-<p>我们可以得出两个关于synchronized的直接推论，这是使用它时需特别注意的：</p>
-<ul>
-<li>被synchronized修饰的同步块<strong>对同一条线程来说是可重入的</strong>。这意味着同一线程反复进入同步块也不会出现自己把自己锁死的情况。</li>
-<li>被synchronized修饰的同步块<strong>在持有锁的线程执行完毕并释放锁之前，会无条件地阻塞后面其他线程的进入</strong>。这意味着无法像处理某些数据库中的锁那样，强制已获取锁的线程释放锁；也无法强制正在等待锁的线程中断等待或超时退出。</li>
-</ul>
-<p>从执行成本的角度看，持有锁是一个重量级（Heavy-Weight）的操作。</p>
-<p>在主流Java虚拟机实现中，Java的线程是映射到操作系统的原生内核线程之上的，如果要阻塞或唤醒一条线程，则需要操作系统来帮忙完成，这就不可避免地陷入用户态到核心态的转换中，进行这种状态转换需要耗费很多的处理器时间。</p>
-<p>尤其是对于代码特别简单的同步块（譬如被synchronized修饰的getter()或setter()方法），状态转换消耗的时间甚至会比用户代码本身执行的时间还要长。因此才说，synchronized是Java语言中一个重量级的操作，有经验的程序员都只会在确实必要的情况下才使用这种操作。而虚拟机本身也会进行一些优化，譬如在通知操作系统阻塞线程之前加入一段自旋等待过程，以避免频繁地切入核心态之中</p>
-<h3 id="锁Lock"><a href="#锁Lock" class="headerlink" title="锁Lock"></a>锁Lock</h3><p>除了synchronized关键字以外，自JDK 5起（实现了JSR 166[1]），Java类库中新提供了java.util.concurrent包（下文称J.U.C包），其中的<br><strong>java.util.concurrent.locks.Lock接口便成了Java的另一种全新的互斥同步手段</strong>。基于Lock接口，用户能够以非块结构（Non-Block Structured）来实现互斥同步，从而摆脱了语言特性的束缚，改为在类库层面去实现同步，这也为日后扩展出不同调度算法、不同特征、不同性能、不同语义的各种锁提供了广阔的空间。</p>
-<h4 id="重入锁（ReentrantLock）"><a href="#重入锁（ReentrantLock）" class="headerlink" title="重入锁（ReentrantLock）"></a>重入锁（ReentrantLock）</h4><p>重入锁（ReentrantLock）是Lock接口最常见的一种实现[2]，顾名思义，它与synchronized一样是可重入[3]的。在基本用法上，ReentrantLock也与synchronized很相似，只是代码写法上稍有区别而已。不过，ReentrantLock与synchronized相比增加了一些高级功能，</p>
-<p>主要有以下三项：等待可中断、可实现公平锁及锁可以绑定多个条件。</p>
-<ul>
-<li>等待可中断：是指当持有锁的线程长期不释放锁的时候，正在等待的线程可以选择放弃等待，改为处理其他事情。可中断特性对处理执行时间非常长的同步块很有帮助。</li>
-<li>公平锁：是指多个线程在等待同一个锁时，必须按照申请锁的时间顺序来依次获得锁；而非公平锁则不保证这一点，在锁被释放时，任何一个等待锁的线程都有机会获得锁。synchronized中的锁是非公平的，ReentrantLock在默认情况下也是非公平的，但可以通过带布尔值的构造函数要求使用公平锁。不过一旦使用了公平锁，将会导致ReentrantLock的性能急剧下降，会明显影响吞吐量。</li>
-<li>锁绑定多个条件：是指一个ReentrantLock对象可以同时绑定多个Condition对象。在synchronized中，锁对象的wait()跟它的notify()或者notifyAll()方法配合可以实现一个隐含的条件，如果要和多于一个的条件关联的时候，就不得不额外添加一个锁；而ReentrantLock则无须这样做，多次调用newCondition()方法即可。</li>
-</ul>
-<p>ReentrantLock在功能上是synchronized的超集，在性能上又至少不会弱于synchronized，那synchronized修饰符是否应该被直接抛弃，不再使用了呢？当然不是，基于以下理由，仍然推荐在synchronized与ReentrantLock都可满足需要时优先使用synchronized：</p>
-<ul>
-<li>synchronized是在<strong>Java语法层面的同步，足够清晰，也足够简单</strong>。每个Java程序员都熟悉synchronized，但J.U.C中的Lock接口则并非如此。因此在只需要基础的同步功能时，更推荐synchronized。</li>
-<li>Lock应该<strong>确保在finally块中释放锁</strong>，否则一旦受同步保护的代码块中抛出异常，则有可能永远不会释放持有的锁。这一点必须由程序员自己来保证，而使用synchronized的话则可以由Java虚拟机来确保即使出现异常，锁也能被自动释放。</li>
-<li>从长远来看，Java虚拟机更容易针对synchronized来进行优化，因为Java虚拟机可以在线程和对象的元数据中记录synchronized中锁的相关信息，而使用J.U.C中的Lock的话，Java虚拟机是很难得知具体哪些锁对象是由特定线程锁持有的。</li>
-</ul>
-<h3 id="非阻塞同步"><a href="#非阻塞同步" class="headerlink" title="非阻塞同步"></a>非阻塞同步</h3><ul>
-<li>互斥同步面临的<strong>主要问题是进行线程阻塞和唤醒所带来的性能开销</strong>，因此这种同步也被称为阻塞同步（Blocking Synchronization）。</li>
-<li>从解决问题的方式上看，<strong>互斥同步属于一种悲观的并发策略</strong>，其总是认为只要不去做正确的同步措施（例如加锁），那就肯定会出现问题，无论共享的数据是否真的会出现竞争，它都会进行加锁（这里讨论的是概念模型，实际上虚拟机会优化掉很大一部分不必要的加锁），这将会导致用户态到核心态转换、维护锁计数器和检查是否有被阻塞的线程需要被唤醒等开销。</li>
-</ul>
-<p>随着硬件指令集的发展，我们已经有了另外一个选择：<strong>基于冲突检测的乐观并发策略</strong>，通俗地说就是不管风险，先进行操作，如果没有其他线程争用共享数据，那操作就直接成功了；如果共享的数据的确被争用，产生了冲突，那再进行其他的补偿措施，<strong>最常用的补偿措施是不断地重试</strong>，直到出现没有竞争的共享数据为止。<strong>这种乐观并发策略的实现不再需要把线程阻塞挂起，因此这种同步操作被称为非阻塞同步（Non-Blocking Synchronization</strong>），使用这种措施的代码也常被称为<strong>无锁（Lock-Free）编程。</strong></p>
-<p>为什么说使用乐观并发策略需要“硬件指令集的发展”？</p>
-<p>因为我们必须要求<strong>操作和冲突检测这两个步骤具备原子性</strong>。靠什么来保证原子性？如果这里再使用互斥同步来保证就完全失去意义了，所以我们只能靠硬件来实现这件事情，<strong>硬件保证某些从语义上看起来需要多次操作的行为可以只通过一条处理器指令就能完成</strong>，这类指令常用的有：</p>
-<ul>
-<li>测试并设置（Test-and-Set）；</li>
-<li>获取并增加（Fetch-and-Increment）；</li>
-<li>·交换（Swap）；</li>
-<li><strong>比较并交换（Compare-and-Swap，下文称CAS）</strong>；</li>
-<li>加载链接/条件储存（Load-Linked/Store-Conditional，下文称LL/SC）</li>
-</ul>
-<p>前面的三条是20世纪就已经存在于大多数指令集之中的处理器指令，后面的两条是现代处理器新增的，而且这两条指令的目的和功能也是类似的.</p>
-<p>因为Java里最终暴露出来的是CAS操作，所以我们以CAS指令为例进行讲解。</p>
-<h4 id="CAS指令"><a href="#CAS指令" class="headerlink" title="CAS指令"></a>CAS指令</h4><ul>
-<li>CAS指令需要有三个操作数，分别是<strong>内存位置</strong>（在Java中可以简单地理解为变量的内存地址，用V表示）、<strong>旧的预期值</strong>（用A表示）和<strong>准备设置的新值</strong>（用B表示）。</li>
-<li>CAS指令执行时，<strong>当且仅当V符合A时，处理器才会用B更新V的值，否则它就不执行更新。但是，不管是否更新了V的值，都会返回V的旧值</strong>，上述的处理过程是一个原子操作，执行期间不会被其他线程中断。</li>
-<li>在JDK 5之后，Java类库中才开始使用CAS操作，该操作由<strong>sun.misc.Unsafe</strong>类里面的compareAndSwapInt()和compareAndSwapLong()等几个方法包装提供。</li>
-<li>HotSpot虚拟机在内部对这些方法做了特殊处理，即时编译出来的结果就是一条平台相关的处理器CAS指令，没有方法调用的过程，或者可以认为是无条件内联进去了[5]。</li>
-<li>不过由于Unsafe类在设计上就不是提供给用户程序调用的类（Unsafe::getUnsafe()的代码中限制了只有启动类加载器（Bootstrap ClassLoader）加载的Class才能访问它），因此在JDK 9之前只有Java类库可以使用CAS，譬如J.U.C包里面的整数原子类，其中的compareAndSet()和getAndIncrement()等方法都使用了Unsafe类的CAS操作来实现。</li>
-<li>而如果用户程序也有使用CAS操作的需求，那要么就采用反射手段突破Unsafe的访问限制，要么就只能通过Java类库API来间接使用它。直到JDK 9之后，Java类库才在VarHandle类里开放了面向用户程序使用的CAS操作</li>
-</ul>
-<p>下面笔者将用一段在前面章节中没有解决的问题代码来介绍如何通过CAS操作避免阻塞同步。测试的代码如代码清单12-1所示，为了节省版面笔者就不重复贴到这里了。这段代码里我们曾经通过20个线程自增10000次的操作来<strong>证明volatile变量不具备原子性</strong>，那么如何才能让它具备原子性呢？之前我们的解决方案是<strong>把race++操作或increase()方法用同步块包裹起来</strong>，这毫无疑问是一个解决方案，但是如果改成代码清单13-4所示的写法，效率将会提高许多。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Atomic变量自增运算测试</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> zzm</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AtomicTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> AtomicInteger race = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        race.incrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> THREADS_COUNT = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        Thread[] threads = <span class="keyword">new</span> Thread[THREADS_COUNT];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; THREADS_COUNT; i++) &#123;</span><br><span class="line">            threads[i] = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">                        increase();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            threads[i].start();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (Thread.activeCount() &gt; <span class="number">1</span>)</span><br><span class="line">            Thread.yield();</span><br><span class="line"></span><br><span class="line">        System.out.println(race);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>使用AtomicInteger代替int后，程序输出了正确的结果，这一切都要归功于incrementAndGet()方法的原子性。它的实现其实非常简单，如代码清单13-5所示</li>
-<li>代码清单13-5　incrementAndGet()方法的JDK源码</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Atomically increments the current value,</span></span><br><span class="line"><span class="comment">   * with memory effects as specified by &#123;<span class="doctag">@link</span> VarHandle#getAndAdd&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * &lt;p&gt;Equivalent to &#123;<span class="doctag">@code</span> addAndGet(1)&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> the updated value</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">incrementAndGet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> U.getAndAddInt(<span class="keyword">this</span>, VALUE, <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Atomically adds the given value to the current value of a field</span></span><br><span class="line"><span class="comment">   * or array element within the given object &#123;<span class="doctag">@code</span> o&#125;</span></span><br><span class="line"><span class="comment">   * at the given &#123;<span class="doctag">@code</span> offset&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> o object/array to update the field/element in</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> offset field/element offset</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> delta the value to add</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> the previous value</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@since</span> 1.8</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@HotSpotIntrinsicCandidate</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getAndAddInt</span><span class="params">(Object o, <span class="keyword">long</span> offset, <span class="keyword">int</span> delta)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">int</span> v;</span><br><span class="line">      <span class="keyword">do</span> &#123;</span><br><span class="line">          v = getIntVolatile(o, offset);</span><br><span class="line">      &#125; <span class="keyword">while</span> (!weakCompareAndSetInt(o, offset, v, v + delta));</span><br><span class="line">      <span class="keyword">return</span> v;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@HotSpotIntrinsicCandidate</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">weakCompareAndSetInt</span><span class="params">(Object o, <span class="keyword">long</span> offset,</span></span></span><br><span class="line"><span class="function"><span class="params">                                            <span class="keyword">int</span> expected,</span></span></span><br><span class="line"><span class="function"><span class="params">                                            <span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> compareAndSetInt(o, offset, expected, x);</span><br><span class="line">  &#125;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Atomically updates Java variable to &#123;<span class="doctag">@code</span> x&#125; if it is currently</span></span><br><span class="line"><span class="comment">   * holding &#123;<span class="doctag">@code</span> expected&#125;.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * &lt;p&gt;This operation has memory semantics of a &#123;<span class="doctag">@code</span> volatile&#125; read</span></span><br><span class="line"><span class="comment">   * and write.  Corresponds to C11 atomic_compare_exchange_strong.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> &#123;<span class="doctag">@code</span> true&#125; if successful</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@HotSpotIntrinsicCandidate</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="keyword">boolean</span> <span class="title">compareAndSetInt</span><span class="params">(Object o, <span class="keyword">long</span> offset,</span></span></span><br><span class="line"><span class="function"><span class="params">                                               <span class="keyword">int</span> expected,</span></span></span><br><span class="line"><span class="function"><span class="params">                                               <span class="keyword">int</span> x)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>incrementAndGet()方法在一个无限循环中，不断尝试将一个比当前值大一的新值赋值给自己。如果失败了，那说明在执行CAS操作的时候，旧值已经发生改变，于是再次循环进行下一次操作，直到设置成功为止。</p>
-<h4 id="CAS操作的“ABA问题”"><a href="#CAS操作的“ABA问题”" class="headerlink" title="CAS操作的“ABA问题”"></a>CAS操作的“ABA问题”</h4><p>尽管CAS看起来很美好，既简单又高效，但显然这种操作无法涵盖互斥同步的所有使用场景，并且CAS从语义上来说并不是真正完美的，它存在一个逻辑漏洞：如果一个变量V初次读取的时候是A值，并且在准备赋值的时候检查到它仍然为A值，那就能说明它的值没有被其他线程改变过了吗？</p>
-<p>这是不能的，因为如果在这段期间它的值曾经被改成B，后来又被改回为A，那CAS操作就会误认为它从来没有被改变过。这个漏洞称为CAS操作的“ABA问题”</p>
-<h3 id="无同步方案"><a href="#无同步方案" class="headerlink" title="无同步方案"></a>无同步方案</h3><p>要保证线程安全，也并非一定要进行阻塞或非阻塞同步，<strong>同步与线程安全两者没有必然的联系</strong>。<strong>同步只是保障存在共享数据争用时正确性的手段，如果能让一个方法本来就不涉及共享数据，那它自然就不需要任何同步措施去保证其正确性</strong>，因此会有一些代码天生就是线程安全的，笔者简单介绍其中的两类。</p>
-<h4 id="可重入代码"><a href="#可重入代码" class="headerlink" title="可重入代码"></a>可重入代码</h4><ul>
-<li>可重入代码（Reentrant Code）：这种代码又称纯代码（Pure Code），是指可以在代码执行的任何时刻中断它，转而去执行另外一段代码（包括递归调用它本身），而在控制权返回后，原来的程序不会出现任何错误，也不会对结果有所影响。</li>
-<li>在特指多线程的上下文语境里（不涉及信号量等因素），我们可以认为可重入代码是线程安全代码的一个真子集，这意味着相对线程安全来说，可重入性是更为基础的特性，它可以保证代码线程安全，</li>
-<li>即所有可重入的代码都是线程安全的，但并非所有的线程安全的代码都是可重入的。</li>
-<li>可重入代码有一些共同的特征，例如，不依赖全局变量、存储在堆上的数据和公用的系统资源，用到的状态量都由参数中传入，不调用非可重入的方法等。</li>
-<li>我们可以通过一个比较简单的原则来判断代码是否具备可重入性：如果一个方法的返回结果是可以预测的，只要输入了相同的数据，就都能返回相同的结果，那它就满足可重入性的要求，当然也就是线程安全的。</li>
-</ul>
-<h4 id="线程本地存储（Thread-Local-Storage）"><a href="#线程本地存储（Thread-Local-Storage）" class="headerlink" title="线程本地存储（Thread Local Storage）"></a>线程本地存储（Thread Local Storage）</h4><ul>
-<li>如果一段代码中所需要的数据必须与其他代码共享，那就看看这些共享数据的代码是否能保证在同一个线程中执行。如果能保证，我们就可以把共享数据的可<br>见范围限制在同一个线程之内，这样，无须同步也能保证线程之间不出现数据争用的问题。</li>
-<li>大部分使用消费队列的架构模式（如“生产者-消费者”模式）都会将产品的消费过程限制在一个线程中消费完，其中最重要的一种应用实例就是经典Web交互模型中的“一个请求对应一个服务器线程”（Thread-per-Request）的处理方式，这种处理方式的广泛应用使得很多Web服务端应用都可以使用线程本地存储来解决线程安全问题。</li>
-<li>Java语言中，如果一个变量要被多线程访问，可以使用volatile关键字将它声明为“易变的”；</li>
-<li>如果一个变量只要被某个线程独享，可以通过java.lang.ThreadLocal类来实现线程本地存储的功能。每一个线程的Thread对象中都有一个ThreadLocalMap对象，这个对象存储了一组以ThreadLocal.threadLocalHashCode为键，以本地线程变量为值的K-V值对，ThreadLocal对象就是当前线程的ThreadLocalMap的访问入口，每一个ThreadLocal对象都包含了一个独一无二的threadLocalHashCode值，使用这个值就可以在线程K-V值对中找回对应的本地线程变量。</li>
-</ul>
-<h2 id="锁优化"><a href="#锁优化" class="headerlink" title="锁优化"></a>锁优化</h2><p>高效并发是从JDK 5升级到JDK 6后一项重要的改进项，HotSpot虚拟机开发团队在这个版本上花费了大量的资源去实现各种锁优化技术，</p>
-<p>如<strong>适应性自旋（Adaptive Spinning）、锁消除（LockElimination）、锁膨胀（Lock Coarsening）、轻量级锁（Lightweight Locking）、偏向锁（BiasedLocking）</strong>等，这些技术都是为了在线程之间更高效地共享数据及解决竞争问题，从而提高程序的执行效率。</p>
-<h3 id="自旋锁与自适应自旋"><a href="#自旋锁与自适应自旋" class="headerlink" title="自旋锁与自适应自旋"></a>自旋锁与自适应自旋</h3><ul>
-<li>互斥同步对性能最大的影响是阻塞的实现，挂起线程和恢复线程的操作都需要转入内核态中完成，这些操作给Java虚拟机的并发性能带来了很大的压力</li>
-<li>同时，虚拟机的开发团队也注意到在许多应用上，共享数据的锁定状态只会持续很短的一段时间，为了这段时间去挂起和恢复线程并不值得</li>
-<li>如果物理机器有一个以上的处理器或者处理器核心，能让两个或以上的线程同时并行执行，我们就可以让后面请求锁的那个线程“稍等一会”，但不放弃处理器的执行时间，看看持有锁的线程是否很快就会释放锁。</li>
-<li>为了让线程等待，我们只须让线程执行一个忙循环（自旋），这项技术就是所谓的自旋锁。</li>
-<li><strong>自旋等待不能代替阻塞</strong>，且先不说对处理器数量的要求，自旋等待本身虽然避免了线程切换的开销，但它是要占用处理器时间的，所以如果<strong>锁被占用的时间很</strong><br><strong>短，自旋等待的效果就会非常好</strong>，反之如果锁被占用的时间很长，那么自旋的线程只会白白消耗处理器资源，而不会做任何有价值的工作，这就会带来性能的浪费。</li>
-<li>因此自旋等待的时间必须有一定的限度，如果自旋超过了限定的次数仍然没有成功获得锁，就应当使用传统的方式去挂起线程。自旋次数的默认值是十次，用户也可以使用参数-XX：PreBlockSpin来自行更改。</li>
-</ul>
-<ul>
-<li>在JDK 6中对自旋锁的优化，引入了自适应的自旋。</li>
-<li>自适应意味着自旋的时间不再是固定的了，而是由前一次在同一个锁上的自旋时间及锁的拥有者的状态来决定的。</li>
-<li>如果在同一个锁对象上，自旋等待刚刚成功获得过锁，并且持有锁的线程正在运行中，那么虚拟机就会认为这次自旋也很有可能再次成功，进而允许自旋等待持续相对更长的时间，比如持续100次忙循环。</li>
-<li>另一方面，如果对于某个锁，自旋很少成功获得过锁，那在以后要获取这个锁时将有可能直接省略掉自旋过程，以避免浪费处理器资源。</li>
-<li>有了自适应自旋，随着程序运行时间的增长及性能监控信息的不断完善，虚拟机对程序锁的状况预测就会越来越精准，虚拟机就会变得越来越“聪明”了。</li>
-</ul>
-<h3 id="锁消除"><a href="#锁消除" class="headerlink" title="锁消除"></a>锁消除</h3><ul>
-<li>锁消除是指虚拟机即时编译器在运行时，对一些代码要求同步，但是<strong>对被检测到不可能存在共享数据竞争的锁进行消除</strong></li>
-<li>锁消除的主要判定依据<strong>来源于逃逸分析的数据支持，</strong>如果判断到一段代码中，在堆上的所有数据都不会逃逸出去被其他线程访问到，那就可<br>以把它们当作栈上数据对待，认为它们是线程私有的，同步加锁自然就无须再进行。</li>
-</ul>
-<p>代码清单13-6　一段看起来没有同步的代码</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">concatString</span><span class="params">(String s1, String s2, String s3)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> s1 + s2 + s3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>我们也知道，由于String是一个不可变的类，对字符串的连接操作总是通过生成新的String对象来进行的，因此Javac编译器会对String连接做自动优化。在JDK 5之前，字符串加法会转化为StringBuffer对象的连续append()操作，在JDK 5及以后的版本中，会转化为StringBuilder对象的连续append()操作。即代码清单13-6所示的代码可能会变成代码清单13-7所示的样子[1]。</p>
-<p>代码清单13-7　Javac转化后的字符串连接操作</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">concatString</span><span class="params">(String s1, String s2, String s3)</span> </span>&#123;</span><br><span class="line">    StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">    sb.append(s1);</span><br><span class="line">    sb.append(s2);</span><br><span class="line">    sb.append(s3);</span><br><span class="line">    <span class="keyword">return</span> sb.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>每个StringBuffer.append()方法中都有一个同步块，锁就是sb对象。虚拟机观察变量sb，经过逃逸分析后会发现它的动态作用域被限制在concatString()方法内<br>部。也就是sb的所有引用都永远不会逃逸到concatString()方法之外，其他线程无法访问到它，所以这里虽然有锁，但是可以被安全地消除掉。在解释执行时这里仍然会加锁，但在经过服务端编译器的即时编译之后，这段代码就会忽略所有的同步措施而直接执行。</p>
-<h3 id="锁粗化"><a href="#锁粗化" class="headerlink" title="锁粗化"></a>锁粗化</h3><p>原则上，我们在编写代码的时候，总是推荐将同步块的作用范围限制得尽量小——只在共享数据的实际作用域中才进行同步，这样是为了使得需要同步的操作数量尽可能变少，即使存在锁竞争，等待锁的线程也能尽可能快地拿到锁。</p>
-<p>大多数情况下，上面的原则都是正确的，但是如果一系列的连续操作都对同一个对象反复加锁和解锁，甚至加锁操作是出现在循环体之中的，那即使没有线程竞争，频繁地进行互斥同步操作也会导致不必要的性能损耗。</p>
-<p>代码清单13-7所示连续的append()方法就属于这类情况。如果虚拟机探测到有这样一串零碎的操作都对同一个对象加锁，将会把加锁同步的范围扩展（粗化）到整个操作序列的外部，</p>
-<p>以代码清单13-7为例，就是扩展到第一个append()操作之前直至最后一个append()操作之后，这样只需要加锁一次就可以了。</p>
-<h3 id="轻量级锁"><a href="#轻量级锁" class="headerlink" title="轻量级锁"></a>轻量级锁</h3><p>轻量级锁是JDK 6时加入的新型锁机制，它名字中的“轻量级”是相对于使用操作系统互斥量来实现的传统锁而言的，因此传统的锁机制就被称为“重量级”锁。</p>
-<ul>
-<li><p>不过，需要强调一点，<strong>轻量级锁并不是用来代替重量级锁的</strong>，它设计的初衷是在没有多线程竞争的前提下，减少传统的重量级锁使用操作系统互斥量产生的性能消耗。</p>
-</li>
-<li><p>要理解轻量级锁，以及后面会讲到的偏向锁的原理和运作过程，必须要对HotSpot虚拟机对象的内存布局（尤其是对象头部分）有所了解</p>
-</li>
-</ul>
-<p>HotSpot虚拟机的对象头（Object Header）分为两部分，</p>
-<ul>
-<li><p>第一部分用于存储对象自身的运行时数据，如哈希码（HashCode）、GC分代年龄（Generational GC Age）等。这部分数据的长度在32位和64位的Java虚拟机中分别会占用32个或64个比特，官方称它为“MarkWord”。这部分是实现轻量级锁和偏向锁的关键。</p>
-</li>
-<li><p>另外一部分用于存储指向方法区对象类型数据的指针，如果是数组对象，还会有一个额外的部分用于存储数组长度。</p>
-</li>
-<li><p>由于对象头信息是与对象自身定义的数据无关的额外存储成本，考虑到Java虚拟机的空间使用效率，Mark Word被设计成一个非固定的动态数据结构，以便在极小的空间内存储尽量多的信息。</p>
-</li>
-<li><p>它会根据对象的状态复用自己的存储空间。例如在32位的HotSpot虚拟机中，对象未被锁定的状态下，Mark Word的32个比特空间里的25个比特将用于存储对象哈希码，4个比特用于存储对象分代年龄，2个比特用于存储锁标志位，还有1个比特固定为0（这表示未进入偏向模式）。对象除了未被锁定的正常状态外，还有轻量级锁定、重量级锁定、GC标记、可偏向等几种不同状态，这些状态下对象头的存储内容如表13-1所示。</p>
-</li>
-</ul>
-<p><img src="source/uploads/jvm/15lock/01MarkWord.png"></p>
-<h4 id="轻量级锁的工作过程"><a href="#轻量级锁的工作过程" class="headerlink" title="轻量级锁的工作过程"></a>轻量级锁的工作过程</h4><ol>
-<li><p>在代码即将进入同步块的时候，如果此同步对象没有被锁定（锁标志位为“01”状态），虚拟机首先将在当前线程的栈帧中建立一个名为锁记录（LockRecord）的空间，用于存储锁对象目前的Mark Word的拷贝（官方为这份拷贝加了一个Displaced前缀，即Displaced Mark Word），这时候线程堆栈与对象头的状态如图13-3所示。</p>
-<p><img src="source/uploads/jvm/15lock/02stackAndObjectHeader.png"></p>
-</li>
-<li><p>然后，虚拟机将使用CAS操作尝试把对象的Mark Word更新为指向Lock Record的指针。如果这个更新动作成功了，即代表该线程拥有了这个对象的锁，并且对象Mark Word的锁标志位（Mark Word的最后两个比特）将转变为“00”，表示此对象处于轻量级锁定状态。这时候线程堆栈与对象头的状态如图13-4所示</p>
-</li>
-</ol>
-<p><img src="source/uploads/jvm/15lock/03AfterstackAndObjectHeader.png"></p>
-<p>如果这个更新操作失败了，那就意味着至少存在一条线程与当前线程竞争获取该对象的锁。虚拟机首先会检查对象的Mark Word是否指向当前线程的栈帧，</p>
-<p>如果是，说明当前线程已经拥有了这个对象的锁，那直接进入同步块继续执行就可以了，</p>
-<p>否则就说明这个锁对象已经被其他线程抢占了。</p>
-<p>如果出现两条以上的线程争用同一个锁的情况，那轻量级锁就不再有效，<strong>必须要膨胀为重量级锁</strong>，锁标志的状态值变为“10”，此时Mark Word中存储的就是指向重量级锁（互斥量）的指针，后面等待锁的线程也必须进入阻塞状态。</p>
-<p>上面描述的是轻量级锁的加锁过程，它的解锁过程也同样是通过CAS操作来进行的，如果对象的Mark Word仍然指向线程的锁记录，那就用CAS操作把对象当前的Mark Word和线程中复制的DisplacedMark Word替换回来。假如能够成功替换，那整个同步过程就顺利完成了；如果替换失败，则说明有其他线程尝试过获取该锁，就要在释放锁的同时，唤醒被挂起的线程。</p>
-<p>轻量级锁能提升程序同步性能的依据是“对于绝大部分的锁，在整个同步周期内都是不存在竞争的”这一经验法则。如果没有竞争，轻量级锁便通过CAS操作成功避免了使用互斥量的开销；但如果确实存在锁竞争，除了互斥量的本身开销外，还额外发生了CAS操作的开销。因此在有竞争的情况下，轻量级锁反而会比传统的重量级锁更慢。</p>
-<h3 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h3><p>偏向锁也是JDK 6中引入的一项锁优化措施，它的目的是消除数据在无竞争情况下的同步原语，进一步提高程序的运行性能。如果说<strong>轻量级锁是在无竞争的情况下使用CAS操作去消除同步使用的互斥量</strong>，那<strong>偏向锁就是在无竞争的情况下把整个同步都消除掉，连CAS操作都不去做了</strong>。</p>
-<p>偏向锁中的“偏”，就是偏心的“偏”、偏袒的“偏”。它的意思是这个锁会偏向于第一个获得它的线程，如果在接下来的执行过程中，该锁一直没有被其他的线程获取，则持有偏向锁的线程将永远不需要再进行同步。</p>
-<h4 id="偏向锁过程"><a href="#偏向锁过程" class="headerlink" title="偏向锁过程"></a>偏向锁过程</h4><p>假设当前虚拟机启用了偏向锁（启用参数-XX：+UseBiased Locking，这是自JDK 6起HotSpot虚拟机的默认值），那么当锁对象第一次被线程获取的时候，虚拟机将会把对象头中的标志位设置为“01”、把偏向模式设置为“1”，表示进入偏向模式。同时使用CAS操作把获取到这个锁的线程的ID记录在对象的Mark Word之中。如果CAS操作成功，持有偏向锁的线程以后每次进入这个锁相关的同步块时，虚拟机都可以不再进行任何同步操作（例如加锁、解锁及对Mark Word的更新操等）。</p>
-<p>一旦出现另外一个线程去尝试获取这个锁的情况，偏向模式就马上宣告结束。根据锁对象目前是否处于被锁定的状态决定是否撤销偏向（偏向模式设置为“0”），撤销后标志位恢复到未锁定（标志位为“01”）或轻量级锁定（标志位为“00”）的状态，后续的同步操作就按照上面介绍的轻量级锁那样去执行。偏向锁、轻量级锁的状态转化及对象Mark Word的关系如图13-5所示。</p>
-<p><img src="source/uploads/jvm/15lock/04pianxiangLOCK"></p>
-<p>细心的读者看到这里可能会发现一个问题：当对象进入偏向状态的时候，Mark Word大部分的空间（23个比特）都用于存储持有锁的线程ID了，这部分空间占用了原有存储对象哈希码的位置，那原来对象的哈希码怎么办呢？</p>
-<ul>
-<li>在Java语言里面一个对象如果计算过哈希码，就应该一直保持该值不变（强烈推荐但不强制，因为用户可以重载hashCode()方法按自己的意愿返回哈希码），否则很多依赖对象哈希码的API都可能存在出错风险。</li>
-<li>作为绝大多数对象哈希码来源的Object::hashCode()方法，返回的是对象的一致性哈希码（Identity Hash Code），这个值是能强制保证不变的，它通过在对象头中存储计算结果来保证第一次计算之后，再次调用该方法取到的哈希码值永远不会再发生改变</li>
-<li>因此，当一个对象已经计算过一致性哈希码后，它就再也无法进入偏向锁状态了；而当一个对象当前正处于偏向锁状态，又收到需要计算其一致性哈希码请求时，它的偏向状态会被立即撤销，并且锁会膨胀为重量级锁。在重量级锁的实现中，对象头指向了重量级锁的位置，代表重量级锁的ObjectMonitor类里有字段可以记录非加锁状态（标志位为“01”）下的Mark Word，其中自然可以存储原来的哈希码。</li>
-</ul>
-<p>偏向锁可以提高带有同步但无竞争的程序性能，但它同样是一个带有效益权衡（Trade Off）性质的优化，也就是说它并非总是对程序运行有利。如果程序中大多数的锁都总是被多个不同的线程访问，那偏向模式就是多余的。在具体问题具体分析的前提下，有时候使用参数-XX：-UseBiasedLocking来禁止偏向锁优化反而可以提升性能。</p>
-]]></content>
-      <categories>
-        <category>jvm</category>
-      </categories>
-      <tags>
-        <tag>线程安全与锁优化</tag>
       </tags>
   </entry>
   <entry>
