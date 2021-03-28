@@ -231,20 +231,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-count">60</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">64</span>
+        <span class="site-state-item-count">65</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -290,6 +290,169 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-05-%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-05-%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D/" class="post-title-link" itemprop="url">Spring源码解析-05-自动装配</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-23 23:32:33" itemprop="dateCreated datePublished" datetime="2020-12-23T23:32:33+08:00">2020-12-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-05-%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-05-%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="自动装配"><a href="#自动装配" class="headerlink" title="自动装配"></a>自动装配</h2><p>Spring利用依赖注入（DI），完成对IOC容器中中各个组件的依赖关系赋值；</p>
+<h3 id="Autowired：自动注入"><a href="#Autowired：自动注入" class="headerlink" title="@Autowired：自动注入"></a>@Autowired：自动注入</h3><ul>
+<li>默认优先按照类型去容器中找对应的组件:applicationContext.getBean(BookDao.class);找到就赋值</li>
+<li>如果找到多个相同类型的组件，再将属性的名称作为组件的id去容器中查找 applicationContext.getBean(“bookDao”)</li>
+<li>@Qualifier(“bookDao”)：使用@Qualifier指定需要装配的组件的id，而不是使用属性名</li>
+<li>自动装配默认一定要将属性赋值好，没有就会报错；可以使用@Autowired(required=false);</li>
+<li>@Primary：让Spring进行自动装配的时候，默认使用首选的bean；也可以继续使用@Qualifier指定需要装配的bean的名字</li>
+</ul>
+<h3 id="Resource-JSR250"><a href="#Resource-JSR250" class="headerlink" title="@Resource(JSR250)"></a>@Resource(JSR250)</h3><p>@Resource:</p>
+<ul>
+<li><p>默认是按照组件名称进行装配的；</p>
+</li>
+<li><p>可以和@Autowired一样实现自动装配功能；</p>
+</li>
+<li><p>没有能支持@Primary功能</p>
+</li>
+<li><p>没有支持@Autowired（reqiured=false）;</p>
+</li>
+</ul>
+<h3 id="Inject-JSR330-java规范的注解"><a href="#Inject-JSR330-java规范的注解" class="headerlink" title="@Inject(JSR330)[java规范的注解]"></a>@Inject(JSR330)[java规范的注解]</h3><ul>
+<li><p>需要导入javax.inject的包，</p>
+</li>
+<li><p>和Autowired的功能一样。</p>
+</li>
+<li><p>没有required=false的功能；</p>
+<h3 id="ps"><a href="#ps" class="headerlink" title="ps:"></a>ps:</h3></li>
+</ul>
+<p>@Autowired:Spring定义的； </p>
+<p>@Resource、@Inject都是java规范</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><h3 id="AutowiredAnnotationBeanPostProcessor"><a href="#AutowiredAnnotationBeanPostProcessor" class="headerlink" title="AutowiredAnnotationBeanPostProcessor"></a>AutowiredAnnotationBeanPostProcessor</h3><ul>
+<li>AutowiredAnnotationBeanPostProcessor:解析完成自动装配功能；</li>
+</ul>
+<h3 id="Autowired位置"><a href="#Autowired位置" class="headerlink" title="@Autowired位置"></a>@Autowired位置</h3><p>@Autowired:构造器，参数，方法，属性 ，都是从容器中获取参数组件的值</p>
+<ul>
+<li><p>标注在set方法位置： @Bean+方法参数；参数从容器中获取;默认不写@Autowired效果是一样的；都能自动装配</p>
+</li>
+<li><p>标在构造器上：如果组件只有一个有参构造器，这个有参构造器的@Autowired可以省略，参数位置的组件还是可以自动从容器中获取</p>
+</li>
+<li><p>放在参数位置： </p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//默认加在ioc容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Boss</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Car car;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//构造器要用的组件，都是从容器中获取</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Boss</span><span class="params">(Car car)</span></span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.car = car;</span><br><span class="line">		System.out.println(<span class="string">&quot;Boss...有参构造器&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Car <span class="title">getCar</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> car;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//@Autowired </span></span><br><span class="line">	<span class="comment">//标注在方法，Spring容器创建当前对象，就会调用方法，完成赋值；</span></span><br><span class="line">	<span class="comment">//方法使用的参数，自定义类型的值从ioc容器中获取</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setCar</span><span class="params">(// <span class="meta">@Autowired</span></span></span></span><br><span class="line"><span class="function"><span class="params">        Car car)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.car = car;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;Boss [car=&quot;</span> + car + <span class="string">&quot;]&quot;</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ComponentScan(&#123;&quot;com.liming.service&quot;,&quot;com.liming.dao&quot;,</span></span><br><span class="line"><span class="meta">	&quot;com.liming.controller&quot;,&quot;com.liming.bean&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConifgOfAutowired</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Primary</span></span><br><span class="line">	<span class="meta">@Bean(&quot;bookDao2&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> BookDao <span class="title">bookDao</span><span class="params">()</span></span>&#123;</span><br><span class="line">		BookDao bookDao = <span class="keyword">new</span> BookDao();</span><br><span class="line">		bookDao.setLable(<span class="string">&quot;2&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> bookDao;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@Bean</span>标注的方法创建对象的时候，方法参数的值从容器中获取</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> car</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">color</span><span class="params">(Car car)</span></span>&#123;</span><br><span class="line">		Color color = <span class="keyword">new</span> Color();</span><br><span class="line">		color.setCar(car);</span><br><span class="line">		<span class="keyword">return</span> color;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="把Spring底层一些组件注入到自定义的Bean中"><a href="#把Spring底层一些组件注入到自定义的Bean中" class="headerlink" title="把Spring底层一些组件注入到自定义的Bean中"></a>把Spring底层一些组件注入到自定义的Bean中</h3><p>自定义组件想要使用Spring容器底层的一些组件（ApplicationContext，BeanFactory，xxx）；</p>
+<ul>
+<li><pre><code>    自定义组件实现xxxAware；在创建对象的时候，会调用接口规定的方法注入相关组件；Aware；</code></pre>
+</li>
+<li><pre><code>    把Spring底层一些组件注入到自定义的Bean中；</code></pre>
+</li>
+<li><pre><code>    xxxAware：功能使用xxxProcessor；</code></pre>
+</li>
+<li><pre><code>        ApplicationContextAware==》ApplicationContextAwareProcessor. invokeAwareInterfaces ；会帮忙把spring底层逐渐传入到当前bean </code></pre>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Red</span> <span class="keyword">implements</span> <span class="title">ApplicationContextAware</span>,<span class="title">BeanNameAware</span>,<span class="title">EmbeddedValueResolverAware</span> </span>&#123;</span><br><span class="line">   </span><br><span class="line">   <span class="keyword">private</span> ApplicationContext applicationContext;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      System.out.println(<span class="string">&quot;传入的ioc：&quot;</span>+applicationContext);</span><br><span class="line">      <span class="keyword">this</span>.applicationContext = applicationContext;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      System.out.println(<span class="string">&quot;当前bean的名字：&quot;</span>+name);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEmbeddedValueResolver</span><span class="params">(StringValueResolver resolver)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      String resolveStringValue = resolver.resolveStringValue(<span class="string">&quot;你好 $&#123;os.name&#125; 我是 #&#123;20*18&#125;&quot;</span>);</span><br><span class="line">      System.out.println(<span class="string">&quot;解析的字符串：&quot;</span>+resolveStringValue);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1649,133 +1812,6 @@ AbstractClass <|-- ConcreteClass2</pre>
 <p>如果你需要扩展功能，可以继承这个抽象类，然后覆写 Protected 方法，然后就是 调用了一个类似 execute方法，就完成你的扩展开发，</p>
 <p>非常容易扩展的一种模式</p>
 <h3 id="todo-去找到这种开源框架的例子"><a href="#todo-去找到这种开源框架的例子" class="headerlink" title="todo 去找到这种开源框架的例子"></a>todo 去找到这种开源框架的例子</h3>
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/11/24/git%E6%8F%90%E4%BA%A4%E7%BB%9F%E8%AE%A1-gitstats-java/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/24/git%E6%8F%90%E4%BA%A4%E7%BB%9F%E8%AE%A1-gitstats-java/" class="post-title-link" itemprop="url">git提交统计-gitstats-java</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-11-24 23:58:24" itemprop="dateCreated datePublished" datetime="2020-11-24T23:58:24+08:00">2020-11-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/git/" itemprop="url" rel="index"><span itemprop="name">git</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/11/24/git%E6%8F%90%E4%BA%A4%E7%BB%9F%E8%AE%A1-gitstats-java/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/11/24/git%E6%8F%90%E4%BA%A4%E7%BB%9F%E8%AE%A1-gitstats-java/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>1.9k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="gitstats-java版"><a href="#gitstats-java版" class="headerlink" title="gitstats java版"></a>gitstats java版</h2><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>年终总结总是要统计项目组 一年的代码提交情况，最早是使用gitstats -python版，github地址是：<br>[gitstats]: <a target="_blank" rel="noopener" href="https://github.com/hoxu/gitstats">https://github.com/hoxu/gitstats</a></p>
-<p>这个使用了python2.6 ，需要手动download项目下来，然后在本地配置执行，然后会生成一系列可视化的静态页面。这个过程是漫长的，并且页面展示的数据也有可能不是我们想要的。但是给我们提供了一个思路，我们只需要搞清楚 里面的py脚本的原理，便可用java实现 ，定制自己想要的效果 。</p>
-<p>本文参考 ：文章[使用Git工具统计代码]: <a target="_blank" rel="noopener" href="https://blog.cyeam.com/kaleidoscope/2015/01/17/gitstats#1-git-shortlog--s-since2013-12-01-before2015-12-10-head-no-merges">https://blog.cyeam.com/kaleidoscope/2015/01/17/gitstats#1-git-shortlog--s-since2013-12-01-before2015-12-10-head-no-merges</a>    “ “</p>
-<p>原始脚本主要用到了8个 git 命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">git shortlog -s --since=2013-12-01 --before=2015-12-10 HEAD --no-merges</span><br><span class="line"></span><br><span class="line">git show-ref --tags</span><br><span class="line"></span><br><span class="line">git rev-list --pretty=format:<span class="string">&quot;%at %ai %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD | grep -v ^commit</span><br><span class="line"></span><br><span class="line">git rev-list --pretty=format:<span class="string">&quot;%at %T&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD | grep -v ^commit</span><br><span class="line"></span><br><span class="line">git ls-tree -r -l -z HEAD</span><br><span class="line"></span><br><span class="line">git <span class="built_in">log</span> --shortstat --first-parent -m --pretty=format:<span class="string">&quot;%at %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD</span><br><span class="line"></span><br><span class="line">git <span class="built_in">log</span> --shortstat --date-order --pretty=format:<span class="string">&quot;%at %aN (%aE)&quot;</span> --since=2013-12-01 --before=2015-12-10 HEAD</span><br><span class="line"></span><br><span class="line">git --git-dir=.git --work-tree=./ rev-parse --short HEAD</span><br></pre></td></tr></table></figure>
-
-<p>具体的命令含义，可以参考原文，</p>
-<p>我这边的思路，就是把所有的提交历史，影响行数，全部保存到数据库里，</p>
-<p>使用 </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"> git <span class="built_in">log</span> --shortstat --date-order  --no-merges --pretty=format:<span class="string">&quot;%H %at %an %s &quot;</span>   HEAD</span><br><span class="line"> （ --no-merges 代表： 只输出修改代码的 commit 的数据，开发分支merge到主分支的请求的commit 是不会被统计的）</span><br><span class="line"> 输出示例： </span><br><span class="line">7847dd178ffe1c50f7ae2ecc8dce4f671b6b0df4 1571158821 jackfrued 更新了第91天的文档和资源</span><br><span class="line"> 2 files changed, 108 insertions(+), 28 deletions(-)</span><br><span class="line"></span><br><span class="line">662318eadb8efaf86f0bc9ac4623d8c5b45c1657 1571146991 jackfrued 更新了第91天的内容</span><br><span class="line"> 7 files changed, 148 insertions(+), 42 deletions(-)</span><br><span class="line"></span><br><span class="line">24048b2e1be968750e18d8c2cc5031d6d0ad265e 1570969223 jackfrued 更新了README.md文件</span><br><span class="line"> 1 file changed, 1 insertion(+), 2 deletions(-)</span><br><span class="line"></span><br><span class="line">cef5d95041b1c1a6e03466325258d627386afbd2 1570969065 jackfrued 更新了最后10天的文档</span><br><span class="line"> 17 files changed, 1045 insertions(+), 254 deletions(-)</span><br><span class="line"></span><br><span class="line"> </span><br></pre></td></tr></table></figure>
-
-<p>将所有的提交记录输出到txt文件上，再去读txt文件，写入数据库，后续展示 只需要看如何写sql就行，可以实现定制化</p>
-<h3 id="后续思路（已实现）："><a href="#后续思路（已实现）：" class="headerlink" title="后续思路（已实现）："></a>后续思路（已实现）：</h3><ul>
-<li><p>将需要统计的项目信息配置在数据库中</p>
-</li>
-<li><p>使用egit 自动git clone代码或者 git checkout  and pull最新分支的代码</p>
-</li>
-<li><p>自动将git log 信息写入文件，再读取并解析文件信息写入数据库中 </p>
-<p><img src="/uploads/gitstats-vue/data-back.png"></p>
-<p><img src="/uploads/gitstats-vue/back-code.png"></p>
-<h3 id="todo-（前端echart-图标可视化展示-）"><a href="#todo-（前端echart-图标可视化展示-）" class="headerlink" title="todo （前端echart  图标可视化展示 ）"></a>todo （前端echart  图标可视化展示 ）</h3></li>
-</ul>
-<p><img src="/uploads/gitstats-vue/front-page.png"></p>
-<p><img src="/uploads/gitstats-vue/front-page02.png"></p>
-
       
     </div>
 
