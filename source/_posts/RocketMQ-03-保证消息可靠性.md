@@ -5,7 +5,7 @@ comments: true
 related_posts: true
 date: 2021-04-12 23:24:23
 tags: 保证消息可靠性
-categories: RokectMQ
+categories: RocketMQ
 ---
 
 # Rocketmq如何保证消息不丢失，如何保证消息不被重复消费
