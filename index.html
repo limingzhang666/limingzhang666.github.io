@@ -231,7 +231,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">66</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -244,7 +244,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">68</span>
+        <span class="site-state-item-count">71</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -290,6 +290,268 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-08-%E5%85%B3%E4%BA%8EBeanPostProcessor%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-08-%E5%85%B3%E4%BA%8EBeanPostProcessor%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="post-title-link" itemprop="url">Spring源码解析-08-关于BeanPostProcessor生命周期</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-04-16 23:10:46" itemprop="dateCreated datePublished" datetime="2021-04-16T23:10:46+08:00">2021-04-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-08-%E5%85%B3%E4%BA%8EBeanPostProcessor%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-08-%E5%85%B3%E4%BA%8EBeanPostProcessor%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>7.4k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>7 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>BeanPostProcessor：后置处理器<br>spring使用**<em>模板模式**</em>，在bean的创建过程中安插了许多锚点，用户寻找对应的锚点，通过重写方法介入到bean的创建过程当中。本节通过重写这些锚点，学习如何使用BeanPostProcessor、获取各类BeanAware并且理清bean的生命周期</p>
+<h2 id="创建类LifeCycleBean"><a href="#创建类LifeCycleBean" class="headerlink" title="创建类LifeCycleBean"></a>创建类LifeCycleBean</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.yinshi.spring.bean;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.BeansException;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.*;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.ApplicationContext;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.ApplicationContextAware;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LifeCycleBean</span> <span class="keyword">implements</span> <span class="title">BeanNameAware</span>, <span class="title">BeanFactoryAware</span>, <span class="title">ApplicationContextAware</span>, <span class="title">InitializingBean</span>, <span class="title">DisposableBean</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> BeanFactory beanFactory;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> ApplicationContext applicationContext;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">LifeCycleBean</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;2. 构造方法被调用，name：&quot;</span> + name);</span><br><span class="line">		<span class="keyword">this</span>.name = name;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;5. BeanNameAware被调用, 获取到的beanName：&quot;</span> + name);</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanFactory</span><span class="params">(BeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.beanFactory = beanFactory;</span><br><span class="line">		System.out.println(<span class="string">&quot;6. BeanFactoryAware被调用，获取到beanFactory：&quot;</span> + beanFactory);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.applicationContext = applicationContext;</span><br><span class="line">		System.out.println(<span class="string">&quot;7. ApplicationContextAware被调用，获取到ApplicationContextAware：&quot;</span> + applicationContext);</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;9. afterPropertiesSet被调用&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">myInit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;10. myInit自定义初始化方法被调用，name：&quot;</span> + getName());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;13. DisposableBean被调用&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">myDestroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;14. destroy-method自定义销毁方法被调用&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">///////////////////////////////////////////////////////////////</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> name;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.name = name;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> BeanFactory <span class="title">getBeanFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> beanFactory;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> ApplicationContext <span class="title">getApplicationContext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> applicationContext;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;LifeCycleBean&#123;&quot;</span> +</span><br><span class="line">				<span class="string">&quot;beanFactory=&quot;</span> + beanFactory +</span><br><span class="line">				<span class="string">&quot;, applicationContext=&quot;</span> + applicationContext +</span><br><span class="line">				<span class="string">&quot;, name=&#x27;&quot;</span> + name + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">				<span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="创建BeanPostProcessor后置处理器"><a href="#创建BeanPostProcessor后置处理器" class="headerlink" title="创建BeanPostProcessor后置处理器"></a>创建BeanPostProcessor后置处理器</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.yinshi.spring.bean;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.BeansException;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.PropertyValues;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LifeCycleBeanPostProcessor</span> <span class="keyword">implements</span> <span class="title">InstantiationAwareBeanPostProcessor</span> </span>&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 实例化之前</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> beanClass the class of the bean to be instantiated</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> beanName  the name of the bean</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> BeansException</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">postProcessBeforeInstantiation</span><span class="params">(Class&lt;?&gt; beanClass, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (beanName.equals(<span class="string">&quot;lifeCycleBean&quot;</span>)) &#123;</span><br><span class="line">			System.out.println(<span class="string">&quot;1. postProcessBeforeInstantiation被调用&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 实例化之后</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">postProcessAfterInstantiation</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (beanName.equals(<span class="string">&quot;lifeCycleBean&quot;</span>)) &#123;</span><br><span class="line">			System.out.println(<span class="string">&quot;3. postProcessAfterInstantiation被调用&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> PropertyValues <span class="title">postProcessProperties</span><span class="params">(PropertyValues pvs, Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (beanName.equals(<span class="string">&quot;lifeCycleBean&quot;</span>)) &#123;</span><br><span class="line">			System.out.println(<span class="string">&quot;4. postProcessProperties被调用&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">postProcessBeforeInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (beanName.equals(<span class="string">&quot;lifeCycleBean&quot;</span>)) &#123;</span><br><span class="line">			((LifeCycleBean) bean).setName(<span class="string">&quot;中中&quot;</span>);</span><br><span class="line">			System.out.println(<span class="string">&quot;8. postProcessBeforeInitialization被调用，把name改成中中&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">postProcessAfterInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (beanName.equals(<span class="string">&quot;lifeCycleBean&quot;</span>)) &#123;</span><br><span class="line">			((LifeCycleBean) bean).setName(<span class="string">&quot;大大&quot;</span>);</span><br><span class="line">			System.out.println(<span class="string">&quot;11. postProcessAfterInitialization被调用，把name改成大大&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="配置类"><a href="#配置类" class="headerlink" title="配置类"></a>配置类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(&quot;com.yinshi.spring.bean&quot;)</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span>  <span class="title">MainConfigOfLifeCycle</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//@Scope(&quot;prototype&quot;)</span></span><br><span class="line">	<span class="meta">@Bean(initMethod=&quot;init&quot;,destroyMethod=&quot;detory&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Car <span class="title">car</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Car();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean(initMethod = &quot;myInit&quot;, destroyMethod = &quot;myDestroy&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> LifeCycleBean <span class="title">lifeCycleBean</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> LifeCycleBean(<span class="string">&quot;小小&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.yinshi.spring;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.yinshi.spring.bean.LifeCycleBean;</span><br><span class="line"><span class="keyword">import</span> com.yinshi.spring.config.MainConfigOfLifeCycle;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.AnnotationConfigApplicationContext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IOCTest_LifeCycle</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test01</span><span class="params">()</span></span>&#123;</span><br><span class="line">		AnnotationConfigApplicationContext applicationContext = <span class="keyword">new</span> AnnotationConfigApplicationContext(MainConfigOfLifeCycle.class);</span><br><span class="line">		System.out.println(<span class="string">&quot;容器创建完成...&quot;</span>);</span><br><span class="line">		applicationContext.getBean(LifeCycleBean.class);</span><br><span class="line">		<span class="comment">// 关闭容器</span></span><br><span class="line">		applicationContext.close();</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 控制台的输出结果</span></span><br><span class="line"></span><br><span class="line"><span class="number">1.</span> postProcessBeforeInstantiation被调用</span><br><span class="line"><span class="number">2.</span> 构造方法被调用，name：小小</span><br><span class="line"><span class="number">3.</span> postProcessAfterInstantiation被调用</span><br><span class="line"><span class="number">4.</span> postProcessProperties被调用</span><br><span class="line"><span class="number">5.</span> BeanNameAware被调用, 获取到的beanName：lifeCycleBean</span><br><span class="line"><span class="number">6.</span> BeanFactoryAware被调用，获取到beanFactory：org.springframework.beans.factory.support.DefaultListableBeanFactory@<span class="number">117e949d</span>: defining beans [lifeCycleBean,lifeCycleBeanPostProcessor]; root of factory hierarchy</span><br><span class="line"><span class="number">7.</span> ApplicationContextAware被调用，获取到ApplicationContextAware：org.springframework.context.support.ClassPathXmlApplicationContext@<span class="number">71e9d</span>db4, started on Sat Feb <span class="number">22</span> <span class="number">20</span>:<span class="number">30</span>:<span class="number">35</span> CST <span class="number">2020</span></span><br><span class="line"><span class="number">8.</span> postProcessBeforeInitialization被调用，把name改成中中</span><br><span class="line"><span class="number">9.</span> afterPropertiesSet被调用</span><br><span class="line"><span class="number">10.</span> myInit自定义初始化方法被调用，name：中中</span><br><span class="line"><span class="number">11.</span> postProcessAfterInitialization被调用，把name改成大大</span><br><span class="line"><span class="number">12.</span> bean创建完成 name： 大大</span><br><span class="line"><span class="number">13.</span> DisposableBean被调用</span><br><span class="line"><span class="number">14.</span> destroy-method自定义销毁方法被调用</span><br><span class="line"></span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li><p>BeanPostProcess</p>
+<ul>
+<li>实例化相关： postProcessBeforeInstantiation     postProcessAfterInstantiation</li>
+<li>填充属性相关: postProcessProperties   </li>
+<li>初始化相关： postProcessBeforeInitialization<code>、</code>postProcessAfterInitialization</li>
+<li>通过重写BeanPostProcess 的方法，可以介入bean创建的不同环节。同时通过postProcessBeforeInitialization 将bean的name属性值 从“小小”改成了“中中”，又通过postProcessAfterInitialization 将“中中”改成了“大大”，成功介入了bean的创建，并且依据我们的意愿 修改了bean</li>
+</ul>
+</li>
+<li><p>BeanNameAware、BeanFactoryAware、ApplicationContextAware<br>这3类不属于后置处理器的范畴，学名叫感知器，让bean能感知到整个容器上下文信息的接口。spring在创建过程中，通过回调子类的setBeanName, setBeanFactory, setApplicationContext实现了BeanName, BeanFactory, ApplicationContext的注入，让bean能够感知获取到spring上下文的相关信息。虽然实现的东西很牛逼，但是实现的原理一点不复杂。通过检测当前的bean是否实现相关Aware，如果实现则调用子类set方法，将当前的BeanFactory等作为参数传入，直接上源码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">invokeAwareMethods</span><span class="params">(<span class="keyword">final</span> String beanName, <span class="keyword">final</span> Object bean)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> Aware) &#123;</span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanNameAware) &#123;</span><br><span class="line">			((BeanNameAware) bean).setBeanName(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanClassLoaderAware) &#123;</span><br><span class="line">			ClassLoader bcl = getBeanClassLoader();</span><br><span class="line">			<span class="keyword">if</span> (bcl != <span class="keyword">null</span>) &#123;</span><br><span class="line">				((BeanClassLoaderAware) bean).setBeanClassLoader(bcl);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanFactoryAware) &#123;</span><br><span class="line">			((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.<span class="keyword">this</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>最后贴出总结后的流程图</p>
+</li>
+</ol>
+<p><img src="/uploads/springSource/BeanLifeCycle01.jpeg"></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-07-%E5%85%B3%E4%BA%8EAware%E6%8E%A5%E5%8F%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-07-%E5%85%B3%E4%BA%8EAware%E6%8E%A5%E5%8F%A3/" class="post-title-link" itemprop="url">Spring源码解析-07-关于Aware接口</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-04-16 22:07:00" itemprop="dateCreated datePublished" datetime="2021-04-16T22:07:00+08:00">2021-04-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-07-%E5%85%B3%E4%BA%8EAware%E6%8E%A5%E5%8F%A3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/04/16/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-07-%E5%85%B3%E4%BA%8EAware%E6%8E%A5%E5%8F%A3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>4.5k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>在Bean对象的生命周期的方法中有好几个接口是Aware接口的子接口，所以弄清楚Aware接口对于理解Spring框架还是很有帮助的。</p>
+<h1 id="结论："><a href="#结论：" class="headerlink" title="结论："></a>结论：</h1><p>Aware系列接口，主要用于辅助Spring bean访问Spring容器</p>
+<h1 id="Aware是什么："><a href="#Aware是什么：" class="headerlink" title="Aware是什么："></a>Aware是什么：</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * A marker superinterface indicating（指示） that a bean is eligible（合适的，符合条件的，有资格的） to be notified by the</span></span><br><span class="line"><span class="comment"> Spring container of a particular framework object through a callback-style method.</span></span><br><span class="line"><span class="comment"> The actual method signature is determined(决定) by individual（个体的） subinterfaces but should</span></span><br><span class="line"><span class="comment"> typically consist of just one void-returning method that accepts a single argument.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;Note that merely（仅仅） implementing &#123;<span class="doctag">@link</span> Aware&#125; provides no default functionality.</span></span><br><span class="line"><span class="comment"> * Rather, processing must be done explicitly（明确的）, for example in a</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@link</span> org.springframework.beans.factory.config.BeanPostProcessor&#125;.</span></span><br><span class="line"><span class="comment"> * Refer to (参考，适用于)&#123;<span class="doctag">@link</span> org.springframework.context.support.ApplicationContextAwareProcessor&#125;</span></span><br><span class="line"><span class="comment"> * for an example of processing specific &#123;<span class="doctag">@code</span> *Aware&#125; interface callbacks.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Chris Beams</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Juergen Hoeller</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span> 3.1</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">	<span class="comment">// 可以发现该接口中并没有定义任何方法，所以这是个标识接口。该接口的子接口有如下：</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Aware的英文意思是“可感知”，它自身是一个空白的接口，但是它有很多实现类，所以它的功能其实就是可以让调用者获取到某些信息，例如：加载当前Bean的容器名，当前Bean在容器中的BeanName，获取一些文本信息和资源文件等等，去获取加载当前Bean的加载器信息，等等等等。<br>我们也可以自定义一些XXAware，去获取自己想要的信息。</li>
+<li>Aware接口从字面上翻译过来是感知捕获的含义。单纯的bean（未实现Aware系列接口）是没有知觉的；实现了Aware系列接口的bean可以访问Spring容器。这些Aware系列接口增强了Spring bean的功能，但是也会造成对Spring框架的绑定，增大了与Spring框架的耦合度。（Aware是“意识到的，察觉到的”的意思，实现了Aware系列接口表明：可以意识到、可以察觉到）</li>
+</ul>
+<h2 id="子接口"><a href="#子接口" class="headerlink" title="子接口"></a>子接口</h2><p><img src="https://ask.qcloudimg.com/http-save/yehe-4919348/ztnwz2oobc.png?imageView2/2/w/1620" alt="img"></p>
+<h2 id="Aware系列接口的共性"><a href="#Aware系列接口的共性" class="headerlink" title="Aware系列接口的共性"></a>Aware系列接口的共性</h2><ol>
+<li>都以“Aware”结尾</li>
+<li>都是Aware接口的子接口，即都继承了Aware接口</li>
+<li>接口内均定义了一个set方法</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ResourceLoaderAware</span> <span class="keyword">extends</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setResourceLoader</span><span class="params">(ResourceLoader resourceLoader)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BeanFactoryAware</span> <span class="keyword">extends</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setBeanFactory</span><span class="params">(BeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationContextAware</span> <span class="keyword">extends</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BeanClassLoaderAware</span> <span class="keyword">extends</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setBeanClassLoader</span><span class="params">(ClassLoader classLoader)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>每个子接口都定义了set方法。而方法中的形参是接口Aware前面的内容，也就是当前Bean需要感知的内容。所以我们需要在Bean中声明相关的成员变量来接收。</li>
+</ul>
+<h2 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.yinshi.spring.bean;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.BeansException;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.BeanClassLoaderAware;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.BeanFactory;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.BeanFactoryAware;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.BeanNameAware;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Component;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AwareTestBean</span> <span class="keyword">implements</span> <span class="title">BeanNameAware</span>, <span class="title">BeanFactoryAware</span>, <span class="title">BeanClassLoaderAware</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> String beanName;</span><br><span class="line">	<span class="keyword">private</span> String beanFactory;</span><br><span class="line">	<span class="keyword">private</span> String classLoader;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanClassLoader</span><span class="params">(ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.classLoader = classLoader.getName();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanFactory</span><span class="params">(BeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.beanFactory = beanFactory.toString();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.beanName = name;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getBeanName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> beanName;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getBeanFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> beanFactory;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getClassLoader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> classLoader;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;AwareTestBean&#123;&quot;</span> +</span><br><span class="line">				<span class="string">&quot;beanName=&#x27;&quot;</span> + beanName + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">				<span class="string">&quot;, beanFactory=&#x27;&quot;</span> + beanFactory + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">				<span class="string">&quot;, classLoader=&#x27;&quot;</span> + classLoader + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">				<span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@Test</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testAware</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		AnnotationConfigApplicationContext applicationContext = <span class="keyword">new</span> AnnotationConfigApplicationContext(MainConifgOfAutowired.class);</span><br><span class="line">		AwareTestBean bean = applicationContext.getBean(AwareTestBean.class);</span><br><span class="line">		System.out.println(bean.toString());</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">AwareTestBean&#123;beanName=<span class="string">&#x27;awareTestBean&#x27;</span>, beanFactory=<span class="string">&#x27;org.springframework.beans.factory.support.DefaultListableBeanFactory@5ab956d7: defining beans [org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,mainConifgOfAutowired,bookService,bookDao,bookController,awareTestBean,boss,car,cat,dog,myApplicationObjectSupport,myBeanPostProcessor,red,bookDao2,color]; root of factory hierarchy&#x27;</span>, classLoader=<span class="string">&#x27;app&#x27;</span>&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h6 id="可以看到是成功了。所以这就是Aware告知的作用。当需要获取当前Bean的一些信息，不需要硬编码或者注入的方式去拿，通过定义好的接口，直接获取"><a href="#可以看到是成功了。所以这就是Aware告知的作用。当需要获取当前Bean的一些信息，不需要硬编码或者注入的方式去拿，通过定义好的接口，直接获取" class="headerlink" title="可以看到是成功了。所以这就是Aware告知的作用。当需要获取当前Bean的一些信息，不需要硬编码或者注入的方式去拿，通过定义好的接口，直接获取"></a>可以看到是成功了。所以这就是Aware告知的作用。当需要获取当前Bean的一些信息，不需要硬编码或者注入的方式去拿，通过定义好的接口，直接获取</h6><p><img src="https://img-blog.csdnimg.cn/20201022183304977.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3doaXRlQmVhckNsaW1i,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1789,268 +2051,6 @@
 <li> zrevrangebyscore  key 结束score 开始score</li>
 </ul>
 <h2 id="解析配置文件redis-conf"><a href="#解析配置文件redis-conf" class="headerlink" title="解析配置文件redis.conf"></a>解析配置文件redis.conf</h2><p>TODO</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-15-%E7%9B%91%E6%8E%A7%E4%BB%BB%E5%8A%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-15-%E7%9B%91%E6%8E%A7%E4%BB%BB%E5%8A%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="post-title-link" itemprop="url">java高并发详解-15-监控任务的生命周期</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-03-09 16:20:40" itemprop="dateCreated datePublished" datetime="2021-03-09T16:20:40+08:00">2021-03-09</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">高并发详解</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-15-%E7%9B%91%E6%8E%A7%E4%BB%BB%E5%8A%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-15-%E7%9B%91%E6%8E%A7%E4%BB%BB%E5%8A%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>1.9k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <ul>
-<li>这个例子我已经用到了实际工作中，怎么说呢，效果还不错吧</li>
-<li>既监控了任务的状态，也实现了单一职责，将任务task的逻辑 与监控 逻辑进行了分离</li>
-<li>也方便统一 任务的状态，可以落数据库</li>
-</ul>
-<h2 id="1-Observable接口定义"><a href="#1-Observable接口定义" class="headerlink" title="1.Observable接口定义"></a>1.Observable接口定义</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Observable</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 任务生命周期的枚举类型</span></span><br><span class="line">    <span class="class"><span class="keyword">enum</span> <span class="title">Cycle</span> </span>&#123;</span><br><span class="line">        STARTED, RUNNING, DONE, ERROR</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取当前任务的生命周期状态</span></span><br><span class="line">    <span class="function">Cycle <span class="title">getCycle</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定义启动线程的方法，作用是为了屏蔽 Thread的其他方法</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//定义线程的打断方法，作用于 start方法一样，也是为了屏蔽Thread的其他方法</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">interrupt</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="2-TaskLifecycle-事件回调者"><a href="#2-TaskLifecycle-事件回调者" class="headerlink" title="2.TaskLifecycle 事件回调者"></a>2.TaskLifecycle 事件回调者</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TaskLifecycle</span>&lt;<span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">onStart</span><span class="params">(Thread thread)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">onRunning</span><span class="params">(Thread thread)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">onFinish</span><span class="params">(Thread thread, T result)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">onError</span><span class="params">(Thread thread, Exception e)</span></span>;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="3-Task函数接口定义"><a href="#3-Task函数接口定义" class="headerlink" title="3.Task函数接口定义"></a>3.Task函数接口定义</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Task</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">// 任务执行接口，该接口允许有返回值 </span></span><br><span class="line">    <span class="function">T <span class="title">call</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="4-ObservableThread-事件发起者"><a href="#4-ObservableThread-事件发起者" class="headerlink" title="4.ObservableThread 事件发起者"></a>4.ObservableThread 事件发起者</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ObservableThread</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">Thread</span> <span class="keyword">implements</span> <span class="title">Observable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> TaskLifecycle&lt;T&gt; lifecycle;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Task&lt;T&gt; task;</span><br><span class="line">    <span class="keyword">private</span> Cycle cycle;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ObservableThread</span><span class="params">(TaskLifecycle&lt;T&gt; lifecycle, Task&lt;T&gt; task)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line">        <span class="keyword">if</span> (task == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;The task is required.&quot;</span>);</span><br><span class="line">        <span class="keyword">this</span>.lifecycle = lifecycle;</span><br><span class="line">        <span class="keyword">this</span>.task = task;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.update(Cycle.STARTED, <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.update(Cycle.RUNNING, <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">            T result = <span class="keyword">this</span>.task.call();</span><br><span class="line">            <span class="keyword">this</span>.update(Cycle.DONE, result, <span class="keyword">null</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">this</span>.update(Cycle.ERROR, <span class="keyword">null</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">(Cycle cycle, T result, Exception e)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (lifecycle == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">this</span>.cycle = cycle;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">switch</span> (cycle) &#123;</span><br><span class="line">                <span class="keyword">case</span> STARTED:</span><br><span class="line">                    <span class="keyword">this</span>.lifecycle.onStart(currentThread());</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> RUNNING:</span><br><span class="line">                    <span class="keyword">this</span>.lifecycle.onRunning(currentThread());</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> DONE:</span><br><span class="line">                    <span class="keyword">this</span>.lifecycle.onFinish(currentThread(), result);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> ERROR:</span><br><span class="line">                    <span class="keyword">this</span>.lifecycle.onError(currentThread(), e);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">            <span class="keyword">if</span> (cycle == Cycle.ERROR) &#123;</span><br><span class="line">                <span class="keyword">throw</span> ex;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Cycle <span class="title">getCycle</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.cycle;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-13-7%E7%A7%8D%E5%8D%95%E4%BE%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-13-7%E7%A7%8D%E5%8D%95%E4%BE%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1/" class="post-title-link" itemprop="url">java高并发详解-13-7种单例设计模式设计</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-03-09 14:00:40" itemprop="dateCreated datePublished" datetime="2021-03-09T14:00:40+08:00">2021-03-09</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">高并发详解</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-13-7%E7%A7%8D%E5%8D%95%E4%BE%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/09/java%E9%AB%98%E5%B9%B6%E5%8F%91%E8%AF%A6%E8%A7%A3-13-7%E7%A7%8D%E5%8D%95%E4%BE%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E8%AE%BE%E8%AE%A1/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>3.1k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>3 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="饿汉式"><a href="#饿汉式" class="headerlink" title="饿汉式"></a>饿汉式</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">HungerSingleton</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">HungerSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> HungerSingleton instance = <span class="keyword">new</span> HungerSingleton();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> HungerSingleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>instance 作为类变量在 类初始化的过程中会被收集进 <clinit>()方法中，该方法能够百分之百地保证同步，也就是说 instance 在多线程地情况下不可能被实例化两次，但是instance 被ClassLoader 加载后可能很长一段时间才被使用，那就意味着 instance 实例所开辟地堆内存会驻留更久地时间</li>
-<li>如果一个类中地成员属性比较少，且占用的内存资源不多，饿汉的方式也未尝不可， </li>
-<li>相反，如果一个类中的成员都是比较重的资源，那么这种方式就会有些不妥</li>
-<li>总结起来，饿汉式的单例设计模式可以保证在多线程的情况下的唯一实例，getInstance的性能也比较高，</li>
-<li>但是无法进行懒加载</li>
-</ul>
-<h2 id="懒汉式-同步方法"><a href="#懒汉式-同步方法" class="headerlink" title="懒汉式+同步方法"></a>懒汉式+同步方法</h2><p>所谓懒汉式就是在使用类实例的时候再去创建，这样就可以避免在类初始化时，提前创建，</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">LazySingleton</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">LazySingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> LazySingleton instance = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> LazySingleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">//如果不加synchronized， 会出现多线程并发问题,</span></span><br><span class="line">        <span class="comment">//加上 synchronized后，单线程，效率问题</span></span><br><span class="line">        <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;</span><br><span class="line">            instance = <span class="keyword">new</span> LazySingleton();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>注意看 getInstance ()方法，如果此处不加 synchronized 同步，则可能存在多线程并发的问题，</li>
-<li>但是加上 synchronized后，单线程，有可能存在效率问题</li>
-</ul>
-<h2 id="Volatile-Double-Check"><a href="#Volatile-Double-Check" class="headerlink" title="Volatile+Double-Check"></a>Volatile+Double-Check</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">VolatileDoubleheckSingleton</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">static</span> VolatileDoubleheckSingleton instance = <span class="keyword">null</span>;</span><br><span class="line">    Connection conn;</span><br><span class="line">    Socket socket;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">VolatileDoubleheckSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// this.conn;</span></span><br><span class="line">        <span class="comment">//this.socket;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> VolatileDoubleheckSingleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (VolatileDoubleheckSingleton.class) &#123;</span><br><span class="line">                <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    instance = <span class="keyword">new</span> VolatileDoubleheckSingleton();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>Double-Check 虽然是一种巧妙地程序设计，但是有可能引起类成员变量地实例化 conn 和socket 发生在instance 实例化之后，（因为JVM在运行时指令重排序导致的）</li>
-<li>而 volatile关键字则可以防止这种重排序的发生 所以 private volatile static VolatileDoubleheckSingleton instance = null;</li>
-</ul>
-<h2 id="Holder方式"><a href="#Holder方式" class="headerlink" title="Holder方式"></a>Holder方式</h2><p>Holder 的方式完全是 借助了类加载的特点，</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">HolderSingleton</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">HolderSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在静态内部类中持有 HolderSingleton 的实例，并且可以直接初始化</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Holder</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> HolderSingleton instance = <span class="keyword">new</span> HolderSingleton();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用 getInstance 方法，事实上是获得 Holder的instance 静态属性</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> HolderSingleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Holder.instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>好处：</p>
-<ul>
-<li>在HolderSingleton类中 没有instance的静态成员，而是将其放到了静态内部类Holder之中，因此在Singleton类的 初始化过程中 并不会创建 Singleton 的实例，</li>
-<li>Holder类中定义了Singleton的静态变量，并且直接进行了实例化。当Holder被主动引用的时候  则会创建Singleton的实例，Singleton实例的创建过程 在Java程序编译时期 收集至 <clinit>（） 方法中，该方法 又是同步方法， 同步方法可以保证内存的可见性，JVM指令的顺序性 和原子性、</li>
-<li>Holder方式的单例设计是最好的设计之一</li>
-</ul>
-<h2 id="枚举方式"><a href="#枚举方式" class="headerlink" title="枚举方式"></a>枚举方式</h2><ul>
-<li>使用枚举的方式实现单例模式 是 《effective java》作者力推的方式 </li>
-<li>枚举类型不允许被继承，同样的是线程安全的且 只能被实例化一次，但是 枚举类型不能够懒加载，</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">enum</span> <span class="title">EnumSingleton</span> </span>&#123;</span><br><span class="line">    INSTANCE;</span><br><span class="line"></span><br><span class="line">    EnumSingleton() &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;INIT&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">method</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 调用该方法则会主动使用Singleton INSTANCE 将会被实例化</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> EnumSingleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> INSTANCE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;</span><br><span class="line">    <span class="comment">//实例变量</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">byte</span>[] data = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="class"><span class="keyword">enum</span> <span class="title">EnumHolder</span> </span>&#123;</span><br><span class="line">        INSTANCE;</span><br><span class="line">        <span class="keyword">private</span> Singleton instance;</span><br><span class="line"></span><br><span class="line">        EnumHolder() &#123;</span><br><span class="line">            <span class="keyword">this</span>.instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> Singleton <span class="title">getSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> EnumHolder.INSTANCE.getSingleton();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 
       
     </div>
