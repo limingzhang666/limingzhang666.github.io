@@ -231,7 +231,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">66</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -244,7 +244,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">71</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -290,6 +290,136 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-02-%E6%B3%A8%E5%86%8C%E7%BB%84%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-02-%E6%B3%A8%E5%86%8C%E7%BB%84%E4%BB%B6/" class="post-title-link" itemprop="url">Spring源码解析-02-注册组件</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-23 21:54:19" itemprop="dateCreated datePublished" datetime="2020-12-23T21:54:19+08:00">2020-12-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-02-%E6%B3%A8%E5%86%8C%E7%BB%84%E4%BB%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-02-%E6%B3%A8%E5%86%8C%E7%BB%84%E4%BB%B6/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.3k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="注册组件"><a href="#注册组件" class="headerlink" title="注册组件"></a>注册组件</h2><ul>
+<li>包扫描+组件标注注解（@Controller/@Service/@Repository/@Component）[自己写的类]</li>
+<li>@Bean[导入的第三方包里面的组件]</li>
+<li>@Import[快速给容器中导入一个组件]<ul>
+<li>@Import(要导入到容器中的组件)；容器中就会自动注册这个组件，id默认是全类名</li>
+<li>ImportSelector:返回需要导入的组件的全类名数组；</li>
+<li>ImportBeanDefinitionRegistrar:手动注册bean到容器中</li>
+</ul>
+</li>
+<li>使用Spring提供的 FactoryBean（工厂Bean）;<ul>
+<li>默认获取到的是工厂bean调用getObject创建的对象</li>
+<li>要获取工厂Bean本身，我们需要给id前面加一个&amp;， 即<pre><code>    “&amp;colorFactoryBean&quot;</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Import"><a href="#Import" class="headerlink" title="@Import"></a>@Import</h3><p>使用@Import 注解，内容包含 MyImportSelector</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="comment">// 导入组件，id默认是组件的全类名（com.liming.bean.Color）</span></span><br><span class="line"><span class="meta">@Import(&#123;Color.class, Red.class, MyImportSelector.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfig2</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ImportSelector"><a href="#ImportSelector" class="headerlink" title="ImportSelector"></a>ImportSelector</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//自定义逻辑返回需要导入的组件</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportSelector</span> <span class="keyword">implements</span> <span class="title">ImportSelector</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//返回值，就是到导入到容器中的组件全类名</span></span><br><span class="line">	<span class="comment">//AnnotationMetadata:当前标注@Import注解的类的所有注解信息</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> String[] selectImports(AnnotationMetadata importingClassMetadata) &#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="comment">//importingClassMetadata</span></span><br><span class="line">		<span class="comment">//方法不要返回null值</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> String[]&#123;<span class="string">&quot;com.bean.Blue&quot;</span>,<span class="string">&quot;com.bean.Yellow&quot;</span>&#125;;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ImportBeanDefinitionRegistrar"><a href="#ImportBeanDefinitionRegistrar" class="headerlink" title="ImportBeanDefinitionRegistrar"></a>ImportBeanDefinitionRegistrar</h4><p>使用 ImportBeanDefinitionRegistrar:手动注册bean到容器中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportBeanDefinitionRegistrar</span> <span class="keyword">implements</span> <span class="title">ImportBeanDefinitionRegistrar</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * AnnotationMetadata：当前类的注解信息</span></span><br><span class="line"><span class="comment">	 * BeanDefinitionRegistry:BeanDefinition注册类；</span></span><br><span class="line"><span class="comment">	 * 		把所有需要添加到容器中的bean；调用</span></span><br><span class="line"><span class="comment">	 * 		BeanDefinitionRegistry.registerBeanDefinition手工注册进来</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">boolean</span> definition = registry.containsBeanDefinition(<span class="string">&quot;com.atguigu.bean.Red&quot;</span>);</span><br><span class="line">		<span class="keyword">boolean</span> definition2 = registry.containsBeanDefinition(<span class="string">&quot;com.atguigu.bean.Blue&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(definition &amp;&amp; definition2)&#123;</span><br><span class="line">			<span class="comment">//指定Bean定义信息；（Bean的类型，Bean。。。）</span></span><br><span class="line">			RootBeanDefinition beanDefinition = <span class="keyword">new</span> RootBeanDefinition(RainBow.class);</span><br><span class="line">			<span class="comment">//注册一个Bean，指定bean名</span></span><br><span class="line">			registry.registerBeanDefinition(<span class="string">&quot;rainBow&quot;</span>, beanDefinition);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="FactoryBean"><a href="#FactoryBean" class="headerlink" title="FactoryBean"></a>FactoryBean</h4><p>实现FactoryBean接口, 然后加上@Bean</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建一个Spring定义的FactoryBean</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ColorFactoryBean</span> <span class="keyword">implements</span> <span class="title">FactoryBean</span>&lt;<span class="title">Color</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//返回一个Color对象，这个对象会添加到容器中</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;ColorFactoryBean...getObject...&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Color();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> Class&lt;?&gt; getObjectType() &#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> Color.class;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//是单例？</span></span><br><span class="line">	<span class="comment">//true：这个bean是单实例，在容器中保存一份</span></span><br><span class="line">	<span class="comment">//false：多实例，每次获取都会创建一个新的bean；</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSingleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> ColorFactoryBean <span class="title">colorFactoryBean</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> ColorFactoryBean();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testImport</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        printBeans(applicationContext);</span><br><span class="line">		<span class="comment">// ==》》》》》 这个实际 获取的是color对象，虽然id是 colorFactoryBean</span></span><br><span class="line">        Object colorFactoryBean2 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        Object colorFactoryBean3 = applicationContext.getBean(<span class="string">&quot;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(<span class="string">&quot;colorFactoryBean==&gt;&quot;</span>+colorFactoryBean2);</span><br><span class="line">        System.out.println(colorFactoryBean2==colorFactoryBean3);</span><br><span class="line">		<span class="comment">// ======》 如果想要获取factoryBean本身，需要在id前面加上  &amp; 符号</span></span><br><span class="line">        Object colorFactoryBean4 = applicationContext.getBean(<span class="string">&quot;&amp;colorFactoryBean&quot;</span>);</span><br><span class="line">        System.out.println(colorFactoryBean4);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">result：</span><br><span class="line">colorFactoryBean</span><br><span class="line">===》colorFactoryBean==&gt;com.liming.bean.Color@<span class="number">159f</span>197</span><br><span class="line"><span class="keyword">true</span></span><br><span class="line">====》com.liming.condition.ColorFactoryBean@<span class="number">78</span>aab498</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1646,138 +1776,6 @@ AbstractClass <|-- ConcreteClass2</pre>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProductFactory</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;String,Product&gt; prMap = <span class="keyword">new</span> HashMap();</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> Product <span class="title">createProduct</span><span class="params">(String type)</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">    	Product product =<span class="keyword">null</span>;</span><br><span class="line">        <span class="comment">//如果Map中已经有这个对象</span></span><br><span class="line">        <span class="keyword">if</span>(prMap.containsKey(type))&#123;</span><br><span class="line">       		product = prMap.get(type);</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(type.equals(<span class="string">&quot;Product1&quot;</span>))&#123;</span><br><span class="line">        	product = <span class="keyword">new</span> ConcreteProduct1();</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        	product = <span class="keyword">new</span> ConcreteProduct2();</span><br><span class="line">     	&#125;</span><br><span class="line">            <span class="comment">//同时把对象放到缓存容器中</span></span><br><span class="line">            prMap.put(type,product);</span><br><span class="line">        &#125;</span><br><span class="line">    	<span class="keyword">return</span> product;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>延迟加载 可以扩展，比如限制某个产品类的最大实例化数量，可以通过判断Map中已有的对象数量来实现，这样的处理是非常有意义的。如JDBC链接数据库都会要求设置一个最大连接数量（MaxConnections）</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/11/19/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-03-%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/19/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-03-%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计模式之禅-03-单例模式</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-11-19 23:17:55" itemprop="dateCreated datePublished" datetime="2020-11-19T23:17:55+08:00">2020-11-19</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/11/19/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-03-%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/11/19/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-03-%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>2k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Singleton singleton = <span class="keyword">new</span> Singleton();</span><br><span class="line"><span class="comment">//限制产生多个对象</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span></span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//通过该方法获得实例对象</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getSingleton</span><span class="params">()</span></span>&#123;</span><br><span class="line"><span class="keyword">return</span> singleton;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//类中其他方法，尽量是static</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span></span>&#123;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>单例模式(SingleTon Pattern):<br> Ensure a class has only one instance,and provide a global point of access to it<br> (确保某一个类只有一个实例，而且自行实例化并向整个系统提供这个实例)</p>
-<p><img src="/uploads/design_patterns/03Singleton/Singleton01.png"></p>
-<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
-<li>减少了内存的开支，特别是一个对象需要频繁创建、销毁时，而且创建或销毁时性能又无法优化，单例模式的优势十分明显</li>
-<li>可以避免对资源的多重占用，如一个写文件的动作，由于只有一个实例存在内存中，避免对同一个资源文件的同时写操作</li>
-</ul>
-<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
-<li>扩展很困难，除了修改代码基本没有第二种途径。</li>
-<li>对测试不利，如果在并行开发的环境，如果单例模式没有完成，是不能进行测试的，没有接口也不能使用mock</li>
-</ul>
-<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><ul>
-<li>要求生成唯一序列号的环境</li>
-<li>在整个项目中需要一个共享访问点或者共享数据，如web页面的计数器，</li>
-<li>需要定义大量的静态常量和静态方法（如 工具类）的环境，可以采用单例模式，当然也可以直接声明为 static的方式</li>
-</ul>
-<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton singleton=<span class="keyword">null</span>;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span></span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getSingleton</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(singleton ==<span class="keyword">null</span> )&#123;</span><br><span class="line">            singleton=<span class="keyword">new</span> Singleton();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> singleton;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>在高并发的情况下，单例模式需要考虑并发问题，解决不安全 的方法有很多，可以在getSingleton方法前加synchronized 关键字</p>
-<h3 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h3><p>有上限数量的单例模式</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Emperor</span> </span>&#123;</span><br><span class="line">    <span class="comment">//定义最多能产生的实例数量</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> maxNumOfEmperor = <span class="number">2</span>;</span><br><span class="line">    <span class="comment">//每个皇帝都有名字，使用一个ArrayList来容纳，每个对象的私有属性</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ArrayList&lt;String&gt; nameList=<span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">    <span class="comment">//定义一个列表，容纳所有的皇帝实例</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ArrayList&lt;Emperor&gt; emperorList=<span class="keyword">new</span> ArrayList&lt;Emperor&gt;();</span><br><span class="line">    <span class="comment">//当前皇帝序列号</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> countNumOfEmperor =<span class="number">0</span>;</span><br><span class="line">    <span class="comment">//产生所有的对象</span></span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;maxNumOfEmperor;i++)&#123;</span><br><span class="line">        	emperorList.add(<span class="keyword">new</span> Emperor(<span class="string">&quot;皇&quot;</span>+(i+<span class="number">1</span>)+<span class="string">&quot;帝&quot;</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Emperor</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">//世俗和道德约束你，目的就是不产生第二个皇帝</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//传入皇帝名称，建立一个皇帝对象</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Emperor</span><span class="params">(String name)</span></span>&#123;</span><br><span class="line">    	nameList.add(name);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//随机获得一个皇帝对象</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Emperor <span class="title">getInstance</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Random random = <span class="keyword">new</span> Random();</span><br><span class="line">        <span class="comment">//随机拉出一个皇帝，只要是个精神领袖就成</span></span><br><span class="line">        countNumOfEmperor = random.nextInt(maxNumOfEmperor);</span><br><span class="line">        <span class="keyword">return</span> emperorList.get(countNumOfEmperor);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//皇帝发话了</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">say</span><span class="params">()</span></span>&#123;</span><br><span class="line">   		 System.out.println(nameList.get(countNumOfEmperor));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="TODO-各种线程-安全的单例模式"><a href="#TODO-各种线程-安全的单例模式" class="headerlink" title="TODO: 各种线程 安全的单例模式"></a>TODO: 各种线程 安全的单例模式</h3><ol>
-<li>如 枚举Enum 等</li>
-</ol>
 
       
     </div>

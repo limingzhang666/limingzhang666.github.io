@@ -231,7 +231,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">66</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -244,7 +244,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">71</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -290,6 +290,168 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/04/17/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-09-Autowired%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/17/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-09-Autowired%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="post-title-link" itemprop="url">Spring源码解析-09-Autowired实现原理</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-04-17 19:00:21" itemprop="dateCreated datePublished" datetime="2021-04-17T19:00:21+08:00">2021-04-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/04/17/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-09-Autowired%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/04/17/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-09-Autowired%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>12k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>11 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="Autowired使用"><a href="#Autowired使用" class="headerlink" title="@Autowired使用"></a>@Autowired使用</h1><h3 id="1-构造函数注入"><a href="#1-构造函数注入" class="headerlink" title="1.构造函数注入"></a>1.构造函数注入</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Class Outer &#123;</span><br><span class="line">	<span class="keyword">private</span> Inner inner;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Outer</span><span class="params">(Inner inner)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.inner = inner;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-属性注入"><a href="#2-属性注入" class="headerlink" title="2.属性注入"></a>2.属性注入</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Class Outer &#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> Inner inner;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-方法注入"><a href="#3-方法注入" class="headerlink" title="3.方法注入"></a>3.方法注入</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Class Outer &#123;</span><br><span class="line">	<span class="keyword">private</span> Inner inner;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> Inner <span class="title">getInner</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> inner;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setInner</span><span class="params">(Inner inner)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.inner = inner;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>绝大部分的代码都使用第2、第3种。第1种在bean实例化时完成，而第2、第3种的实现原理都是一样的，在属性填充时完成。</p>
+<p>在开始之前，如果我们自己设计<code>@Autowired</code>，我们应该怎么实现？我想做法还是比较简单的</p>
+<ol>
+<li>通过反射查找bean的class下所有注解了<code>@Autowired</code>的<code>字段</code>和<code>方法</code></li>
+<li>获取到字段，通过<code>getBean(字段)</code>获取到对应bean，然后再通过反射调用<code>field</code>的<code>set</code>将bean注入</li>
+</ol>
+<h1 id="Autowired源码分析"><a href="#Autowired源码分析" class="headerlink" title="@Autowired源码分析"></a>@Autowired源码分析</h1><h2 id="AutowiredAnnotationBeanPostProcessor类"><a href="#AutowiredAnnotationBeanPostProcessor类" class="headerlink" title="AutowiredAnnotationBeanPostProcessor类"></a>AutowiredAnnotationBeanPostProcessor类</h2><p>该类是<code>@Autowired</code>的具体实现类，先预览一下类方法</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy84MTkwOTU1LWU0YWE4ZjY1ZDM1OTViMWMucG5n?x-oss-process=image/format,png" alt="AutowiredAnnotationBeanPostProcessor预览.png"></p>
+<p>发现实际有机会介入bean的创建操作只有可能是后置处理器，用于后置处理的有3个方法，其中一个过时不用，分别是<code>postProcessMergedBeanDefinition</code>、<code>postProcessProperties</code>后置处理，我们再看一下这2个方法的具体代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AutowiredAnnotationBeanPostProcessor</span> <span class="keyword">extends</span> <span class="title">InstantiationAwareBeanPostProcessorAdapter</span></span></span><br><span class="line"><span class="class">		<span class="keyword">implements</span> <span class="title">MergedBeanDefinitionPostProcessor</span>, <span class="title">PriorityOrdered</span>, <span class="title">BeanFactoryAware</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessMergedBeanDefinition</span><span class="params">(RootBeanDefinition beanDefinition, Class&lt;?&gt; beanType, String beanName)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 1. 寻找bean中所有被@Autowired注释的属性，并将属性封装成InjectedElement类型</span></span><br><span class="line">		InjectionMetadata metadata = findAutowiringMetadata(beanName, beanType, <span class="keyword">null</span>);</span><br><span class="line">		metadata.checkConfigMembers(beanDefinition);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> PropertyValues <span class="title">postProcessProperties</span><span class="params">(PropertyValues pvs, Object bean, String beanName)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 1. 寻找通过@Autowired注解的属性或者方法</span></span><br><span class="line">		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// 2. 注入</span></span><br><span class="line">			metadata.inject(bean, beanName, pvs);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (BeanCreationException ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> ex;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName, <span class="string">&quot;Injection of autowired dependencies failed&quot;</span>, ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> pvs;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>跟我们的猜想是一样的，首先先找出所有注解了@Autowired的属性或者方法，然后进行注入，当然postProcessMergedBeanDefinition后置处理器的调用肯定是在postProcessProperties之前的，这里我们回顾一下spring bean的创建过程。2个处理器我已用黄色标出</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy84MTkwOTU1LTdmMDgyMjMxY2JhZTEyYzAuanBn?x-oss-process=image/format,png" alt="spring @Autowired注入时机.jpg"></p>
+<h2 id="1-查找所有-Autowired"><a href="#1-查找所有-Autowired" class="headerlink" title="1. 查找所有@Autowired"></a>1. 查找所有@Autowired</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 寻找bean中所有被@Autowired注释的属性，并将属性封装成InjectedElement类型</span></span><br><span class="line">InjectionMetadata metadata = findAutowiringMetadata(beanName, beanType, <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> InjectionMetadata <span class="title">findAutowiringMetadata</span><span class="params">(String beanName, Class&lt;?&gt; clazz, <span class="meta">@Nullable</span> PropertyValues pvs)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// Fall back to class name as cache key, for backwards compatibility with custom callers.</span></span><br><span class="line">		<span class="comment">// 获取缓存的key值，一般以beanName做key</span></span><br><span class="line">		String cacheKey = (StringUtils.hasLength(beanName) ? beanName : clazz.getName());</span><br><span class="line">		<span class="comment">// Quick check on the concurrent map first, with minimal locking.</span></span><br><span class="line">		<span class="comment">// 从缓存中获取metadata</span></span><br><span class="line">		InjectionMetadata metadata = <span class="keyword">this</span>.injectionMetadataCache.get(cacheKey);</span><br><span class="line">		<span class="comment">// 检测metadata是否需要更新</span></span><br><span class="line">		<span class="keyword">if</span> (InjectionMetadata.needsRefresh(metadata, clazz)) &#123;</span><br><span class="line">			<span class="keyword">synchronized</span> (<span class="keyword">this</span>.injectionMetadataCache) &#123;</span><br><span class="line">				metadata = <span class="keyword">this</span>.injectionMetadataCache.get(cacheKey);</span><br><span class="line">				<span class="keyword">if</span> (InjectionMetadata.needsRefresh(metadata, clazz)) &#123;</span><br><span class="line">					<span class="keyword">if</span> (metadata != <span class="keyword">null</span>) &#123;</span><br><span class="line">						metadata.clear(pvs);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="comment">// 通过clazz类，查找所有@Autowired的属性或者方法，并封装成InjectionMetadata类型</span></span><br><span class="line">					metadata = buildAutowiringMetadata(clazz);</span><br><span class="line">					<span class="comment">// 将metadata加入缓存</span></span><br><span class="line">					<span class="keyword">this</span>.injectionMetadataCache.put(cacheKey, metadata);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> metadata;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>可以看到spring依然在用缓存的方式提高性能，继续跟踪核心代码<code>buildAutowiringMetadata(clazz)</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> InjectionMetadata <span class="title">buildAutowiringMetadata</span><span class="params">(<span class="keyword">final</span> Class&lt;?&gt; clazz)</span> </span>&#123;</span><br><span class="line">	<span class="comment">// 查看clazz是否有Autowired注解</span></span><br><span class="line">	<span class="keyword">if</span> (!AnnotationUtils.isCandidateClass(clazz, <span class="keyword">this</span>.autowiredAnnotationTypes)) &#123;</span><br><span class="line">		<span class="keyword">return</span> InjectionMetadata.EMPTY;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 这里需要注意AutowiredFieldElement，AutowiredMethodElement均继承了InjectionMetadata.InjectedElement</span></span><br><span class="line">	<span class="comment">// 因此这个列表是可以保存注解的属性和被注解的方法的</span></span><br><span class="line">	List&lt;InjectionMetadata.InjectedElement&gt; elements = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">	Class&lt;?&gt; targetClass = clazz;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 1. 通过do while循环，递归的往直接继承的父类寻找@Autowired</span></span><br><span class="line">	<span class="keyword">do</span> &#123;</span><br><span class="line">		<span class="keyword">final</span> List&lt;InjectionMetadata.InjectedElement&gt; currElements = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">		</span><br><span class="line">		<span class="comment">// 2. 通过反射，获取所有属性，doWithLocalFields则是循环的对每个属性应用以下匿名方法</span></span><br><span class="line">		ReflectionUtils.doWithLocalFields(targetClass, field -&gt; &#123;</span><br><span class="line">			<span class="comment">// 判断当前field属性是否含有@Autowired的注解</span></span><br><span class="line">			MergedAnnotation&lt;?&gt; ann = findAutowiredAnnotation(field);</span><br><span class="line">			<span class="keyword">if</span> (ann != <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="comment">// 返回该属性在类中的修饰符，如果等于static常量，则抛出异常，@Autowired不允许注解在静态属性上</span></span><br><span class="line">				<span class="keyword">if</span> (Modifier.isStatic(field.getModifiers())) &#123;</span><br><span class="line">					<span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">						logger.info(<span class="string">&quot;Autowired annotation is not supported on static fields: &quot;</span> + field);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">// @Autowired有required属性，获取required的值，默认为true</span></span><br><span class="line">				<span class="keyword">boolean</span> required = determineRequiredStatus(ann);</span><br><span class="line">				<span class="comment">// 3. 将field封装成InjectedElement，并添加到集合中，这里用的是AutowiredFieldElement</span></span><br><span class="line">				currElements.add(<span class="keyword">new</span> AutowiredFieldElement(field, required));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 4. @Autowired可以注解在方法上</span></span><br><span class="line">		ReflectionUtils.doWithLocalMethods(targetClass, method -&gt; &#123;</span><br><span class="line">			Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);</span><br><span class="line">			<span class="keyword">if</span> (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) &#123;</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			MergedAnnotation&lt;?&gt; ann = findAutowiredAnnotation(bridgedMethod);</span><br><span class="line">			<span class="keyword">if</span> (ann != <span class="keyword">null</span> &amp;&amp; method.equals(ClassUtils.getMostSpecificMethod(method, clazz))) &#123;</span><br><span class="line">				<span class="keyword">if</span> (Modifier.isStatic(method.getModifiers())) &#123;</span><br><span class="line">					<span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">						logger.info(<span class="string">&quot;Autowired annotation is not supported on static methods: &quot;</span> + method);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">if</span> (method.getParameterCount() == <span class="number">0</span>) &#123;</span><br><span class="line">					<span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">						logger.info(<span class="string">&quot;Autowired annotation should only be used on methods with parameters: &quot;</span> +</span><br><span class="line">								method);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">boolean</span> required = determineRequiredStatus(ann);</span><br><span class="line">				PropertyDescriptor pd = BeanUtils.findPropertyForMethod(bridgedMethod, clazz);</span><br><span class="line">				<span class="comment">// 5. 将方法封装成InjectedElement，并添加到集合中，这里用的是AutowiredMethodElement</span></span><br><span class="line">				currElements.add(<span class="keyword">new</span> AutowiredMethodElement(method, required, pd));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;);</span><br><span class="line"></span><br><span class="line">		elements.addAll(<span class="number">0</span>, currElements);</span><br><span class="line">		<span class="comment">// 返回直接继承的父类</span></span><br><span class="line">		targetClass = targetClass.getSuperclass();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果父类不为空则需要把父类的@Autowired属性或方法也找出</span></span><br><span class="line">	<span class="keyword">while</span> (targetClass != <span class="keyword">null</span> &amp;&amp; targetClass != Object.class);</span><br><span class="line">	<span class="comment">// 6. new InjectionMetadata(clazz, elements)，将找到的所有的待注入属性或方法生成metadata返回</span></span><br><span class="line">	<span class="keyword">return</span> InjectionMetadata.forElements(elements, clazz);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>外层 do … while … 的循环被用于递归的查找父类的@Autowired属性或方法</p>
+</li>
+<li><p>通过反射的方式获取到所有属性并循环验证每一个属性是否被@Autowired注解</p>
+</li>
+<li><p>将查找到包含@Autowired注解的filed封装成AutowiredFieldElement，加入到列表中</p>
+</li>
+<li><p>循环查找在方法上的注解</p>
+</li>
+<li><p>将找到的方法封装成AutowiredMethodElement，并加入列表<br>这里需要特别强调一点，InjectedElement被AutowiredFieldElement、AutowiredMethodElement所继承，他们都有各自的inject函数，实现各自的注入。因此改ArrayList elements是拥有2种类型的属性</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy84MTkwOTU1LTcxZjNjZjNiMzk2YTBjOTAucG5n?x-oss-process=image/format,png" alt="InjectedElement.png"></p>
+</li>
+<li><p>将找到的所有元素列表和clazz作为参数生成metadata数据返回</p>
+</li>
+</ol>
+<h2 id="2-注入"><a href="#2-注入" class="headerlink" title="2. 注入"></a>2. 注入</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注入</span></span><br><span class="line">metadata.inject(bean, beanName, pvs);</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">inject</span><span class="params">(Object target, <span class="meta">@Nullable</span> String beanName, <span class="meta">@Nullable</span> PropertyValues pvs)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">		<span class="comment">// 获取所有需要被注入的元素</span></span><br><span class="line">		Collection&lt;InjectedElement&gt; checkedElements = <span class="keyword">this</span>.checkedElements;</span><br><span class="line">		Collection&lt;InjectedElement&gt; elementsToIterate =</span><br><span class="line">				(checkedElements != <span class="keyword">null</span> ? checkedElements : <span class="keyword">this</span>.injectedElements);</span><br><span class="line">		<span class="comment">// 迭代的元素不为空</span></span><br><span class="line">		<span class="keyword">if</span> (!elementsToIterate.isEmpty()) &#123;</span><br><span class="line">			<span class="keyword">for</span> (InjectedElement element : elementsToIterate) &#123;</span><br><span class="line">				<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">					logger.trace(<span class="string">&quot;Processing injected element of bean &#x27;&quot;</span> + beanName + <span class="string">&quot;&#x27;: &quot;</span> + element);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">// 循环注入，这里有可能是AutowiredFieldElement也可能AutowiredMethodElement，因此调用的inject是2个不同的方法</span></span><br><span class="line">				element.inject(target, beanName, pvs);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>利用for循环，遍历刚刚我们查到到的elements列表，进行注入。在上面有特别提醒，这里的element有可能是AutowiredFieldElement类型、或AutowiredMethodElement类型。各自代表@Autowired注解在属性上、以及注解在方法上的2种不同元素。因此他们调用的element.inject(target, beanName, pvs);也是不一样的</p>
+<h3 id="2-1-字段注入-AutowiredFieldElement"><a href="#2-1-字段注入-AutowiredFieldElement" class="headerlink" title="2.1 字段注入(AutowiredFieldElement)"></a>2.1 字段注入(AutowiredFieldElement)</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">AutowiredFieldElement</span> <span class="keyword">extends</span> <span class="title">InjectionMetadata</span>.<span class="title">InjectedElement</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">inject</span><span class="params">(Object bean, <span class="meta">@Nullable</span> String beanName, <span class="meta">@Nullable</span> PropertyValues pvs)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">		Field field = (Field) <span class="keyword">this</span>.member;</span><br><span class="line">		Object value;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.cached) &#123;</span><br><span class="line">			value = resolvedCachedArgument(beanName, <span class="keyword">this</span>.cachedFieldValue);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 专门用于注入的包装类，包装构造函数参数，方法参数或字段</span></span><br><span class="line">			DependencyDescriptor desc = <span class="keyword">new</span> DependencyDescriptor(field, <span class="keyword">this</span>.required);</span><br><span class="line">			<span class="comment">// 设置class</span></span><br><span class="line">			desc.setContainingClass(bean.getClass());</span><br><span class="line">			<span class="comment">// 需要被自动注入的beanNames，这里只有可能 = 1，方法注入时才有可能为多个</span></span><br><span class="line">			Set&lt;String&gt; autowiredBeanNames = <span class="keyword">new</span> LinkedHashSet&lt;&gt;(<span class="number">1</span>);</span><br><span class="line">			Assert.state(beanFactory != <span class="keyword">null</span>, <span class="string">&quot;No BeanFactory available&quot;</span>);</span><br><span class="line">			TypeConverter typeConverter = beanFactory.getTypeConverter();<span class="comment">// 获取类型转换器</span></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="comment">// 通过beanFactory获取属性对应的值，比如需要调用getBean(&quot;b&quot;)获取依赖的属性单例，并且通过自动转型转为需要的类型</span></span><br><span class="line">				value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> UnsatisfiedDependencyException(<span class="keyword">null</span>, beanName, <span class="keyword">new</span> InjectionPoint(field), ex);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">				<span class="keyword">if</span> (!<span class="keyword">this</span>.cached) &#123;</span><br><span class="line">					<span class="keyword">if</span> (value != <span class="keyword">null</span> || <span class="keyword">this</span>.required) &#123;</span><br><span class="line">						<span class="keyword">this</span>.cachedFieldValue = desc;</span><br><span class="line">						<span class="comment">// 注册依赖，</span></span><br><span class="line">						registerDependentBeans(beanName, autowiredBeanNames);</span><br><span class="line">						<span class="comment">// 因为是属性注入，因此这里只有可能等于1</span></span><br><span class="line">						<span class="keyword">if</span> (autowiredBeanNames.size() == <span class="number">1</span>) &#123;</span><br><span class="line">							String autowiredBeanName = autowiredBeanNames.iterator().next();</span><br><span class="line">							<span class="keyword">if</span> (beanFactory.containsBean(autowiredBeanName) &amp;&amp;</span><br><span class="line">									beanFactory.isTypeMatch(autowiredBeanName, field.getType())) &#123;</span><br><span class="line">								<span class="comment">// 缓存当前value</span></span><br><span class="line">								<span class="keyword">this</span>.cachedFieldValue = <span class="keyword">new</span> ShortcutDependencyDescriptor(</span><br><span class="line">										desc, autowiredBeanName, field.getType());</span><br><span class="line">							&#125;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						<span class="keyword">this</span>.cachedFieldValue = <span class="keyword">null</span>;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">this</span>.cached = <span class="keyword">true</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (value != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// 通过反射，将value值设置到bean中</span></span><br><span class="line">			ReflectionUtils.makeAccessible(field);</span><br><span class="line">			field.set(bean, value);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>spring通过反射的方式，调用field的set进行属性的注入</li>
+</ul>
+<h3 id="2-2-方法注入-AutowiredMethodElement"><a href="#2-2-方法注入-AutowiredMethodElement" class="headerlink" title="2.2 方法注入(AutowiredMethodElement)"></a>2.2 方法注入(AutowiredMethodElement)</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">AutowiredMethodElement</span> <span class="keyword">extends</span> <span class="title">InjectionMetadata</span>.<span class="title">InjectedElement</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">inject</span><span class="params">(Object bean, <span class="meta">@Nullable</span> String beanName, <span class="meta">@Nullable</span> PropertyValues pvs)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (checkPropertySkipping(pvs)) &#123;</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// @Autowired标注在方法上</span></span><br><span class="line">		Method method = (Method) <span class="keyword">this</span>.member;</span><br><span class="line">		Object[] arguments;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.cached) &#123;</span><br><span class="line">			<span class="comment">// Shortcut for avoiding synchronization...</span></span><br><span class="line">			<span class="comment">// 有缓存</span></span><br><span class="line">			arguments = resolveCachedArguments(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 没缓存，直接获取方法上所有的参数</span></span><br><span class="line">			<span class="keyword">int</span> argumentCount = method.getParameterCount();</span><br><span class="line">			arguments = <span class="keyword">new</span> Object[argumentCount];</span><br><span class="line">			DependencyDescriptor[] descriptors = <span class="keyword">new</span> DependencyDescriptor[argumentCount];</span><br><span class="line">			Set&lt;String&gt; autowiredBeans = <span class="keyword">new</span> LinkedHashSet&lt;&gt;(argumentCount);</span><br><span class="line">			Assert.state(beanFactory != <span class="keyword">null</span>, <span class="string">&quot;No BeanFactory available&quot;</span>);</span><br><span class="line">			TypeConverter typeConverter = beanFactory.getTypeConverter();</span><br><span class="line">			<span class="comment">// 循环所有参数</span></span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; arguments.length; i++) &#123;</span><br><span class="line">				MethodParameter methodParam = <span class="keyword">new</span> MethodParameter(method, i);</span><br><span class="line">				DependencyDescriptor currDesc = <span class="keyword">new</span> DependencyDescriptor(methodParam, <span class="keyword">this</span>.required);</span><br><span class="line">				currDesc.setContainingClass(bean.getClass());</span><br><span class="line">				descriptors[i] = currDesc;</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					<span class="comment">// 通过beanFactory，获取代注入的bean，并进行类型转换</span></span><br><span class="line">					Object arg = beanFactory.resolveDependency(currDesc, beanName, autowiredBeans, typeConverter);</span><br><span class="line">					<span class="keyword">if</span> (arg == <span class="keyword">null</span> &amp;&amp; !<span class="keyword">this</span>.required) &#123;</span><br><span class="line">						arguments = <span class="keyword">null</span>;</span><br><span class="line">						<span class="keyword">break</span>;</span><br><span class="line">					&#125;</span><br><span class="line">					arguments[i] = arg;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> UnsatisfiedDependencyException(<span class="keyword">null</span>, beanName, <span class="keyword">new</span> InjectionPoint(methodParam), ex);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">				<span class="keyword">if</span> (!<span class="keyword">this</span>.cached) &#123;</span><br><span class="line">					<span class="keyword">if</span> (arguments != <span class="keyword">null</span>) &#123;</span><br><span class="line">						DependencyDescriptor[] cachedMethodArguments = Arrays.copyOf(descriptors, arguments.length);</span><br><span class="line">						<span class="comment">// 注册依赖</span></span><br><span class="line">						registerDependentBeans(beanName, autowiredBeans);</span><br><span class="line">						<span class="comment">// 如果自动注入的个数 = 参数个数，则缓存</span></span><br><span class="line">						<span class="keyword">if</span> (autowiredBeans.size() == argumentCount) &#123;</span><br><span class="line">							Iterator&lt;String&gt; it = autowiredBeans.iterator();</span><br><span class="line">							Class&lt;?&gt;[] paramTypes = method.getParameterTypes();</span><br><span class="line">							<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; paramTypes.length; i++) &#123;</span><br><span class="line">								String autowiredBeanName = it.next();</span><br><span class="line">								<span class="keyword">if</span> (beanFactory.containsBean(autowiredBeanName) &amp;&amp;</span><br><span class="line">										beanFactory.isTypeMatch(autowiredBeanName, paramTypes[i])) &#123;</span><br><span class="line">									<span class="comment">// 缓存</span></span><br><span class="line">									cachedMethodArguments[i] = <span class="keyword">new</span> ShortcutDependencyDescriptor(</span><br><span class="line">											descriptors[i], autowiredBeanName, paramTypes[i]);</span><br><span class="line">								&#125;</span><br><span class="line">							&#125;</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="comment">// 缓存方法</span></span><br><span class="line">						<span class="keyword">this</span>.cachedMethodArguments = cachedMethodArguments;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						<span class="keyword">this</span>.cachedMethodArguments = <span class="keyword">null</span>;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">this</span>.cached = <span class="keyword">true</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (arguments != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="comment">// 反射调用注入方法，将获取到的所有bean作为参数</span></span><br><span class="line">				ReflectionUtils.makeAccessible(method);</span><br><span class="line">				method.invoke(bean, arguments);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (InvocationTargetException ex) &#123;</span><br><span class="line">				<span class="keyword">throw</span> ex.getTargetException();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这里与属性注入最大的区别在于，<code>@Autowired注解</code>在方法上，方法可以拥有多个参数，因此这里需要通过循环将一个个获取，而获取bean的方式于上面一样，本质都是通过<code>getBean</code>获取。而核心语句还是2句</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 反射调用注入方法，将获取到的所有bean作为参数</span></span><br><span class="line">ReflectionUtils.makeAccessible(method);</span><br><span class="line">method.invoke(bean, arguments);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>与属性注入不同的是，当<code>@Autowired注解</code>在方法上，例如我们注解在setter方法上，则只需要直接调用该setter方法将参数数组传入即可以，即使用invoke触发方法，具体属性赋值的过程在setter方法中由用户自行编写</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1806,251 +1968,6 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> Object <span class="title">resolveBeforeInstantiation</span><span class="params">(String beanName, RootBeanDefinition mbd)</span> </span>&#123;</span><br><span class="line">		Object bean = <span class="keyword">null</span>;</span><br><span class="line">		<span class="comment">// 如果尚未被解析</span></span><br><span class="line">		<span class="keyword">if</span> (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) &#123;</span><br><span class="line">			<span class="comment">// Make sure bean class is actually resolved at this point.</span></span><br><span class="line">			<span class="keyword">if</span> (!mbd.isSynthetic() &amp;&amp; hasInstantiationAwareBeanPostProcessors()) &#123;</span><br><span class="line">				Class&lt;?&gt; targetType = determineTargetType(beanName, mbd);</span><br><span class="line">				<span class="keyword">if</span> (targetType != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="comment">//</span></span><br><span class="line">					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);</span><br><span class="line">					<span class="comment">//</span></span><br><span class="line">					<span class="keyword">if</span> (bean != <span class="keyword">null</span>) &#123;</span><br><span class="line">						bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			mbd.beforeInstantiationResolved = (bean != <span class="keyword">null</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
 
 <p>此方法最吸引我们的无疑 是两个方法 applyBeanPostProcessorsBeforeInstantiation  以及 applyBeanPostProcessorsAfterInitialization 。两个方法的实现非常的简单 ，无非是 对后处理器中的所有 InstantiationAwareBeanPostProcessor 类型的后处理器 进行 postProcessBeforeInstantiation 方法 和 BeanPostProcesso</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/11/redis%E5%85%A5%E9%97%A8-01/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/11/redis%E5%85%A5%E9%97%A8-01/" class="post-title-link" itemprop="url">redis入门-01</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-03-11 21:20:44" itemprop="dateCreated datePublished" datetime="2021-03-11T21:20:44+08:00">2021-03-11</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2021/03/11/redis%E5%85%A5%E9%97%A8-01/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/11/redis%E5%85%A5%E9%97%A8-01/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>3.9k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>4 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h1><h2 id="传统的ACID"><a href="#传统的ACID" class="headerlink" title="传统的ACID"></a>传统的ACID</h2><p>关系型数据库遵循ACID规则<br>事务在英文中是transaction，和现实世界中的交易很类似，它有如下四个特性：</p>
-<p>1、A (Atomicity) 原子性<br>原子性很容易理解，也就是说事务里的所有操作要么全部做完，要么都不做，事务成功的条件是事务里的所有操作都成功，只要有一个操作失败，整个事务就失败，需要回滚。比如银行转账，从A账户转100元至B账户，分为两个步骤：1）从A账户取100元；2）存入100元至B账户。这两步要么一起完成，要么一起不完成，如果只完成第一步，第二步失败，钱会莫名其妙少了100元。</p>
-<p>2、C (Consistency) 一致性<br>一致性也比较容易理解，也就是说数据库要一直处于一致的状态，事务的运行不会改变数据库原本的一致性约束。</p>
-<p>3、I (Isolation) 独立性<br>所谓的独立性是指并发的事务之间不会互相影响，如果一个事务要访问的数据正在被另外一个事务修改，只要另外一个事务未提交，它所访问的数据就不受未提交事务的影响。比如现有有个交易是从A账户转100元至B账户，在这个交易还未完成的情况下，如果此时B查询自己的账户，是看不到新增加的100元的</p>
-<p>4、D (Durability) 持久性<br>持久性是指一旦事务提交后，它所做的修改将会永久的保存在数据库上，即使出现宕机也不会丢失。</p>
-<h2 id="CAP"><a href="#CAP" class="headerlink" title="CAP"></a>CAP</h2><p>C:Consistency（强一致性）</p>
-<p>A:Availability（可用性）</p>
-<p>P:Partition tolerance（分区容错性）</p>
-<h3 id="CAP的三进二"><a href="#CAP的三进二" class="headerlink" title="CAP的三进二"></a>CAP的三进二</h3><p>CAP理论就是说在分布式存储系统中，最多只能实现上面的两点。<br>而由于当前的网络硬件肯定会出现延迟丢包等问题，所以</p>
-<p><strong>分区容忍性是我们必须需要实现的。</strong></p>
-<p><strong>所以我们只能在一致性和可用性之间进行权衡，没有NoSQL系统能同时保证这三点</strong>。</p>
-<p><strong>C:强一致性 A：高可用性 P：分布式容忍性</strong></p>
-<ul>
-<li><p>CA 传统Oracle数据库 </p>
-</li>
-<li><p>AP 大多数网站架构的选择</p>
-</li>
-<li><p>CP Redis、Mongodb</p>
-<p>注意：分布式架构的时候必须做出取舍。<br>一致性和可用性之间取一个平衡。多余大多数web应用，其实并不需要强一致性。因此牺牲C换取P，这是目前分布式数据库产品的方向</p>
-</li>
-</ul>
-<h4 id="一致性与可用性的决择"><a href="#一致性与可用性的决择" class="headerlink" title="一致性与可用性的决择"></a>一致性与可用性的决择</h4><p>​    对于web2.0网站来说，关系数据库的很多主要特性却往往无用武之地</p>
-<h4 id="数据库事务一致性需求"><a href="#数据库事务一致性需求" class="headerlink" title="数据库事务一致性需求"></a>数据库事务一致性需求</h4><p>​    很多web实时系统并不要求严格的数据库事务，对读一致性的要求很低， 有些场合对写一致性要求并不高。允许实现最终一致性。</p>
-<h4 id="数据库的写实时性和读实时性需求"><a href="#数据库的写实时性和读实时性需求" class="headerlink" title="数据库的写实时性和读实时性需求"></a>数据库的写实时性和读实时性需求</h4><p>​    对关系数据库来说，插入一条数据之后立刻查询，是肯定可以读出来这条数据的，但是对于很多web应用来说，并不要求这么高的实时性，比方说发一条消息之 后，过几秒乃至十几秒之后，我的订阅者才看到这条动态是完全可以接受的。</p>
-<h4 id="对复杂的SQL查询，特别是多表关联查询的需求"><a href="#对复杂的SQL查询，特别是多表关联查询的需求" class="headerlink" title="对复杂的SQL查询，特别是多表关联查询的需求"></a>对复杂的SQL查询，特别是多表关联查询的需求</h4><p>　　任何大数据量的web系统，都非常忌讳多个大表的关联查询，以及复杂的数据分析类型的报表查询，特别是SNS类型的网站，从需求以及产品设计角 度，就避免了这种情况的产生。往往更多的只是单表的主键查询，以及单表的简单条件分页查询，SQL的功能被极大的弱化了。</p>
-<h3 id="经典CAP图"><a href="#经典CAP图" class="headerlink" title="经典CAP图"></a>经典CAP图</h3><p> CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，<br>最多只能同时较好的满足两个。<br>因此，根据 CAP 原理将 NoSQL 数据库分成了满足 CA 原则、满足 CP 原则和满足 AP 原则三 大类：<br>CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。<br>CP - 满足一致性，分区容忍必的系统，通常性能不是特别高。<br>AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。</p>
-<p><img src="/uploads/redis/Image.bmp"></p>
-<h2 id="BASE"><a href="#BASE" class="headerlink" title="BASE"></a>BASE</h2><p>BASE就是为了解决关系数据库强一致性引起的问题而引起的可用性降低而提出的解决方案。</p>
-<p>BASE其实是下面三个术语的缩写：<br>    基本可用（Basically Available）<br>    软状态（Soft state）<br>    最终一致（Eventually consistent）</p>
-<p>它的思想是通过让系统放松对某一时刻数据一致性的要求来换取系统整体伸缩性和性能上改观。为什么这么说呢，缘由就在于大型系统往往由于地域分布和极高性能的要求，不可能采用分布式事务来完成这些指标，要想获得这些指标，我们必须采用另外一种方式来完成，这里BASE就是解决这个问题的办法</p>
-<h1 id="REDIS-入门"><a href="#REDIS-入门" class="headerlink" title="REDIS 入门"></a>REDIS 入门</h1><h2 id="功能："><a href="#功能：" class="headerlink" title="功能："></a>功能：</h2><ul>
-<li>内存存储和持久化：redis支持异步将内存中的数据写到硬盘上，同时不影响继续服务</li>
-<li>取最新N个数据的操作，如：可以将最新的10条评论的ID放在Redis的List集合里面</li>
-<li>模拟类似于HttpSession这种需要设定过期时间的功能</li>
-<li>发布、订阅消息系统</li>
-<li>定时器、计数器</li>
-</ul>
-<h2 id="基础知识讲解"><a href="#基础知识讲解" class="headerlink" title="基础知识讲解"></a>基础知识讲解</h2><ul>
-<li><p>单进程模型来处理客户端的请求。对读写等事件的响应是通过对epoll函数的包装来做到的。Redis的实际处理速度完全依靠主进程的执行效率</p>
-</li>
-<li><p>Epoll是Linux内核为处理大批量文件描述符而作了改进的epoll，是Linux下多路复用IO接口select/poll的增强版本，它能显著提高程序在大量并发连接中只有少量活跃的情况下的系统CPU利用率。</p>
-</li>
-<li><p>默认16个数据库，类似数组下表从零开始，初始默认使用零号库</p>
-</li>
-<li><p>Select命令切换数据库</p>
-</li>
-<li><p>Dbsize查看当前数据库的key的数量</p>
-</li>
-<li><p>Flushdb：清空当前库</p>
-</li>
-<li><p>Flushall；通杀全部库</p>
-</li>
-<li><p>统一密码管理，16个库都是同样密码，要么都OK要么一个也连接不上</p>
-</li>
-<li><p>Redis索引都是从零开始</p>
-</li>
-<li><p>为什么默认端口是6379</p>
-</li>
-</ul>
-<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><h3 id="String（字符串）"><a href="#String（字符串）" class="headerlink" title="String（字符串）"></a>String（字符串）</h3><p>string是redis最基本的类型，你可以理解成与Memcached一模一样的类型，一个key对应一个value。</p>
-<p>string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象 。</p>
-<p>string类型是Redis最基本的数据类型，一个redis中字符串value最多可以是512M</p>
-<h3 id="Hash（哈希，类似java里的Map）"><a href="#Hash（哈希，类似java里的Map）" class="headerlink" title="Hash（哈希，类似java里的Map）"></a>Hash（哈希，类似java里的Map）</h3><p>Hash（哈希）<br>Redis hash 是一个键值对集合。<br>Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象</p>
-<h3 id="List（列表）"><a href="#List（列表）" class="headerlink" title="List（列表）"></a>List（列表）</h3><p>Redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素导列表的头部（左边）或者尾部（右边）。<br>它的底层实际是个链表</p>
-<h3 id="Set（集合）"><a href="#Set（集合）" class="headerlink" title="Set（集合）"></a>Set（集合）</h3><p>Redis的Set是string类型的无序集合。它是通过HashTable实现实现的，</p>
-<h3 id="Zset-sorted-set：有序集合"><a href="#Zset-sorted-set：有序集合" class="headerlink" title="Zset(sorted set：有序集合)"></a>Zset(sorted set：有序集合)</h3><p>zset(sorted set：有序集合)<br>Redis zset 和 set 一样也是string类型元素的集合,且不允许重复的成员。<br>不同的是每个元素都会关联一个double类型的分数。<br>redis正是通过分数来为集合中的成员进行从小到大的排序。zset的成员是唯一的,但分数(score)却可以重复。</p>
-<h2 id="常用命令："><a href="#常用命令：" class="headerlink" title="常用命令："></a>常用命令：</h2><p><a target="_blank" rel="noopener" href="http://redisdoc.com/">http://redisdoc.com/</a></p>
-<h3 id="Redis-键-key"><a href="#Redis-键-key" class="headerlink" title="Redis 键(key)"></a>Redis 键(key)</h3><p><img src="/uploads/redis/redis_key.bmp"></p>
-<ul>
-<li> keys *</li>
-<li> exists key的名字，判断某个key是否存在</li>
-<li> move key db   —&gt;当前库就没有了，被移除了</li>
-<li> expire key 秒钟：为给定的key设置过期时间</li>
-<li> ttl key 查看还有多少秒过期，-1表示永不过期，-2表示已过期</li>
-<li> type key 查看你的key是什么类型</li>
-</ul>
-<h3 id="Redis字符串-String"><a href="#Redis字符串-String" class="headerlink" title="Redis字符串(String)"></a>Redis字符串(String)</h3><p><img src="/uploads/redis/redis-string01.bmp"></p>
-<p><img src="/uploads/redis/redis-string02.bmp"></p>
-<ul>
-<li><p>set/get/del/append/strlen</p>
-</li>
-<li><p>Incr/decr/incrby/decrby,一定要是数字才能进行加减</p>
-</li>
-<li><p>getrange/setrange</p>
-</li>
-<li><p> setex(set with expire)键秒值/setnx(set if not exist)</p>
-</li>
-<li><p>mset/mget/msetnx</p>
-</li>
-<li><p>getset(先get再set)</p>
-</li>
-</ul>
-<h3 id="Redis列表-List"><a href="#Redis列表-List" class="headerlink" title="Redis列表(List)"></a>Redis列表(List)</h3><p><img src="/uploads/redis/redis-list01.bmp"></p>
-<p><img src="/uploads/redis/redis-list02.bmp"></p>
-<ul>
-<li>lpush/rpush/lrange</li>
-<li> lpop/rpop</li>
-<li> lindex，按照索引下标获得元素(从上到下)</li>
-<li>llen</li>
-<li> lrem key 删N个value</li>
-<li> ltrim key 开始index 结束index，截取指定范围的值后再赋值给key</li>
-<li> rpoplpush 源列表 目的列表</li>
-<li> lset key index value</li>
-<li> linsert key  before/after 值1 值2</li>
-<li>它是一个字符串链表，left、right都可以插入添加；<br>如果键不存在，创建新的链表；<br>如果键已存在，新增内容；<br>如果值全移除，对应的键也就消失了。<br>链表的操作无论是头和尾效率都极高，但假如是对中间元素进行操作，效率就很惨淡了。</li>
-</ul>
-<h3 id="Redis集合-Set"><a href="#Redis集合-Set" class="headerlink" title="Redis集合(Set)"></a>Redis集合(Set)</h3><p><img src="/uploads/redis/redis-set.bmp"></p>
-<ul>
-<li>sadd/smembers/sismember</li>
-<li> scard，获取集合里面的元素个数</li>
-<li> srem key value 删除集合中元素</li>
-<li> srandmember key 某个整数(随机出几个数)</li>
-<li> spop key 随机出栈</li>
-<li> smove key1 key2 在key1里某个值      作用是将key1里的某个值赋给key2</li>
-<li>数学集合类<ul>
-<li>差集：sdiff</li>
-<li>交集：sinter</li>
-<li>并集：sunion</li>
-</ul>
-</li>
-</ul>
-<h3 id="Redis哈希-Hash"><a href="#Redis哈希-Hash" class="headerlink" title="Redis哈希(Hash)"></a>Redis哈希(Hash)</h3><p><img src="/uploads/redis/redis-hash.bmp"></p>
-<ul>
-<li>hset/hget/hmset/hmget/hgetall/hdel</li>
-<li>hlen</li>
-<li> hexists key 在key里面的某个值的key</li>
-<li>hkeys/hvals</li>
-<li> hincrby/hincrbyfloat</li>
-<li> hsetnx</li>
-</ul>
-<h3 id="Redis有序集合Zset-sorted-set"><a href="#Redis有序集合Zset-sorted-set" class="headerlink" title="Redis有序集合Zset(sorted set)"></a>Redis有序集合Zset(sorted set)</h3><p><img src="/uploads/redis/redis-zset01.bmp"></p>
-<p><img src="/uploads/redis/redis-zset02.bmp"></p>
-<ul>
-<li>zadd/zrange</li>
-<li> zrangebyscore key 开始score 结束score</li>
-<li> zrem key 某score下对应的value值，作用是删除元素</li>
-<li> zcard/zcount key score区间/zrank key values值，作用是获得下标值/zscore key 对应值,获得分数</li>
-<li> zrevrank key values值，作用是逆序获得下标值</li>
-<li> zrevrange</li>
-<li> zrevrangebyscore  key 结束score 开始score</li>
-</ul>
-<h2 id="解析配置文件redis-conf"><a href="#解析配置文件redis-conf" class="headerlink" title="解析配置文件redis.conf"></a>解析配置文件redis.conf</h2><p>TODO</p>
 
       
     </div>
