@@ -67,6 +67,26 @@ public Class Outer {
 
 ## AutowiredAnnotationBeanPostProcessor类
 
+- 处理 （@Value，@Autowired，@Inject）
+
+  ```java
+  @SuppressWarnings("unchecked")
+  	public AutowiredAnnotationBeanPostProcessor() {
+  		this.autowiredAnnotationTypes.add(Autowired.class);
+  		this.autowiredAnnotationTypes.add(Value.class);
+  		try {
+  			this.autowiredAnnotationTypes.add((Class<? extends Annotation>)
+  					ClassUtils.forName("javax.inject.Inject", AutowiredAnnotationBeanPostProcessor.class.getClassLoader()));
+  			logger.trace("JSR-330 'javax.inject.Inject' annotation found and supported for autowiring");
+  		}
+  		catch (ClassNotFoundException ex) {
+  			// JSR-330 API not available - simply skip.
+  		}
+  	}
+  ```
+
+  
+
 该类是`@Autowired`的具体实现类，先预览一下类方法
 
 ![AutowiredAnnotationBeanPostProcessor预览.png](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy84MTkwOTU1LWU0YWE4ZjY1ZDM1OTViMWMucG5n?x-oss-process=image/format,png)
