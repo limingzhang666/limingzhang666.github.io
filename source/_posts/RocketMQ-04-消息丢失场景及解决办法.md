@@ -5,7 +5,7 @@ comments: true
 related_posts: true
 date: 2021-04-12 23:41:18
 tags: 消息丢失场景及解决办法
-categories: RokcetMQ
+categories: RocketMQ
 ---
 
 
