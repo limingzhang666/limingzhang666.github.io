@@ -231,20 +231,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">67</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">72</span>
+        <span class="site-state-item-count">73</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -290,6 +290,304 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-04-%E5%B1%9E%E6%80%A7%E8%B5%8B%E5%80%BC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-04-%E5%B1%9E%E6%80%A7%E8%B5%8B%E5%80%BC/" class="post-title-link" itemprop="url">Spring源码解析-04-属性赋值</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-23 23:21:14" itemprop="dateCreated datePublished" datetime="2020-12-23T23:21:14+08:00">2020-12-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-04-%E5%B1%9E%E6%80%A7%E8%B5%8B%E5%80%BC/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-04-%E5%B1%9E%E6%80%A7%E8%B5%8B%E5%80%BC/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h3 id="使用-Value注解"><a href="#使用-Value注解" class="headerlink" title="使用@Value注解"></a>使用@Value注解</h3><ul>
+<li><p>基本数值</p>
+</li>
+<li><p>可以写SpEL; #{}</p>
+</li>
+<li><p>可以写 ${} ;取出配置文件【properties】中的值 (在运行环境变量中的值)</p>
+<p>ps: 这种方式 需要在添加 @PropertySource注解</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//使用@Value赋值；</span></span><br><span class="line">	<span class="comment">//1、基本数值</span></span><br><span class="line">	<span class="comment">//2、可以写SpEL； #&#123;&#125;</span></span><br><span class="line">	<span class="comment">//3、可以写$&#123;&#125;；取出配置文件【properties】中的值（在运行环境变量里面的值）</span></span><br><span class="line">	<span class="meta">@Value(&quot;张三&quot;)</span></span><br><span class="line">	<span class="keyword">private</span> String name;</span><br><span class="line">	<span class="meta">@Value(&quot;#&#123;20-2&#125;&quot;)</span></span><br><span class="line">	<span class="keyword">private</span> Integer age;</span><br><span class="line">	<span class="meta">@Value(&quot;$&#123;person.nickName&#125;&quot;)</span></span><br><span class="line">	<span class="keyword">private</span> String nickName;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getNickName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> nickName;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setNickName</span><span class="params">(String nickName)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.nickName = nickName;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> name;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.name = name;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> Integer <span class="title">getAge</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> age;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAge</span><span class="params">(Integer age)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.age = age;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//使用@PropertySource读取外部配置文件中的k/v保存到运行的环境变量中;加载完外部的配置文件以后使用$&#123;&#125;取出配置文件的值</span></span><br><span class="line"><span class="meta">@PropertySource(value=&#123;&quot;classpath:/person.properties&quot;&#125;)</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfigOfPropertyValues</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Person <span class="title">person</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Person();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Profile"><a href="#Profile" class="headerlink" title="@Profile"></a>@Profile</h2><p>Spring为我们提供的可以根据当前环境，动态的激活和切换一系列组件的功能；</p>
+<p>开发环境、测试环境、生产环境；</p>
+<p>数据源：(/A)(/B)(/C)；</p>
+<p>@Profile：指定组件在哪个环境的情况下才能被注册到容器中，不指定，任何环境下都能注册这个组件</p>
+<ul>
+<li>1）、加了环境标识的bean，只有这个环境被激活的时候才能注册到容器中。默认是default环境</li>
+<li>2）、写在配置类上，只有是指定的环境的时候，整个配置类里面的所有配置才能开始生效</li>
+<li>3）、没有标注环境标识的bean在，任何环境下都是加载的；</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PropertySource(&quot;classpath:/dbconfig.properties&quot;)</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfigOfProfile</span> <span class="keyword">implements</span> <span class="title">EmbeddedValueResolverAware</span></span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Value(&quot;$&#123;db.user&#125;&quot;)</span></span><br><span class="line">	<span class="keyword">private</span> String user;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> StringValueResolver valueResolver;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> String  driverClass;</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Yellow <span class="title">yellow</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Yellow();</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Profile(&quot;test&quot;)</span></span><br><span class="line">	<span class="meta">@Bean(&quot;testDataSource&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> DataSource <span class="title">dataSourceTest</span><span class="params">(<span class="meta">@Value(&quot;$&#123;db.password&#125;&quot;)</span>String pwd)</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">		ComboPooledDataSource dataSource = <span class="keyword">new</span> ComboPooledDataSource();</span><br><span class="line">		dataSource.setUser(user);</span><br><span class="line">		dataSource.setPassword(pwd);</span><br><span class="line">		dataSource.setJdbcUrl(<span class="string">&quot;jdbc:mysql://localhost:3306/test&quot;</span>);</span><br><span class="line">		dataSource.setDriverClass(driverClass);</span><br><span class="line">		<span class="keyword">return</span> dataSource;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Profile(&quot;dev&quot;)</span></span><br><span class="line">	<span class="meta">@Bean(&quot;devDataSource&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> DataSource <span class="title">dataSourceDev</span><span class="params">(<span class="meta">@Value(&quot;$&#123;db.password&#125;&quot;)</span>String pwd)</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">		ComboPooledDataSource dataSource = <span class="keyword">new</span> ComboPooledDataSource();</span><br><span class="line">		dataSource.setUser(user);</span><br><span class="line">		dataSource.setPassword(pwd);</span><br><span class="line">		dataSource.setJdbcUrl(<span class="string">&quot;jdbc:mysql://localhost:3306/ssm_crud&quot;</span>);</span><br><span class="line">		dataSource.setDriverClass(driverClass);</span><br><span class="line">		<span class="keyword">return</span> dataSource;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Profile(&quot;prod&quot;)</span></span><br><span class="line">	<span class="meta">@Bean(&quot;prodDataSource&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> DataSource <span class="title">dataSourceProd</span><span class="params">(<span class="meta">@Value(&quot;$&#123;db.password&#125;&quot;)</span>String pwd)</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">		ComboPooledDataSource dataSource = <span class="keyword">new</span> ComboPooledDataSource();</span><br><span class="line">		dataSource.setUser(user);</span><br><span class="line">		dataSource.setPassword(pwd);</span><br><span class="line">		dataSource.setJdbcUrl(<span class="string">&quot;jdbc:mysql://localhost:3306/scw_0515&quot;</span>);</span><br><span class="line">		</span><br><span class="line">		dataSource.setDriverClass(driverClass);</span><br><span class="line">		<span class="keyword">return</span> dataSource;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEmbeddedValueResolver</span><span class="params">(StringValueResolver resolver)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">this</span>.valueResolver = resolver;</span><br><span class="line">		driverClass = valueResolver.resolveStringValue(<span class="string">&quot;$&#123;db.driverClass&#125;&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-03-Bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-03-Bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="post-title-link" itemprop="url">Spring源码解析-03-Bean的生命周期</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-23 22:25:26" itemprop="dateCreated datePublished" datetime="2020-12-23T22:25:26+08:00">2020-12-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-03-Bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/12/23/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-03-Bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>4.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="Bean生命周期"><a href="#Bean生命周期" class="headerlink" title="Bean生命周期"></a>Bean生命周期</h2><ul>
+<li><p>bean创建—初始化—-销毁的过程</p>
+</li>
+<li><p>容器管理bean的生命周期；</p>
+<p>我们可以自定义初始化和销毁方法；</p>
+<p>容器在bean进行到当前生命周期的时候来调用我们自定义的初始化和销毁方法</p>
+</li>
+</ul>
+<h3 id="1-构造（对象创建）"><a href="#1-构造（对象创建）" class="headerlink" title="1.构造（对象创建）"></a>1.构造（对象创建）</h3><ul>
+<li>单实例（Singleton）：在容器启动的时候创建对象</li>
+<li>多实例(prototype )：在每次获取的时候创建对象</li>
+</ul>
+<h3 id="2-BeanPostProcessor-postProcessBeforeInitialization"><a href="#2-BeanPostProcessor-postProcessBeforeInitialization" class="headerlink" title="2.BeanPostProcessor.postProcessBeforeInitialization"></a>2.BeanPostProcessor.postProcessBeforeInitialization</h3><h3 id="3-初始化"><a href="#3-初始化" class="headerlink" title="3.初始化"></a>3.初始化</h3><p>对象创建完成，并赋值好，调用初始化方法。。。</p>
+<h3 id="4-BeanPostProcessor-postProcessAfterInitialization"><a href="#4-BeanPostProcessor-postProcessAfterInitialization" class="headerlink" title="4.BeanPostProcessor.postProcessAfterInitialization"></a>4.BeanPostProcessor.postProcessAfterInitialization</h3><h3 id="5-销毁"><a href="#5-销毁" class="headerlink" title="5.销毁"></a>5.销毁</h3><ul>
+<li>单实例：容器关闭的时候</li>
+<li>多实例：容器不会管理这个bean；容器不会调用销毁方法</li>
+</ul>
+<h2 id="BeanPostProcessor-后置处理器"><a href="#BeanPostProcessor-后置处理器" class="headerlink" title="BeanPostProcessor 后置处理器"></a>BeanPostProcessor 后置处理器</h2><ul>
+<li>Bean 初始化前后进行处理工作</li>
+<li>遍历得到容器中所有的BeanPostProcessor；挨个执行beforeInitialization，</li>
+<li>一但返回null，跳出for循环，不会执行后面的BeanPostProcessor.postProcessorsBeforeInitialization</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 后置处理器：初始化前后进行处理工作</span></span><br><span class="line"><span class="comment"> * 将后置处理器加入到容器中</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> liming</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyBeanPostProcessor</span> <span class="keyword">implements</span> <span class="title">BeanPostProcessor</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">postProcessBeforeInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;postProcessBeforeInitialization...&quot;</span>+beanName+<span class="string">&quot;=&gt;&quot;</span>+bean);</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">postProcessAfterInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;postProcessAfterInitialization...&quot;</span>+beanName+<span class="string">&quot;=&gt;&quot;</span>+bean);</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>见： org.springframework.context.support.AbstractApplicationContext#refresh</p>
+<p>【Bean属性赋值】populateBean(beanName, mbd, instanceWrapper);</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">赋值之前：</span><br><span class="line">1）、拿到InstantiationAwareBeanPostProcessor后置处理器；</span><br><span class="line">	postProcessAfterInstantiation()；</span><br><span class="line">2）、拿到InstantiationAwareBeanPostProcessor后置处理器；</span><br><span class="line">	postProcessPropertyValues()；</span><br><span class="line">=====赋值之前：===</span><br><span class="line">3）、应用Bean属性的值；为属性利用setter方法等进行赋值；</span><br><span class="line">	applyPropertyValues(beanName, mbd, bw, pvs);</span><br><span class="line">4）、【Bean初始化】initializeBean(beanName, exposedObject, mbd);</span><br><span class="line">	1）、【执行Aware接口方法】invokeAwareMethods(beanName, bean);</span><br><span class="line">	执行xxxAware接口的方法</span><br><span class="line">		BeanNameAware\BeanClassLoaderAware\BeanFactoryAware</span><br><span class="line">	2）、【执行后置处理器初始化之前】</span><br><span class="line">	applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);</span><br><span class="line">	BeanPostProcessor.postProcessBeforeInitialization（）;</span><br><span class="line">	3）、【执行初始化方法】invokeInitMethods(beanName, wrappedBean, mbd);</span><br><span class="line">		1）、是否是InitializingBean接口的实现；执行接口规定的初始化；</span><br><span class="line">		2）、是否自定义初始化方法；</span><br><span class="line">	4）、【执行后置处理器初始化之后】applyBeanPostProcessorsAfterInitialization</span><br><span class="line">						 		BeanPostProcessor.postProcessAfterInitialization()；</span><br></pre></td></tr></table></figure>
+
+<p>即：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">initializeBean</span><br><span class="line">&#123;</span><br><span class="line">applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);</span><br><span class="line">invokeInitMethods(beanName, wrappedBean, mbd);执行自定义初始化</span><br><span class="line">applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="指定Bean-初始化和销毁的方法"><a href="#指定Bean-初始化和销毁的方法" class="headerlink" title="指定Bean 初始化和销毁的方法"></a>指定Bean 初始化和销毁的方法</h2><ul>
+<li>通过@Bean指定init-method和destroy-method；</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(&quot;com.liming.bean&quot;)</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainConfigOfLifeCycle</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Bean(initMethod=&quot;init&quot;,destroyMethod=&quot;detory&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Car <span class="title">car</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Car();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>通过让Bean实现InitializingBean（定义初始化逻辑），DisposableBean（定义销毁逻辑）;</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Cat</span> <span class="keyword">implements</span> <span class="title">InitializingBean</span>,<span class="title">DisposableBean</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Cat</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;cat constructor...&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;cat...destroy...&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;cat...afterPropertiesSet...&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>可以使用JSR250；</li>
+</ul>
+<p>@PostConstruct：在bean创建完成并且属性赋值完成；来执行初始化方法</p>
+<p>@PreDestroy：在容器销毁bean之前通知我们进行清理工作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Dog</span> <span class="keyword">implements</span> <span class="title">ApplicationContextAware</span> </span>&#123;</span><br><span class="line">	<span class="comment">//@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> ApplicationContext applicationContext;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Dog</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;dog constructor...&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//对象创建并赋值之后调用</span></span><br><span class="line">	<span class="meta">@PostConstruct</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;Dog....@PostConstruct...&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//容器移除对象之前</span></span><br><span class="line">	<span class="meta">@PreDestroy</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">detory</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;Dog....@PreDestroy...&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		<span class="keyword">this</span>.applicationContext = applicationContext;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>BeanPostProcessor【interface】：bean的后置处理器</li>
+</ul>
+<p>在bean初始化前后进行一些处理工作；</p>
+<ul>
+<li><pre><code>    postProcessBeforeInitialization:在初始化之前工作</code></pre>
+</li>
+<li><pre><code>    postProcessAfterInitialization:在初始化之后工作</code></pre>
+</li>
+</ul>
+<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><p>Spring底层对 BeanPostProcessor 的使用包括：</p>
+<p>bean赋值，注入其他组件，@Autowired，生命周期注解功能，@Async,xxx BeanPostProcessor;</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1477,305 +1775,6 @@ AbstractClass <|-- ConcreteClass2</pre>
 </ul>
 <p><img src="/uploads/gitstats-vue/front-page.png"></p>
 <p><img src="/uploads/gitstats-vue/front-page02.png"></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-05-%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-05-%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计模式之禅-05-抽象工厂模式</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-11-23 23:45:28" itemprop="dateCreated datePublished" datetime="2020-11-23T23:45:28+08:00">2020-11-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-05-%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-05-%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>1.5k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="抽象工厂模式（Abstract-Factory-Pattern）"><a href="#抽象工厂模式（Abstract-Factory-Pattern）" class="headerlink" title="抽象工厂模式（Abstract Factory Pattern）"></a>抽象工厂模式（Abstract Factory Pattern）</h2><p>Provide an interface for creating families of related or dependent objects without specifying their concrete classes. （为创建一组相关的或者相互依赖的对象 提供一个接口，而且无须指定他们的具体类）</p>
-<p>抽象工厂模式的通用类图如下所示：</p>
-<p><img src="/uploads/design_patterns/05abstractFactory/universe_abstract_factory.png"></p>
-<p><img src="/uploads/design_patterns/05abstractFactory/abstract_factory_source.png"></p>
-<p>其实就是将 结果（product） 抽象化了，具体的结果由 creator指定</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"> 代码清单<span class="number">9</span>-<span class="number">11</span> 抽象产品类</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractProductA</span> </span>&#123;</span><br><span class="line">    <span class="comment">//每个产品共有的方法</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">shareMethod</span><span class="params">()</span></span>&#123;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//每个产品相同方法，不同实现</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">代码清单<span class="number">9</span>-<span class="number">12</span> 产品A1的实现类</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProductA1</span> <span class="keyword">extends</span> <span class="title">AbstractProductA</span> </span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>&#123;</span><br><span class="line">System.out.println(<span class="string">&quot;产品A1的实现方法&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">代码清单<span class="number">9</span>-<span class="number">13</span> 产品A2的实现类</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProductA2</span> <span class="keyword">extends</span> <span class="title">AbstractProductA</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;产品A2的实现方法&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">代码清单<span class="number">9</span>-<span class="number">14</span> 抽象工厂类</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractCreator</span> </span>&#123;</span><br><span class="line">    <span class="comment">//创建A产品家族</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> AbstractProductA <span class="title">createProductA</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="comment">//创建B产品家族</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> AbstractProductB <span class="title">createProductB</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line">代码清单<span class="number">9</span>-<span class="number">15</span> 产品等级<span class="number">1</span>的实现类</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Creator1</span> <span class="keyword">extends</span> <span class="title">AbstractCreator</span> </span>&#123;</span><br><span class="line">    <span class="comment">//只生产产品等级为1的A产品</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> AbstractProductA <span class="title">createProductA</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="keyword">new</span> ProductA1();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//只生产产品等级为1的B产品</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> AbstractProductB <span class="title">createProductB</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="keyword">new</span> ProductB1();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
-<li><p>封装性，每个产品的实现类不是高层模块需要关心的 。高层模块只关心接口，抽象，不关心具体的实现创建过程 ，</p>
-<p> 创建的工作由工厂类负责 </p>
-</li>
-<li><p> 产品族内的约束为非公开状态 。就是各个产品之间的一些比例关系，具体产品类的约束是在工厂内实现的。</p>
-</li>
-</ul>
-<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
-<li>产品族的扩展非常困难，假如再增加一个  AbstractProductC,改动很大，具有侵入性</li>
-</ul>
-<h3 id="抽象工厂模式的使用场景"><a href="#抽象工厂模式的使用场景" class="headerlink" title="抽象工厂模式的使用场景"></a>抽象工厂模式的使用场景</h3><p>使用场景定义非常简单：  一个对象族（或者是 一组没有任何关系的对象）都有相同的约束，则可以使用抽象工厂模式 。</p>
-<h3 id="抽象工厂模式的注意事项"><a href="#抽象工厂模式的注意事项" class="headerlink" title="抽象工厂模式的注意事项"></a>抽象工厂模式的注意事项</h3><ul>
-<li>产品族扩展比较困难，但是产品等级( Creator1 )扩展时非常容易的 ,增加一个createor3 extends AbstractCreator 就行了。</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-04-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-04-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计模式之禅-04-工厂模式</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-11-23 21:25:11" itemprop="dateCreated datePublished" datetime="2020-11-23T21:25:11+08:00">2020-11-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-04-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/11/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%A6%85-04-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>3.1k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>3 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>Define an interface for creating an object,but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.(定义一个用于创建对象的接口，让子类决定实例化哪一个类。工厂方法使一个类的实例化延迟到其子类。)</p>
-<p><img src="/uploads/design_patterns/04Factory/factory01.png"></p>
-<p>在工厂方法模式中，抽象产品类Product负责定义产品的共性，实现对事物最抽象的定义；</p>
-<p>Creator为抽象创建类，也就是抽象工厂，具体如何创建产品类是由具体的实现工厂ConcreteCreator完成的。</p>
-<ul>
-<li>抽象产品类 与 具体产品类</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">	<span class="comment">//产品类的公共方法</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method1</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">//业务逻辑处理</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//抽象方法</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">method2</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct1</span> <span class="keyword">extends</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//业务逻辑处理</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct2</span> <span class="keyword">extends</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//业务逻辑处理</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>抽象工厂类</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Creator</span></span>&#123;</span><br><span class="line">	 <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * 创建一个产品对象，其输入参数类型可以自行设置</span></span><br><span class="line"><span class="comment">        * 通常为String、Enum、Class等，当然也可以为空</span></span><br><span class="line"><span class="comment">	*/</span>	</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> &lt;T extends Product&gt; <span class="function">T <span class="title">createProduct</span><span class="params">(Class&lt;T&gt; c)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>具体工厂类</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteCreator</span> <span class="keyword">extends</span> <span class="title">Creator</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> &lt;T extends Product&gt; <span class="function">T <span class="title">createProduct</span><span class="params">(Class&lt;T&gt; c)</span></span>&#123;</span><br><span class="line">    Product product=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    	product = (Product)Class.forName(c.getName()).newInstance();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="comment">//异常处理</span></span><br><span class="line">        &#125;</span><br><span class="line">    	<span class="keyword">return</span> (T)product;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
-<li>良好的封装性，代码结构清晰。只需要知道产品的类名就可以了，不需要创建对象的过程，减低模块的耦合性</li>
-<li>扩展性优秀。下次需要增加一个产品时候，只需要适当的修改具体工厂类或者扩展一个工厂类，就可以拥抱变化。或者只是单纯的增加产品类</li>
-<li>屏蔽产品类。 产品类的实现如何变化，调用者都不需要关心，只需要关心产品的接口。</li>
-<li>解耦</li>
-</ul>
-</li>
-<li><h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><ul>
-<li>工厂模式是new一个对象的替代品，所以在所有需要生成对象的地方都可以使用，但是需要慎重考虑是否需要增加一个工厂类进行管理，增加代码复杂度</li>
-<li>需要灵活、可扩展的框架时，可以考虑采用工厂方法模式 。</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><h3 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h3><ul>
-<li><h4 id="简单工厂模式图"><a href="#简单工厂模式图" class="headerlink" title="简单工厂模式图"></a>简单工厂模式图</h4><p>当一个模块只需要一个工厂类时候，就可以去除抽象工厂类AbstractHumanFactory </p>
-<p><img src="/uploads/design_patterns/04Factory/simple_factory.png"></p>
-</li>
-<li><h4 id="升级为多个工厂类"><a href="#升级为多个工厂类" class="headerlink" title="升级为多个工厂类"></a>升级为多个工厂类</h4><p>当初始化一个对象很耗费精力，各个产品有自己独特得逻辑，放在同一个工厂方法中会使得代码结构不清晰，这个时候就可以多设置几个具体的工厂类。</p>
-<p><img src="/uploads/design_patterns/04Factory/multipleConcreteFactory.png"></p>
-<p>注意： 抽象方法中已经不再需要传递相关参数了，因为每一个具体的工厂都已经非常明确自己的职责： 创建自己负责的产品类对象</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 多工厂模式的抽象工厂类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractHumanFactory</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Human <span class="title">createHuman</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//  白色人种的创建工厂</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">whiteHumanFactory</span> <span class="keyword">extends</span> <span class="title">AbstractHumanFactory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Human <span class="title">createHuman</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> WhiteHuman();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><h4 id="替代单例模式"><a href="#替代单例模式" class="headerlink" title="替代单例模式"></a>替代单例模式</h4><p>单例模式的核心要求是 ： 在内存中只有一个对象，通过工厂方法 也可以只在内存中生产一个对象。</p>
-<p><img src="/uploads/design_patterns/04Factory/factory_singleton.png"></p>
-<p>单例对象 构造函数肯定是私有的，目的就是 不允许通过new的方式创建一个对象。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;</span><br><span class="line">    <span class="comment">//不允许通过new产生一个对象</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span></span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">//业务处理</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ul>
-<pre><code>所以单例工厂可以通过反射的方式去创建对象，然后提供给外部访问，从而保证内存中对象唯一
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SingletonFactory</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton singleton;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Class cl= Class.forName(Singleton.class.getName());</span><br><span class="line">        <span class="comment">//获得无参构造</span></span><br><span class="line">        Constructor constructor=cl.getDeclaredConstructor();</span><br><span class="line">        <span class="comment">//设置无参构造是可访问的</span></span><br><span class="line">        constructor.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">//产生一个实例对象</span></span><br><span class="line">        singleton = (Singleton)constructor.newInstance();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    	<span class="comment">//异常处理</span></span><br><span class="line">    	&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getSingleton</span><span class="params">()</span></span>&#123;</span><br><span class="line">    	<span class="keyword">return</span> singleton;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;	</span><br><span class="line"></span><br></pre></td></tr></table></figure></code></pre>
-<ul>
-<li><h4 id="延迟初始化（lazy-init）"><a href="#延迟初始化（lazy-init）" class="headerlink" title="延迟初始化（lazy_init）"></a>延迟初始化（lazy_init）</h4><p>类似于缓存一样，当一个对象被消费完毕后，并不立刻释放，工厂类保持其初始状态，等待再次被使用。</p>
-<p><img src="/uploads/design_patterns/04Factory/lazy_init_factory.png" alt="lazy_init_factory.png"></p>
-</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProductFactory</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;String,Product&gt; prMap = <span class="keyword">new</span> HashMap();</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> Product <span class="title">createProduct</span><span class="params">(String type)</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">    	Product product =<span class="keyword">null</span>;</span><br><span class="line">        <span class="comment">//如果Map中已经有这个对象</span></span><br><span class="line">        <span class="keyword">if</span>(prMap.containsKey(type))&#123;</span><br><span class="line">       		product = prMap.get(type);</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(type.equals(<span class="string">&quot;Product1&quot;</span>))&#123;</span><br><span class="line">        	product = <span class="keyword">new</span> ConcreteProduct1();</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        	product = <span class="keyword">new</span> ConcreteProduct2();</span><br><span class="line">     	&#125;</span><br><span class="line">            <span class="comment">//同时把对象放到缓存容器中</span></span><br><span class="line">            prMap.put(type,product);</span><br><span class="line">        &#125;</span><br><span class="line">    	<span class="keyword">return</span> product;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>延迟加载 可以扩展，比如限制某个产品类的最大实例化数量，可以通过判断Map中已有的对象数量来实现，这样的处理是非常有意义的。如JDBC链接数据库都会要求设置一个最大连接数量（MaxConnections）</p>
 
       
     </div>
