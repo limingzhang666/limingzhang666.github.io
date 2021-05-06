@@ -231,7 +231,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-count">70</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -244,7 +244,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">73</span>
+        <span class="site-state-item-count">74</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -290,6 +290,381 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/05/06/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-11-Spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/05/06/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-11-Spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/" class="post-title-link" itemprop="url">Spring源码解析-11-Spring解决循环依赖</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-05-06 23:32:33" itemprop="dateCreated datePublished" datetime="2021-05-06T23:32:33+08:00">2021-05-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/05/06/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-11-Spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/05/06/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-11-Spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>15k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>13 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>转载至：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/223028634">https://zhuanlan.zhihu.com/p/223028634</a></p>
+<h1 id="什么是循环依赖"><a href="#什么是循环依赖" class="headerlink" title="什么是循环依赖"></a>什么是循环依赖</h1><p>所谓的循环依赖是指，A 依赖 B，B 又依赖 A，它们之间形成了循环依赖。或者是 A 依赖 B，B 依赖 C，C 又依赖 A，形成了循环依赖。更或者是自己依赖自己。它们之间的依赖关系如下：</p>
+<p><img src="https://pic4.zhimg.com/80/v2-c520af43c3ebcd4376d3d552f0bdee3f_720w.jpg" alt="img"></p>
+<p>这里以两个类直接相互依赖为例，他们的实现代码可能如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanB</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> BeanA beanA;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanA</span><span class="params">(BeanA beanA)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>.beanA = beanA;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanA</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> BeanB beanB;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeanB</span><span class="params">(BeanB beanB)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.beanB = beanB;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>配置信息如下（用注解方式注入同理，只是为了方便理解，用了配置文件）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean id=&quot;beanA&quot; class=&quot;priv.starfish.BeanA&quot;&gt;</span><br><span class="line">  &lt;property name=&quot;beanB&quot; ref=&quot;beanB&quot;/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br><span class="line"></span><br><span class="line">&lt;bean id=&quot;beanB&quot; class=&quot;priv.starfish.BeanB&quot;&gt;</span><br><span class="line">  &lt;property name=&quot;beanA&quot; ref=&quot;beanA&quot;/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+
+<p>Spring 启动后，读取如上的配置文件，会按顺序先实例化 A，但是创建的时候又发现它依赖了 B，接着就去实例化 B ，同样又发现它依赖了 A ，这尼玛咋整？无限循环呀</p>
+<p>Spring “肯定”不会让这种事情发生的，如前言我们说的 Spring 实例化对象分两步，(实例化对象、属性赋值以及初始化)</p>
+<ul>
+<li>第一步会先创建一个原始对象，只是没有设置属性，可以理解为”半成品”—— 官方叫 A 对象的早期引用（EarlyBeanReference），</li>
+<li>所以当实例化 B 的时候发现依赖了 A， B 就会把这个“半成品”设置进去先完成实例化，既然 B 完成了实例化，所以 A 就可以获得 B 的引用，也完成实例化了，这其实就是 Spring 解决循环依赖的思想。</li>
+</ul>
+<p>不理解没关系，先有个大概的印象，然后我们从源码来看下 Spring 具体是怎么解决的。</p>
+<h1 id="源码解毒"><a href="#源码解毒" class="headerlink" title="源码解毒"></a>源码解毒</h1><p>代码版本：5.0.16.RELEASE<br>在 Spring IOC 容器读取 Bean 配置创建 Bean 实例之前, 必须对它进行实例化。只有在容器实例化后，才可以从 IOC 容器里获取 Bean 实例并使用，循环依赖问题也就是发生在实例化 Bean 的过程中的，所以我们先回顾下获取 Bean 的过程。</p>
+<h2 id="获取-Bean-流程"><a href="#获取-Bean-流程" class="headerlink" title="获取 Bean 流程"></a>获取 Bean 流程</h2><p>Spring IOC 容器中获取 bean 实例的简化版流程如下（排除了各种包装和检查的过程）</p>
+<p><img src="https://pic3.zhimg.com/80/v2-e1a6e1b254f0212f923a434d9bcda0ea_720w.jpg" alt="img"></p>
+<p>大概的流程顺序（可以结合着源码看下，我就不贴了，贴太多的话，呕~呕呕，想吐）：</p>
+<ol>
+<li><p>流程从getBean 方法开始，getBean 是个空壳方法，所有逻辑直接到 doGetBean 方法中</p>
+</li>
+<li><p>transformedBeanName 将 name 转换为真正的 beanName（name 可能是 FactoryBean 以 &amp; 字符开头或者有别名的情况，所以需要转化下）</p>
+</li>
+<li><p>然后通过getSingleton（beanName） 方法尝试从缓存中查找是不是有该实例 sharedInstance（单例在 Spring 的同一容器只会被创建一次，后续再获取 bean，就直接从缓存获取即可）</p>
+</li>
+<li><p>如果有的话，sharedInstance 可能是完全实例化好的 bean，也可能是一个原始的 bean，所以再经getObjectForBeanInstance 处理即可返回</p>
+</li>
+<li><p>当然 sharedInstance 也可能是 null，这时候就会执行创建 bean 的逻辑，将结果返回</p>
+<p>第三步的时候我们提到了一个缓存的概念，这个就是 Spring 为了解决单例的循环依赖问题而设计的 三级缓存</p>
+</li>
+</ol>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">/** Cache of singleton objects: bean name --&gt; bean instance */</span><br><span class="line">private final Map&lt;String, Object&gt; singletonObjects = new ConcurrentHashMap&lt;&gt;(256);</span><br><span class="line"></span><br><span class="line">/** Cache of singleton factories: bean name --&gt; ObjectFactory */</span><br><span class="line">private final Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories = new HashMap&lt;&gt;(16);</span><br><span class="line"></span><br><span class="line">/** Cache of early singleton objects: bean name --&gt; bean instance */</span><br><span class="line">private final Map&lt;String, Object&gt; earlySingletonObjects = new HashMap&lt;&gt;(16);</span><br></pre></td></tr></table></figure>
+
+<p>这三级缓存的作用分别是：</p>
+<ul>
+<li><p>singletonobject：完成初始化的单例对象的 cache，这里的 bean 经历过 实例化-&gt;属性填充-&gt;初始化 以及各种后置处理（一级缓存）</p>
+</li>
+<li><p>earlySingletonobjects：存放原始的 bean 对象（完成实例化但是尚未填充属性和初始化），仅仅能作为指针提前曝光，被其他 bean 所引用，用于解决循环依赖的 （二级缓存）</p>
+</li>
+<li><p>singletonFactories：在 bean 实例化完之后，属性填充以及初始化之前，如果允许提前曝光，Spring 会将实例化后的 bean 提前曝光，也就是把该 bean 转换成beanFactory 并加入到singletonFactories （三级缓存）</p>
+</li>
+</ul>
+<p>我们首先从缓存中试着获取 bean，就是从这三级缓存中查找</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">protected Object getSingleton(String beanName, boolean allowEarlyReference) &#123;</span><br><span class="line">    Object singletonObject = this.singletonObjects.get(beanName);</span><br><span class="line">    if (singletonObject == null &amp;&amp; isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">        synchronized (this.singletonObjects) &#123;</span><br><span class="line">            singletonObject = this.earlySingletonObjects.get(beanName);</span><br><span class="line">            if (singletonObject == null &amp;&amp; allowEarlyReference) &#123;</span><br><span class="line">             // 三级缓存获取，key=beanName value=objectFactory，objectFactory中存储     //getObject()方法用于获取提前曝光的实例</span><br><span class="line">                ObjectFactory&lt;?&gt; singletonFactory = this.singletonFactories.get(beanName);</span><br><span class="line">                if (singletonFactory != null) &#123;</span><br><span class="line">                    // 三级缓存有的话，就把他移动到二级缓存</span><br><span class="line">                    singletonObject = singletonFactory.getObject();</span><br><span class="line">                    this.earlySingletonObjects.put(beanName, singletonObject);</span><br><span class="line">                    this.singletonFactories.remove(beanName);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return singletonObject;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>如果缓存没有的话，我们就要创建了，接着我们以单例对象为例，再看下创建 bean 的逻辑（大括号表示内部类调用方法）：</p>
+<p><img src="https://pic3.zhimg.com/80/v2-42bdff7b6c4648bce389c8b28ec0ae32_720w.jpg" alt="img"></p>
+<p>创建 bean 从以下代码开始，一个匿名内部类方法参数（总觉得 Lambda 的方式可读性不如内部类好理解）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (mbd.isSingleton()) &#123;</span><br><span class="line">    sharedInstance = getSingleton(beanName, () -&gt; &#123;</span><br><span class="line"> <span class="keyword">try</span> &#123;</span><br><span class="line"> <span class="keyword">return</span> createBean(beanName, mbd, args);</span><br><span class="line">        &#125;</span><br><span class="line"> <span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">            destroySingleton(beanName);</span><br><span class="line"> <span class="keyword">throw</span> ex;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>getsingleton（） 方法内部主要有两个方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getSingleton</span><span class="params">(String beanName, ObjectFactory&lt;?&gt; singletonFactory)</span> </span>&#123;</span><br><span class="line"> <span class="comment">// 创建 singletonObject</span></span><br><span class="line"> singletonObject = singletonFactory.getObject();</span><br><span class="line"> <span class="comment">// 将 singletonObject 放入缓存</span></span><br><span class="line">    addSingleton(beanName, singletonObject);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ol>
+<li><p>getobject（）匿名内部类的实现真正调用的又是createBean（beanName，mbd，args）</p>
+</li>
+<li><p>往里走，主要的实现逻辑在doCreateBean 方法，先通过createBeanInstance 创建一个原始 bean 对象</p>
+</li>
+<li><p>接着 addSingletonFactory 添加 bean 工厂对象到 singletonFactories 缓存（三级缓存）</p>
+</li>
+<li><p>通过populateBean 方法向原始 bean 对象中填充属性，并解析依赖，假设这时候创建 A 之后填充属性时发现依赖 B，然后创建依赖对象 B 的时候又发现依赖 A，还是同样的流程，又去getBean（A），这个时候三级缓存已经有了 beanA 的“半成品”，这时就可以把 A 对象的原始引用注入 B 对象（并将其移动到二级缓存）来解决循环依赖问题。这时候 getobject（） 方法就算执行结束了，返回完全实例化的 bean</p>
+</li>
+<li><p>最后调用addSingleton 把完全实例化好的 bean 对象放入 singletonObjects 缓存（一级缓存）中，打完收工</p>
+</li>
+</ol>
+<h2 id="Spring-解决循环依赖"><a href="#Spring-解决循环依赖" class="headerlink" title="Spring 解决循环依赖"></a>Spring 解决循环依赖</h2><p>建议搭配着“源码”看下边的逻辑图，更好下饭</p>
+<p><img src="https://pic1.zhimg.com/80/v2-de1d20cfad5616c3116527f6cbe8e150_720w.jpg" alt="img"></p>
+<p>流程其实上边都已经说过了，结合着上图我们再看下具体细节，用大白话再捋一捋：</p>
+<ol>
+<li>Spring 创建 bean 主要分为两个步骤，创建原始 bean 对象，接着去填充对象属性和初始化</li>
+<li>每次创建 bean 之前，我们都会从缓存中查下有没有该 bean，因为是单例，只能有一个</li>
+<li>当我们创建 beanA 的原始对象后，并把它放到三级缓存中，接下来就该填充对象属性了，这时候发现依赖了 beanB，接着就又去创建 beanB，同样的流程，创建完 beanB 填充属性时又发现它依赖了 beanA，又是同样的流程，不同的是，这时候可以在三级缓存中查到刚放进去的原始对象 beanA，所以不需要继续创建，用它注入 beanB，完成 beanB 的创建</li>
+<li>既然 beanB 创建好了，所以 beanA 就可以完成填充属性的步骤了，接着执行剩下的逻辑，闭环完成</li>
+</ol>
+<p>这就是单例模式下 Spring 解决循环依赖的流程了。</p>
+<p>但是这个地方，不管是谁看源码都会有个小疑惑，为什么需要三级缓存呢，我赶脚二级他也够了呀</p>
+<p>革命尚未成功，同志仍需努力</p>
+<p>跟源码的时候，发现在创建 beanB 需要引用 beanA 这个“半成品”的时候，就会触发”前期引用”，即如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ObjectFactory&lt;?&gt; singletonFactory = <span class="keyword">this</span>.singletonFactories.get(beanName);</span><br><span class="line"><span class="keyword">if</span> (singletonFactory != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="comment">// 三级缓存有的话，就把他移动到二级缓存</span></span><br><span class="line">    singletonObject = singletonFactory.getObject();</span><br><span class="line">    <span class="keyword">this</span>.earlySingletonObjects.put(beanName, singletonObject);</span><br><span class="line">    <span class="keyword">this</span>.singletonFactories.remove(beanName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>singletonFactory.getobject（）是一个接口方法，这里具体的实现方法在</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) &#123;</span><br><span class="line">    Object exposedObject = bean;</span><br><span class="line">    if (!mbd.isSynthetic() &amp;&amp; hasInstantiationAwareBeanPostProcessors()) &#123;</span><br><span class="line">        for (BeanPostProcessor bp : getBeanPostProcessors()) &#123;</span><br><span class="line">            if (bp instanceof SmartInstantiationAwareBeanPostProcessor) &#123;</span><br><span class="line">                SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;</span><br><span class="line">                // 这么一大段就这句话是核心，也就是当bean要进行提前曝光时，</span><br><span class="line">                // 给一个机会，通过重写后置处理器的getEarlyBeanReference方法，来自定义操作bean</span><br><span class="line">                // 值得注意的是，如果提前曝光了，但是没有被提前引用，则该后置处理器并不生效!!!</span><br><span class="line">                // 这也正式三级缓存存在的意义，否则二级缓存就可以解决循环依赖的问题</span><br><span class="line">                exposedObject = ibp.getEarlyBeanReference(exposedObject, beanName);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return exposedObject;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个方法就是 Spring 为什么使用三级缓存，而不是二级缓存的原因，它的目的是为了后置处理，如果没有 AOP 后置处理，就不会走进 if 语句，直接返回了 exposedObject ，相当于啥都没干，二级缓存就够用了。</p>
+<p>所以又得出结论，这个三级缓存应该和 AOP 有关系，继续。</p>
+<p>在 Spring 的源码中getEarlyBeanReference 是 smartInstantiationAwareBeanPostProcessor接口的默认方法，真正实现这个方法的只有<strong>AbstractAutoProxyCreator</strong> 这个类，用于提前曝光的 AOP 代理。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public Object getEarlyBeanReference(Object bean, String beanName) throws BeansException &#123;</span><br><span class="line">   Object cacheKey = getCacheKey(bean.getClass(), beanName);</span><br><span class="line">   this.earlyProxyReferences.put(cacheKey, bean);</span><br><span class="line">   // 对bean进行提前Spring AOP代理</span><br><span class="line">   return wrapIfNecessary(bean, beanName, cacheKey);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这么说有点干，来个小 demo 吧，我们都知道 Spring AOP、事务等都是通过代理对象来实现的，而事务的代理对象是由自动代理创建器来自动完成的。也就是说 Spring 最终给我们放进容器里面的是一个代理对象，而非原始对象，假设我们有如下一段业务代码：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Service</span><br><span class="line">public class HelloServiceImpl implements HelloService &#123;</span><br><span class="line">   @Autowired</span><br><span class="line">   private HelloService helloService;</span><br><span class="line"></span><br><span class="line">   @Override</span><br><span class="line">   @Transactional</span><br><span class="line">   public Object hello() &#123;</span><br><span class="line">      return &quot;Hello JavaKeeper&quot;;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此Service 类使用到了事务，所以最终会生成一个 JDK 动态代理对象Proxy 。刚好它又存在自己引用自己的循环依赖，完美符合我们的场景需求。</p>
+<p>我们再自定义一个后置处理，来看下效果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class HelloProcessor implements SmartInstantiationAwareBeanPostProcessor &#123;</span><br><span class="line"></span><br><span class="line"> @Override</span><br><span class="line"> public Object getEarlyBeanReference(Object bean, String beanName) throws BeansException &#123;</span><br><span class="line">  System.out.println(&quot;提前曝光了：&quot;+beanName);</span><br><span class="line">  return bean;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，调用方法栈中有我们自己实现的HelloProcessor，说明这个 bean 会通过 AOP 代理处理。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-4bcd8c80ec160d3dda1cf1773500be52_720w.jpg" alt="img"></p>
+<p>再从源码看下这个自己循环自己的 bean 的创建流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">protected Object doCreateBean( ... )&#123;</span><br><span class="line"> ...</span><br><span class="line"> </span><br><span class="line"> boolean earlySingletonExposure = (mbd.isSingleton() &amp;&amp; this.allowCircularReferences &amp;&amp; isSingletonCurrentlyInCreation(beanName));</span><br><span class="line">    // 需要提前暴露（支持循环依赖），就注册一个ObjectFactory到三级缓存</span><br><span class="line"> if (earlySingletonExposure) &#123; </span><br><span class="line">        // 添加 bean 工厂对象到 singletonFactories 缓存中，并获取原始对象的早期引用</span><br><span class="line">  //匿名内部方法 getEarlyBeanReference 就是后置处理器 </span><br><span class="line">  // SmartInstantiationAwareBeanPostProcessor 的一个方法，</span><br><span class="line">  // 它的功效为：保证自己被循环依赖的时候，即使被别的Bean @Autowire进去的也是代理对象</span><br><span class="line">  addSingletonFactory(beanName, () -&gt; getEarlyBeanReference(beanName, mbd, bean));</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> // 此处注意：如果此处自己被循环依赖了  那它会走上面的getEarlyBeanReference，从而创建一个代理对象从  三级缓存转移到二级缓存里</span><br><span class="line"> // 注意此时候对象还在二级缓存里，并没有在一级缓存。并且此时后续的这两步操作还是用的 exposedObject，它仍旧是原始对象~~~</span><br><span class="line"> populateBean(beanName, mbd, instanceWrapper);</span><br><span class="line"> exposedObject = initializeBean(beanName, exposedObject, mbd);</span><br><span class="line"></span><br><span class="line"> // 因为事务的AOP自动代理创建器在getEarlyBeanReference 创建代理后，initializeBean 就不会再重复创建了，二选一的）</span><br><span class="line">     </span><br><span class="line"> // 所以经过这两大步后，exposedObject 还是原始对象，通过 getEarlyBeanReference 创建的代理对象还在三级缓存呢</span><br><span class="line"> </span><br><span class="line"> ...</span><br><span class="line"> </span><br><span class="line"> // 循环依赖校验</span><br><span class="line"> if (earlySingletonExposure) &#123;</span><br><span class="line">        // 注意此处第二个参数传的false，表示不去三级缓存里再去调用一次getObject()方法了~~~，此时代理对象还在二级缓存，所以这里拿出来的就是个 代理对象</span><br><span class="line">  // 最后赋值给exposedObject  然后return出去，进而最终被addSingleton()添加进一级缓存里面去  </span><br><span class="line">  // 这样就保证了我们容器里 最终实际上是代理对象，而非原始对象~~~~~</span><br><span class="line">  Object earlySingletonReference = getSingleton(beanName, false);</span><br><span class="line">  if (earlySingletonReference != null) &#123;</span><br><span class="line">   if (exposedObject == bean) &#123; </span><br><span class="line">    exposedObject = earlySingletonReference;</span><br><span class="line">   &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="自我解惑："><a href="#自我解惑：" class="headerlink" title="自我解惑："></a>自我解惑：</h2><h3 id="问：还是不太懂，为什么这么设计呢，即使有代理，在二级缓存代理也可以吧-为什么要使用三级缓存呢？"><a href="#问：还是不太懂，为什么这么设计呢，即使有代理，在二级缓存代理也可以吧-为什么要使用三级缓存呢？" class="headerlink" title="问：还是不太懂，为什么这么设计呢，即使有代理，在二级缓存代理也可以吧 | 为什么要使用三级缓存呢？"></a>问：还是不太懂，为什么这么设计呢，即使有代理，在二级缓存代理也可以吧 | 为什么要使用三级缓存呢？</h3><p>我们再来看下相关代码，假设我们现在是二级缓存架构，创建 A 的时候，我们不知道有没有循环依赖，所以放入二级缓存提前暴露，接着创建 B，也是放入二级缓存，这时候发现又循环依赖了 A，就去二级缓存找，是有，但是如果此时还有 AOP 代理呢，我们要的是代理对象可不是原始对象，这怎么办，只能改逻辑，在第一步的时候，不管3721，所有 Bean 统统去完成 AOP 代理，如果是这样的话，就不需要三级缓存了，但是这样不仅没有必要，而且违背了 Spring 在结合 AOP 跟 Bean 的生命周期的设计。</p>
+<p>所以 Spring “多此一举”的将实例先封装到 ObjectFactory 中（三级缓存），主要关键点在getobject（） 方法并非直接返回实例，而是对实例又使用smartInstantiattionAwareBeanPostProcessor 的 getEarlyBeanReference 方法对 bean 进行处理，也就是说，当 Spring 中存在该后置处理器，所有的单例 bean 在实例化后都会被进行提前曝光到三级缓存中，但是并不是所有的 bean 都存在循环依赖，也就是三级缓存到二级缓存的步骤不一定都会被执行，有可能曝光后直接创建完成，没被提前引用过，就直接被加入到一级缓存中。因此可以确保只有提前曝光且被引用的 bean 才会进行该后置处理。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">protected Object getSingleton(String beanName, boolean allowEarlyReference) &#123;</span><br><span class="line">    Object singletonObject = this.singletonObjects.get(beanName);</span><br><span class="line">    if (singletonObject == null &amp;&amp; isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">        synchronized (this.singletonObjects) &#123;</span><br><span class="line">            singletonObject = this.earlySingletonObjects.get(beanName);</span><br><span class="line">            if (singletonObject == null &amp;&amp; allowEarlyReference) &#123;</span><br><span class="line">             // 三级缓存获取，key=beanName value=objectFactory，objectFactory中存储     //getObject()方法用于获取提前曝光的实例</span><br><span class="line">                ObjectFactory&lt;?&gt; singletonFactory = this.singletonFactories.get(beanName);</span><br><span class="line">                if (singletonFactory != null) &#123;</span><br><span class="line">                    // 三级缓存有的话，就把他移动到二级缓存</span><br><span class="line">                    singletonObject = singletonFactory.getObject();</span><br><span class="line">                    this.earlySingletonObjects.put(beanName, singletonObject);</span><br><span class="line">                    this.singletonFactories.remove(beanName);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return singletonObject;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">boolean earlySingletonExposure = (mbd.isSingleton() &amp;&amp; this.allowCircularReferences &amp;&amp;</span><br><span class="line">      isSingletonCurrentlyInCreation(beanName));</span><br><span class="line">if (earlySingletonExposure) &#123;</span><br><span class="line">   if (logger.isDebugEnabled()) &#123;</span><br><span class="line">      logger.debug(&quot;Eagerly caching bean &#x27;&quot; + beanName +</span><br><span class="line">            &quot;&#x27; to allow for resolving potential circular references&quot;);</span><br><span class="line">   &#125;</span><br><span class="line">   // 添加 bean 工厂对象到 singletonFactories 缓存中，并获取原始对象的早期引用</span><br><span class="line">   //匿名内部方法 getEarlyBeanReference 就是后置处理器</span><br><span class="line">   // SmartInstantiationAwareBeanPostProcessor 的一个方法，</span><br><span class="line">   // 它的功效为：保证自己被循环依赖的时候，即使被别的Bean @Autowire进去的也是代理对象~~~~  AOP自动代理创建器此方法里会创建的代理对象~~~</span><br><span class="line">   addSingletonFactory(beanName, () -&gt; getEarlyBeanReference(beanName, mbd, bean));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="再问：AOP-代理对象提前放入了三级缓存，没有经过属性填充和初始化，这个代理又是如何保证依赖属性的注入的呢？"><a href="#再问：AOP-代理对象提前放入了三级缓存，没有经过属性填充和初始化，这个代理又是如何保证依赖属性的注入的呢？" class="headerlink" title="再问：AOP 代理对象提前放入了三级缓存，没有经过属性填充和初始化，这个代理又是如何保证依赖属性的注入的呢？"></a>再问：AOP 代理对象提前放入了三级缓存，没有经过属性填充和初始化，这个代理又是如何保证依赖属性的注入的呢？</h3><p>这个又涉及到了 Spring 中动态代理的实现，不管是cglib代理还是jdk动态代理生成的代理类，代理时，会将目标对象 target 保存在最后生成的代理 $proxy 中，当调用 $proxy 方法时会回调 h.invoke，而 h.invoke 又会回调目标对象 target 的原始方法。所有，其实在 AOP 动态代理时，原始 bean 已经被保存在 提前曝光代理中了，之后 原始 bean 继续完成属性填充和初始化操作。因为 AOP 代理$proxy中保存着 traget 也就是是 原始bean 的引用，因此后续 原始bean 的完善，也就相当于Spring AOP中的 target 的完善，这样就保证了 AOP 的属性填充与初始化了！</p>
+<p>非单例循环依赖<br>看完了单例模式的循环依赖，我们再看下非单例的情况，假设我们的配置文件是这样的：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean id=&quot;beanA&quot; class=&quot;priv.starfish.BeanA&quot; scope=&quot;prototype&quot;&gt;</span><br><span class="line">   &lt;property name=&quot;beanB&quot; ref=&quot;beanB&quot;/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br><span class="line"></span><br><span class="line">&lt;bean id=&quot;beanB&quot; class=&quot;priv.starfish.BeanB&quot; scope=&quot;prototype&quot;&gt;</span><br><span class="line">   &lt;property name=&quot;beanA&quot; ref=&quot;beanA&quot;/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+
+<p>启动 Spring，结果如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Error creating bean with name &#x27;beanA&#x27; defined in class path resource [applicationContext.xml]: Cannot resolve reference to bean &#x27;beanB&#x27; while setting bean property &#x27;beanB&#x27;;</span><br><span class="line"></span><br><span class="line">Error creating bean with name &#x27;beanB&#x27; defined in class path resource [applicationContext.xml]: Cannot resolve reference to bean &#x27;beanA&#x27; while setting bean property &#x27;beanA&#x27;;</span><br><span class="line"></span><br><span class="line">Caused by: org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name <span class="string">&#x27;beanA&#x27;</span>: Requested bean is currently in creation: Is there an unresolvable circular reference?</span><br></pre></td></tr></table></figure>
+
+<p>对于 prototype 作用域的 bean，Spring 容器无法完成依赖注入，因为 Spring 容器不进行缓存 prototype 作用域的 bean ，因此无法提前暴露一个创建中的bean 。</p>
+<p>原因也挺好理解的，原型模式每次请求都会创建一个实例对象，即使加了缓存，循环引用太多的话，就比较麻烦了就，所以 Spring 不支持这种方式，直接抛出异常：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if (isPrototypeCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">   throw new BeanCurrentlyInCreationException(beanName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>构造器循环依赖<br>上文我们讲的是通过 Setter 方法注入的单例 bean 的循环依赖问题，用 Spring 的小伙伴也都知道，依赖注入的方式还有构造器注入、工厂方法注入的方式（很少使用），那如果构造器注入方式也有循环依赖，可以搞不？</p>
+<p>我们再改下代码和配置文件</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">public class BeanA &#123;</span><br><span class="line">   private BeanB beanB;</span><br><span class="line">   public BeanA(BeanB beanB) &#123;</span><br><span class="line">      this.beanB = beanB;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public class BeanB &#123;</span><br><span class="line"> private BeanA beanA;</span><br><span class="line"> public BeanB(BeanA beanA) &#123;</span><br><span class="line">  this.beanA = beanA;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&lt;bean id=&quot;beanA&quot; class=&quot;priv.starfish.BeanA&quot;&gt;</span><br><span class="line">&lt;constructor-arg ref=&quot;beanB&quot;/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br><span class="line"></span><br><span class="line">&lt;bean id=&quot;beanB&quot; class=&quot;priv.starfish.BeanB&quot;&gt;</span><br><span class="line">&lt;constructor-arg ref=&quot;beanA&quot;/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果，又是异常</p>
+<p><img src="https://pic1.zhimg.com/80/v2-266138efb33f5ba6516439b0d83a50cc_720w.jpg" alt="img"></p>
+<p>看看官方给出的说法</p>
+<p>Circular dependencies<br>If you use predominantly constructor injection, it is possible to create an unresolvable circular dependency scenario.<br>For example: Class A requires an instance of class B through constructor injection, and class B requires an instance of class A through constructor injection. If you configure beans for classes A and B to be injected into each other, the Spring IoC container detects this circular reference at runtime, and throws a BeanCurrentlyInCreationException.<br>One possible solution is to edit the source code of some classes to be configured by setters rather than constructors. Alternatively, avoid constructor injection and use setter injection only. In other words, although it is not recommended, you can configure circular dependencies with setter injection.<br>Unlike the typical case (with no circular dependencies), a circular dependency between bean A and bean B forces one of the beans to be injected into the other prior to being fully initialized itself (a classic chicken-and-egg scenario).<br>大概意思是：</p>
+<p>如果您主要使用构造器注入，循环依赖场景是无法解决的。建议你用 setter 注入方式代替构造器注入</p>
+<p>其实也不是说只要是构造器注入就会有循环依赖问题，Spring 在创建 Bean 的时候默认是按照自然排序来进行创建的，我们暂且把先创建的 bean 叫主 bean，上文的 A 即主 bean，只要主 bean 注入依赖 bean 的方式是 setter 方式，依赖 bean 的注入方式无所谓，都可以解决，反之亦然</p>
+<p>所以上文我们 AB 循环依赖问题，只要 A 的注入方式是 setter ，就不会有循环依赖问题。</p>
+<p>面试官问：为什么呢？</p>
+<p>Spring 解决循环依赖依靠的是 Bean 的“中间态”这个概念，而这个中间态指的是已经实例化，但还没初始化的状态。实例化的过程又是通过构造器创建的，如果 A 还没创建好出来，怎么可能提前曝光，所以构造器的循环依赖无法解决，我一直认为应该先有鸡才能有蛋。</p>
+<h1 id="小总结-面试这么答"><a href="#小总结-面试这么答" class="headerlink" title="小总结 | 面试这么答"></a>小总结 | 面试这么答</h1><h2 id="B-中提前注入了一个没有经过初始化的-A-类型对象不会有问题吗？"><a href="#B-中提前注入了一个没有经过初始化的-A-类型对象不会有问题吗？" class="headerlink" title="B 中提前注入了一个没有经过初始化的 A 类型对象不会有问题吗？"></a>B 中提前注入了一个没有经过初始化的 A 类型对象不会有问题吗？</h2><p>虽然在创建 B 时会提前给 B 注入了一个还未初始化的 A 对象，但是在创建 A 的流程中一直使用的是注入到 B 中的 A 对象的引用，之后会根据这个引用对 A 进行初始化，所以这是没有问题的。</p>
+<h2 id="Spring-是如何解决的循环依赖？"><a href="#Spring-是如何解决的循环依赖？" class="headerlink" title="Spring 是如何解决的循环依赖？"></a>Spring 是如何解决的循环依赖？</h2><p>Spring 为了解决单例的循环依赖问题，使用了三级缓存。其中一级缓存为单例池（singletonObjects），二级缓存为提前曝光对象（earlySingletonObjects），三级缓存为提前曝光对象工厂（singletonFactories）。</p>
+<p>假设A、B循环引用，实例化 A 的时候就将其放入三级缓存中，接着填充属性的时候，发现依赖了 B，同样的流程也是实例化后放入三级缓存，接着去填充属性时又发现自己依赖 A，这时候从缓存中查找到早期暴露的 A，没有 AOP 代理的话，直接将 A 的原始对象注入 B，完成 B 的初始化后，进行属性填充和初始化，这时候 B 完成后，就去完成剩下的 A 的步骤，如果有 AOP 代理，就进行 AOP 处理获取代理后的对象 A，注入 B，走剩下的流程。</p>
+<h2 id="为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？"><a href="#为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？" class="headerlink" title="为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？"></a>为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？</h2><p>如果没有 AOP 代理，二级缓存可以解决问题，但是有 AOP 代理的情况下，只用二级缓存就意味着所有 Bean 在实例化后就要完成 AOP 代理，这样违背了 Spring 设计的原则，Spring 在设计之初就是通过 AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在 Bean 生命周期的最后一步来完成 AOP 代理，而不是在实例化后就立马进行 AOP 代理。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/05/04/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-10-%E5%85%B3%E4%BA%8ESpringAOP%E4%B8%8EIOC%E7%9A%84%E4%B8%AA%E4%BA%BA%E6%80%9D%E8%80%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
+      <meta itemprop="name" content="Yinshi">
+      <meta itemprop="description" content="拨开云雾见青天">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yinshi's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/05/04/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-10-%E5%85%B3%E4%BA%8ESpringAOP%E4%B8%8EIOC%E7%9A%84%E4%B8%AA%E4%BA%BA%E6%80%9D%E8%80%83/" class="post-title-link" itemprop="url">Spring源码解析-10-关于SpringAOP与IOC的个人思考</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-05-04 23:32:33" itemprop="dateCreated datePublished" datetime="2021-05-04T23:32:33+08:00">2021-05-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">Spring源码</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/05/04/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-10-%E5%85%B3%E4%BA%8ESpringAOP%E4%B8%8EIOC%E7%9A%84%E4%B8%AA%E4%BA%BA%E6%80%9D%E8%80%83/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/05/04/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-10-%E5%85%B3%E4%BA%8ESpringAOP%E4%B8%8EIOC%E7%9A%84%E4%B8%AA%E4%BA%BA%E6%80%9D%E8%80%83/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>转载至：<a target="_blank" rel="noopener" href="https://jiankunking.com/spring-aop-ioc-think.html">https://jiankunking.com/spring-aop-ioc-think.html</a></p>
+<p>AOP是Spring提供的关键特性之一。AOP即面向切面编程，是OOP编程的有效补充。使用AOP技术，可以将一些系统性相关的编程工作，独立提取出来，独立实现，然后通过切面切入进系统。从而避免了在业务逻辑的代码中混入很多的系统相关的逻辑——比如权限管理，事物管理，日志记录等等。这些系统性的编程工作都可以独立编码实现，然后通过AOP技术切入进系统即可。从而达到了将不同的关注点分离出来的效果。<br><a target="_blank" rel="noopener" href="https://jiankunking.com/images/spring-jdk-aop-think/AOP%E7%A4%BA%E6%84%8F.png"><img src="https://jiankunking.com/images/spring-jdk-aop-think/AOP%E7%A4%BA%E6%84%8F.png" alt="img"></a><br>本文深入剖析Spring的AOP的原理。</p>
+<h1 id="一、AOP-的实现原理"><a href="#一、AOP-的实现原理" class="headerlink" title="一、AOP 的实现原理"></a>一、AOP 的实现原理</h1><p>AOP分为静态AOP和动态AOP。</p>
+<p>静态AOP是指AspectJ实现的AOP，他是将切面代码直接编译到Java类文件中。</p>
+<p>动态AOP是指将切面代码进行动态织入实现的AOP。</p>
+<p>Spring的AOP为动态AOP，实现的技术为：JDK提供的动态代理技术 和 CGLIB(动态字节码增强技术)。尽管实现技术不一样，但都是基于代理模式，都是生成一个代理对象。</p>
+<h2 id="1、JDK动态代理"><a href="#1、JDK动态代理" class="headerlink" title="1、JDK动态代理"></a>1、JDK动态代理</h2><p>JDK部分解析参考：<br><a target="_blank" rel="noopener" href="https://www.jiankunking.com/java-jdk-aop.html">Java JDK 动态代理（AOP）使用及实现原理分析</a></p>
+<h2 id="2、CGLIB（code-generate-libary）"><a href="#2、CGLIB（code-generate-libary）" class="headerlink" title="2、CGLIB（code generate libary）"></a>2、CGLIB（code generate libary）</h2><p>字节码生成技术实现AOP，其实就是继承被代理对象，然后Override需要被代理的方法，在覆盖该方法时，自然是可以插入我们自己的代码的。</p>
+<p><strong>因为需要Override被代理对象的方法，所以自然CGLIB技术实现AOP时，就必须要求需要被代理的方法不能是final方法，因为final方法不能被子类覆盖。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">package net.aazj.aop;</span><br><span class="line"></span><br><span class="line">import java.lang.reflect.Method;</span><br><span class="line">import net.sf.cglib.proxy.Enhancer;</span><br><span class="line">import net.sf.cglib.proxy.MethodInterceptor;</span><br><span class="line">import net.sf.cglib.proxy.MethodProxy;</span><br><span class="line"></span><br><span class="line">public class CGProxy implements MethodInterceptor&#123;</span><br><span class="line">    private Object target;    &#x2F;&#x2F; 被代理对象</span><br><span class="line">    public CGProxy(Object target)&#123;</span><br><span class="line">        this.target &#x3D; target;</span><br><span class="line">    &#125;</span><br><span class="line">    public Object intercept(Object obj, java.lang.reflect.Method method, Object[] args, MethodProxy proxy) throws Throwable &#123;</span><br><span class="line">        System.out.println(&quot;do sth before....&quot;);</span><br><span class="line">        Object result &#x3D; proxy.invokeSuper(obj, args);</span><br><span class="line">        System.out.println(&quot;do sth after....&quot;);</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line">    public Object getProxyObject() &#123;</span><br><span class="line">        Enhancer enhancer &#x3D; new Enhancer();</span><br><span class="line">        &#x2F;&#x2F; 设置父类</span><br><span class="line">        enhancer.setSuperclass(this.target.getClass());    </span><br><span class="line">        &#x2F;&#x2F; 设置回调</span><br><span class="line">        enhancer.setCallback(this);    &#x2F;&#x2F; 在调用父类方法时，回调 this.intercept()</span><br><span class="line">        &#x2F;&#x2F; 创建代理对象</span><br><span class="line">        return enhancer.create();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">public interface UserService &#123;</span><br><span class="line">    public void addUser(User user);</span><br><span class="line">    public User getUser(int id);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public class UserServiceImpl implements UserService &#123;</span><br><span class="line">    public void addUser(User user) &#123;</span><br><span class="line">        System.out.println(&quot;add user into database.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    public User getUser(int id) &#123;</span><br><span class="line">        User user &#x3D; new User();</span><br><span class="line">        user.setId(id);</span><br><span class="line">        System.out.println(&quot;getUser from database.&quot;);</span><br><span class="line">        return user;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public class CGProxyTest &#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">         &#x2F;&#x2F; 被代理的对象</span><br><span class="line">        Object proxyedObject &#x3D; new UserServiceImpl();   </span><br><span class="line">        CGProxy cgProxy &#x3D; new CGProxy(proxyedObject);</span><br><span class="line">        UserService proxyObject &#x3D; (UserService) cgProxy.getProxyObject();</span><br><span class="line">        proxyObject.getUser(1);</span><br><span class="line">        proxyObject.addUser(new User());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">do sth before....</span><br><span class="line">getUser from database.</span><br><span class="line">do sth after....</span><br><span class="line">do sth before....</span><br><span class="line">add user into database.</span><br><span class="line">do sth after....</span><br></pre></td></tr></table></figure>
+
+<p>它的原理是：生成一个父类<br>enhancer.setSuperclass(this.target.getClass())<br>的子类enhancer.create(),然后对父类的方法进行拦截enhancer.setCallback(this).</p>
+<h1 id="二、思考"><a href="#二、思考" class="headerlink" title="二、思考"></a>二、思考</h1><p>从以上两种代理方式可以看出，<strong>实现AOP的关键是：动态代理，即将需要用的接口、类再包装一层，通过动态修改字节码文件实现各种拦截与通知。</strong></p>
+<p><strong>注意，两者(JDK动态代理、CGLIB)都需要：要代理真实对象的实例。</strong></p>
+<p>比如：在Spring MVC的Controller层一般@Autowired是Service接口，但带有@Service标识的却是实现Service接口的实体类，这样对于JDK动态代理来说已经足以生成代理类了(其实，不过是cglib还是jdk的动态代理，你直接@Autowired Service接口实现类，也是可以注入成功的，但不如注入Service接口灵活)，大家在跟踪代码的时候可以看一下Spring注入的bean真正的类型，你就可以发现它是代理生成的实例。</p>
+<p>比如这种：</p>
+<p><a target="_blank" rel="noopener" href="https://jiankunking.com/images/spring-jdk-aop-think/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E5%AF%B9%E8%B1%A1%E7%B1%BB%E5%9E%8B.png"><img src="https://jiankunking.com/images/spring-jdk-aop-think/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E5%AF%B9%E8%B1%A1%E7%B1%BB%E5%9E%8B.png" alt="img"></a></p>
+<p>带有注解标识的接口或者在Spring.XML中配置的bean会在Spring初始化的时候，被Spring通过反射加载实例化到Spring容器中。</p>
+<blockquote>
+<p>做过Client/Server架构开发的朋友应该知道，在Application运行过程中一般都会有一个应用上下文Context，一般将一些系统信息放在里面，比如一些登录信息、WCF连接实例等。这些信息在系统的任何地方都可以取到（其实就是一些顶级变量集合，生命周期最长的一些家伙）。</p>
+</blockquote>
+<blockquote>
+<p>换个角度想一下，如果我们在Application初始化的时候，用反射（获取要代理对象的实例）和动态代理获取有注解标识或者在xml中配置bean的实例，并放到应用上下文Context中，在需要的地方都能取到，这不就是一个简单版的Spring 容器吗？</p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1567,271 +1942,6 @@
 <p>所以………………厉害</p>
 <p><strong>这边再贴一下关于 streamReader  和 sax的解析xml 的安全问题的 源头，以及解决方案</strong></p>
 <p>ref : <a target="_blank" rel="noopener" href="https://www.dazhuanlan.com/2020/02/02/5e36a1acefeea/">https://www.dazhuanlan.com/2020/02/02/5e36a1acefeea/</a></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/15/2021todoList/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/15/2021todoList/" class="post-title-link" itemprop="url">2021todoList</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-03-15 22:20:07" itemprop="dateCreated datePublished" datetime="2021-03-15T22:20:07+08:00">2021-03-15</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%BE%85%E5%8A%9E%E6%B8%85%E5%8D%95/" itemprop="url" rel="index"><span itemprop="name">待办清单</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2021/03/15/2021todoList/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/15/2021todoList/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>0</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://limingzhang666.github.io/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-01-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/yinshi01_avatar.jpg">
-      <meta itemprop="name" content="Yinshi">
-      <meta itemprop="description" content="拨开云雾见青天">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yinshi's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-01-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/" class="post-title-link" itemprop="url">Spring源码解析-01-01-容器的基础</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-03-11 23:23:29" itemprop="dateCreated datePublished" datetime="2021-03-11T23:23:29+08:00">2021-03-11</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Sprig%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">Sprig源码解析</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-01-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/11/Spring%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90-01-01-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%9F%BA%E7%A1%80/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>6.1k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>6 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="容器的基础（Bean的解析）"><a href="#容器的基础（Bean的解析）" class="headerlink" title="容器的基础（Bean的解析）"></a>容器的基础（Bean的解析）</h1><p>XmlBeanFactory： </p>
-<h2 id="配置文件的封装："><a href="#配置文件的封装：" class="headerlink" title="配置文件的封装："></a>配置文件的封装：</h2><ul>
-<li><p>文件资源统一抽象为： InputStreamSource 资源, Resource 继承 InputStreamSource，</p>
-</li>
-<li><p>然后 通过Resource资源，可以 拿到InputStream，</p>
-</li>
-</ul>
-<p>xmlBeanFactory的构造函数：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a new XmlBeanFactory with the given resource,</span></span><br><span class="line"><span class="comment">	 * 创建一个xml</span></span><br><span class="line"><span class="comment">	 * which must be parsable using DOM.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> resource the XML resource to load bean definitions from</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> BeansException in case of loading or parsing errors</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">XmlBeanFactory</span><span class="params">(Resource resource)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>(resource, <span class="keyword">null</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a new XmlBeanFactory with the given input stream,</span></span><br><span class="line"><span class="comment">	 * which must be parsable using DOM.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> resource the XML resource to load bean definitions from</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> parentBeanFactory parent bean factory</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> BeansException in case of loading or parsing errors</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">XmlBeanFactory</span><span class="params">(Resource resource, BeanFactory parentBeanFactory)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">super</span>(parentBeanFactory);</span><br><span class="line">        <span class="comment">// 资源加载的真正实现</span></span><br><span class="line">		<span class="keyword">this</span>.reader.loadBeanDefinitions(resource);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="加载xmlBeanDefinitions"><a href="#加载xmlBeanDefinitions" class="headerlink" title="加载xmlBeanDefinitions"></a>加载xmlBeanDefinitions</h2><ul>
-<li><p>在 XmlBeanFactory中 调用了 super(parentBeanFactory); 一直往上追可以看到 ,这段代码作用是：</p>
-<ul>
-<li>忽略给定接口的自动装配功能</li>
-</ul>
-</li>
-<li><p>这样的目的是为什么呢，效果如何：</p>
-<ul>
-<li><p>举例子来说：当A中有属性B，那么当Spring在获取A的Bean的时候，如果其属性B还没有初始化，那么Spring会自动初始化B，这也是Sprnig  提供的一种特性，</p>
-</li>
-<li><p>但是某些情况下，B不会被初始化，其中的一种情况就是 B实现了BeanNameAware 接口。</p>
-</li>
-<li><p>spring是这么介绍的： 自动装配时 忽略给定的依赖接口，典型应用就是 通过其他方式解析 Application 上下文注册依赖，类似于 BeanFactory 通过BeanFactoryAware 进行注入 或者ApplicationContext通过ApplicationContextAware 进行注入</p>
-</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create a new AbstractAutowireCapableBeanFactory.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">AbstractAutowireCapableBeanFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="keyword">super</span>();</span><br><span class="line">	ignoreDependencyInterface(BeanNameAware.class);</span><br><span class="line">	ignoreDependencyInterface(BeanFactoryAware.class);</span><br><span class="line">	ignoreDependencyInterface(BeanClassLoaderAware.class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="loadBeanDefinitions"><a href="#loadBeanDefinitions" class="headerlink" title="loadBeanDefinitions"></a>loadBeanDefinitions</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Load bean definitions from the specified XML file.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> encodedResource the resource descriptor for the XML file,</span></span><br><span class="line"><span class="comment">	 * allowing to specify an encoding to use for parsing the file</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the number of bean definitions found</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> BeanDefinitionStoreException in case of loading or parsing errors</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">loadBeanDefinitions</span><span class="params">(EncodedResource encodedResource)</span> <span class="keyword">throws</span> BeanDefinitionStoreException </span>&#123;</span><br><span class="line">		Assert.notNull(encodedResource, <span class="string">&quot;EncodedResource must not be null&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">			logger.trace(<span class="string">&quot;Loading XML bean definitions from &quot;</span> + encodedResource);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 1.封装资源文件 ，首先 对参数Resource 使用 EncodedResource</span></span><br><span class="line">		Set&lt;EncodedResource&gt; currentResources = <span class="keyword">this</span>.resourcesCurrentlyBeingLoaded.get();</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!currentResources.add(encodedResource)) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(</span><br><span class="line">					<span class="string">&quot;Detected cyclic loading of &quot;</span> + encodedResource + <span class="string">&quot; - check your import definitions!&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 2. 获得输入流</span></span><br><span class="line">		<span class="keyword">try</span> (InputStream inputStream = encodedResource.getResource().getInputStream()) &#123;</span><br><span class="line">			InputSource inputSource = <span class="keyword">new</span> InputSource(inputStream);</span><br><span class="line">			<span class="keyword">if</span> (encodedResource.getEncoding() != <span class="keyword">null</span>) &#123;</span><br><span class="line">				inputSource.setEncoding(encodedResource.getEncoding());</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 3.重点方法</span></span><br><span class="line">			<span class="keyword">return</span> doLoadBeanDefinitions(inputSource, encodedResource.getResource());</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(</span><br><span class="line">					<span class="string">&quot;IOException parsing XML document from &quot;</span> + encodedResource.getResource(), ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			currentResources.remove(encodedResource);</span><br><span class="line">			<span class="keyword">if</span> (currentResources.isEmpty()) &#123;</span><br><span class="line">				<span class="keyword">this</span>.resourcesCurrentlyBeingLoaded.remove();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="获取Document"><a href="#获取Document" class="headerlink" title="获取Document"></a>获取Document</h3><ul>
-<li>xmlBeanFactoryReader 类对于文档并没有亲力亲为，而是委托 给了 DocumentLoader 去执行，这力的 DocumentLoader是个接口，而真正的调用的是 ： DefaultDocumentLoader </li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">int</span> <span class="title">doLoadBeanDefinitions</span><span class="params">(InputSource inputSource, Resource resource)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> BeanDefinitionStoreException </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			Document doc = doLoadDocument(inputSource, resource);</span><br><span class="line">			<span class="keyword">int</span> count = registerBeanDefinitions(doc, resource);</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">&quot;Loaded &quot;</span> + count + <span class="string">&quot; bean definitions from &quot;</span> + resource);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> count;</span><br><span class="line">		&#125;<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(resource.getDescription(),</span><br><span class="line">					<span class="string">&quot;Unexpected exception parsing XML document from &quot;</span> + resource, ex);</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="解析并注册BeanDefinitions"><a href="#解析并注册BeanDefinitions" class="headerlink" title="解析并注册BeanDefinitions"></a>解析并注册BeanDefinitions</h3><ul>
-<li>当把文件转换为Document之后，接下来的提取以及注册 bean。</li>
-<li>这个方法很好的应用了 面向对象中单一职责的原则，将逻辑处理委托给单一的类 进行处理，而这个逻辑处理类就是 BeanDefinitionDocumentReader</li>
-<li>BeanDefinitionDocumentReader 是一个接口，而实例化的工作是在 createBeanDefinitionDocumentReader（）中完成的，BeanDefinitionDocumentReader的最终类型是 DefaultBeanDefinitionDocumentReader</li>
-<li>DefaultBeanDefinitionDocumentReader::doRegisterBeanDefinitions() 提取root，以便将root作为参数继续 BeanDefinition 的注册</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">registerBeanDefinitions</span><span class="params">(Document doc, Resource resource)</span> <span class="keyword">throws</span> BeanDefinitionStoreException </span>&#123;</span><br><span class="line">	<span class="comment">//使用 DefaultBeanDefinitionDocumentReader 实例化 BeanDefinitionDocumentReader</span></span><br><span class="line">	BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();</span><br><span class="line">	<span class="comment">// 将环境变量设置其中</span></span><br><span class="line">	<span class="comment">// 记录统计前BeanDefinition 的加载个数</span></span><br><span class="line">	<span class="keyword">int</span> countBefore = getRegistry().getBeanDefinitionCount();</span><br><span class="line">	<span class="comment">// 加载以及注册 bean</span></span><br><span class="line">	documentReader.registerBeanDefinitions(doc, createReaderContext(resource));</span><br><span class="line">	<span class="comment">// 记录本次加载 的BeanDefinition 的个数</span></span><br><span class="line">	<span class="keyword">return</span> getRegistry().getBeanDefinitionCount() - countBefore;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="核心方法-registerBeanDefinitions"><a href="#核心方法-registerBeanDefinitions" class="headerlink" title="核心方法 registerBeanDefinitions"></a>核心方法 registerBeanDefinitions</h3><ul>
-<li>对profile 处理，然后开始解析 </li>
-<li>跟进  preProcessXml(),postProcessXml(root);发现代码是空的，为啥是空的呢</li>
-</ul>
-<p><strong>面向对象常说的一句话： 一个类要么是面向继承的设计，要么就用final 修饰。因为 DefaultBeanDefinitionDocumentReader 不是final类，所以他是面向继承设计。</strong> </p>
-<p><strong>这2个方法是为子类设计的 ，这个模板方法模式，如果继承自 DefaultBeanDefinitionDocumentReader 的子类需要在Bean解析前后 做一些处理的话，那么只需要 重写这2个方法。</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doRegisterBeanDefinitions</span><span class="params">(Element root)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 专门处理解析</span></span><br><span class="line">		BeanDefinitionParserDelegate parent = <span class="keyword">this</span>.delegate;</span><br><span class="line">		<span class="keyword">this</span>.delegate = createDelegate(getReaderContext(), root, parent);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.delegate.isDefaultNamespace(root)) &#123;</span><br><span class="line">			<span class="comment">//. 处理 profile 属性</span></span><br><span class="line">			String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);</span><br><span class="line">			<span class="keyword">if</span> (StringUtils.hasText(profileSpec)) &#123;</span><br><span class="line">				String[] specifiedProfiles = StringUtils.tokenizeToStringArray(</span><br><span class="line">						profileSpec, BeanDefinitionParserDelegate.MULTI_VALUE_ATTRIBUTE_DELIMITERS);</span><br><span class="line">				<span class="comment">// We cannot use Profiles.of(...) since profile expressions are not supported</span></span><br><span class="line">				<span class="comment">// in XML config. See SPR-12458 for details.</span></span><br><span class="line">				<span class="keyword">if</span> (!getReaderContext().getEnvironment().acceptsProfiles(specifiedProfiles)) &#123;</span><br><span class="line">					<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">						logger.debug(<span class="string">&quot;Skipped XML bean definition file due to specified profiles [&quot;</span> + profileSpec +</span><br><span class="line">								<span class="string">&quot;] not matching: &quot;</span> + getReaderContext().getResource());</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 3. 解析前处理，留给子类实现</span></span><br><span class="line">		preProcessXml(root);</span><br><span class="line">		parseBeanDefinitions(root, <span class="keyword">this</span>.delegate);</span><br><span class="line">		<span class="comment">// 4. 解析后处理，留给子类实现</span></span><br><span class="line">		postProcessXml(root);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">this</span>.delegate = parent;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="parseBeanDefinitions-root-this-delegate"><a href="#parseBeanDefinitions-root-this-delegate" class="headerlink" title="parseBeanDefinitions(root, this.delegate)"></a>parseBeanDefinitions(root, this.delegate)</h3><ul>
-<li>如何解析XML 的元素就跳过了，包含自定义标签之类的 。感觉也用不到，毕竟现在大部分都是注解开发 ，就先不看了,太繁琐了</li>
-</ul>
 
       
     </div>
